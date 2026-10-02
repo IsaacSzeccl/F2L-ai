@@ -6,7 +6,7 @@ Beacon is a native macOS companion for people learning to use AI tools such as C
 You hold a key and ask a question out loud, and Beacon answers in a calm voice while it **draws a circle on the exact button or box in the real window**.
 It points; you click.
 
-**Setting up for the first time? Start with [SETUP.md](SETUP.md).** Design decisions are recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
+**Teammates: start with [docs/TEAM_SETUP.md](docs/TEAM_SETUP.md).** Owner's checklist: [SETUP.md](SETUP.md). Design decisions are recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## Using it
 
