@@ -1,0 +1,10 @@
+.build/
+build/
+.swiftpm/
+*.xcodeproj/
+DerivedData/
+.DS_Store
+.omc/
+# Spike snapshots contain screenshots; never commit them.
+spike-cases/
+*.env
