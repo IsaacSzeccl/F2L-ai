@@ -1,4 +1,4 @@
-# Design decisions
+# Design decisions 
 
 These decisions were settled in the design review of the v1 PRD (Oct 2026). Where this file and the PRD disagree, **this file wins**.
 
