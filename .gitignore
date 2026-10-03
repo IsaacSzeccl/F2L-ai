@@ -8,3 +8,6 @@ DerivedData/
 # Spike snapshots contain screenshots; never commit them.
 spike-cases/
 *.env
+.env
+.env.*
+!.env.example

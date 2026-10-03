@@ -27,7 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 startCoach()
             })
         }
-        settings = HostedWindow(title: "Beacon Settings", size: CGSize(width: 520, height: 520)) { [unowned self] in
+        settings = HostedWindow(title: "Beacon Settings", size: CGSize(width: 540, height: 720)) { [unowned self] in
             AnyView(SettingsView { [unowned self] in session?.testVoice() })
         }
 
@@ -51,6 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             releaseTalk: { session.endListening(cancelled: false) },
             togglePause: { session.togglePause() },
             clearPointer: { session.clearPointer() },
+            submitText: { session.submitText($0) },
             newConversation: { session.resetConversation() },
             openSettings: { [unowned self] in settings?.show() },
             openOnboarding: { [unowned self] in onboarding?.show() },
@@ -80,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             item.button?.title = "◉"
         }
         let menu = NSMenu()
+        menu.addItem(MenuAction.item("Type a question…") { [unowned self] in island?.focusInput() })
         menu.addItem(MenuAction.item("Pause / Resume") { [unowned self] in session?.togglePause() })
         menu.addItem(MenuAction.item("Start over") { [unowned self] in session?.resetConversation() })
         menu.addItem(.separator())

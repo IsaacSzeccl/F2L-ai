@@ -24,11 +24,25 @@ Pick one of these:
 Then:
 
 ```bash
-security find-identity -v -p codesigning        # copy the quoted name
-echo 'export SIGN_IDENTITY="Apple Development: you@example.com (ABCDE12345)"' >> ~/.zshrc
+security find-identity -v -p codesigning        # must say "1 valid identities found"
+```
+
+`ABCDE12345` in the example below is a placeholder. **Don't type it.** Copy the real name, or the 40-character code at the start of the line, from the command above.
+
+```bash
+echo 'export SIGN_IDENTITY="szeisaac1126@gmail.com (V69DY6BUVP)"' >> ~/.zshrc
 source ~/.zshrc
 ./scripts/build-app.sh                           # should no longer print the ad-hoc warning
 ```
+
+**If it says "0 valid identities found" even though the certificate exists** (`security find-identity -p codesigning` without `-v` lists it), your Mac is missing Apple's current intermediate certificate, so the chain can't be verified. Fix:
+
+```bash
+curl -O https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer
+security add-certificates -k ~/Library/Keychains/login.keychain-db AppleWWDRCAG3.cer
+```
+
+Run the `find-identity -v` command again. The first time you build, macOS may ask for your login password to use the key: choose **Always Allow**.
 
 Every teammate who builds the app needs to do this on their own Mac.
 
@@ -40,8 +54,11 @@ Every teammate who builds the app needs to do this on their own Mac.
 | **ElevenLabs** (required for a natural voice) | The coach's voice | https://elevenlabs.io → Profile → API key | The free tier works; the app uses `pcm_22050`, which every tier allows. Without a key the app falls back to the robotic macOS voice. |
 | Anthropic (optional) | Fallback brain if z.ai doesn't work out | https://console.anthropic.com | Switch the provider in Settings to use it. |
 
-Enter the keys in the app: hover the bar at the top of the screen, click **⋯**, then **Settings…**. They're saved to your macOS Keychain.
-For development you can instead export `ZAI_API_KEY`, `ELEVENLABS_API_KEY` or `ANTHROPIC_API_KEY`; environment variables override the Keychain.
+Two ways to give the app its keys:
+- **A `.env` file (easiest for development).** Run `cp .env.example .env` in the project folder, paste the keys after the `=` signs, and relaunch Beacon. The file is git-ignored. It overrides anything saved in Settings.
+- **In the app:** hover the bar at the top of the screen, click **⋯**, then **Settings…**. The keys are saved to your macOS Keychain.
+
+Shell exports such as `export ZAI_API_KEY=…` only reach the app if you start its binary from that same terminal, not with `open` or `./scripts/run.sh`. Use `.env` instead.
 
 - [ ] **Choose a voice:** in Settings, set *Voice ID* to a warm, patient voice from your ElevenLabs Voice Library. The default is the premade voice "George" (`JBFqnCBsd6RMkjVDRZzb`). Press **Test voice**.
 
@@ -82,6 +99,12 @@ Beacon turns on Chrome's web accessibility automatically, so it can circle exact
 
 - [ ] Open ChatGPT in Chrome, then run `log stream --predicate 'subsystem == "app.beacon.coach" AND category == "screen"' --level debug`, ask a question, and look for `Context: Google Chrome – N controls`. N should be in the dozens.
 - [ ] If N is around 0–5, open `chrome://accessibility` and turn on **Web accessibility**, then try again. If it's still empty, the coach falls back to approximate "around here" circles.
+
+## 7b. If speech recognition is poor
+
+**First, turn on Dictation:** System Settings, then Keyboard, then Dictation. macOS blocks speech recognition entirely while it's off (log line: `kLSRErrorDomain 201: Siri and Dictation are disabled`). If the microphone meter moves but nothing is recognised, this is why.
+
+Open Settings (hover the top bar, **⋯**, **Settings…**) and use **Test microphone and speech**. It reports the microphone, its loudness, and what was heard, with a **Play back** button. The usual fixes are choosing the right microphone, changing the language to English (Hong Kong) or English (UK), or turning off "Keep my voice on this Mac". The full list is in [docs/TEAM_SETUP.md](docs/TEAM_SETUP.md#speech-not-working). You can also type questions in the bar's text box.
 
 ## 8. Measure latency (10 min)
 

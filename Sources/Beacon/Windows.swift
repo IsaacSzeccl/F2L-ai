@@ -58,7 +58,7 @@ struct OnboardingView: View {
 
             GroupBox("What Beacon sees, and where it goes") {
                 VStack(alignment: .leading, spacing: 6) {
-                    ForEach(PrivacyCopy.lines(onDeviceSpeech: SFSpeechRecognizer(locale: Locale(identifier: "en-US"))?.supportsOnDeviceRecognition ?? false), id: \.self) { line in
+                    ForEach(PrivacyCopy.lines(onDeviceSpeech: Preferences.speechOnDeviceOnly), id: \.self) { line in
                         Label(line, systemImage: "checkmark.shield").font(.callout)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -128,6 +128,17 @@ struct SettingsView: View {
     @State private var ttsModel = Preferences.ttsModel
     @State private var keys: [SecretKey: String] = [:]
     @State private var saved = false
+    @State private var micUID = Preferences.inputDeviceUID ?? ""
+    @State private var speechLocale = Preferences.speechLocale
+    @State private var onDeviceOnly = Preferences.speechOnDeviceOnly
+    @State private var microphones = AudioDevices.inputDevices()
+    @StateObject private var voiceCheck = VoiceCheck()
+
+    private static let languages: [(id: String, name: String)] = [
+        ("en-US", "English (US)"), ("en-GB", "English (UK)"), ("en-HK", "English (Hong Kong)"),
+        ("en-IN", "English (India)"), ("en-SG", "English (Singapore)"), ("en-AU", "English (Australia)"),
+        ("zh-HK", "Cantonese (Hong Kong)"),
+    ]
 
     var body: some View {
         Form {
@@ -143,6 +154,21 @@ struct SettingsView: View {
                 TextField("Coach model", text: $model, prompt: Text(provider.defaultModel))
                 TextField("Screen summary model", text: $summaryModel, prompt: Text(provider.defaultSummaryModel))
                 Toggle("Background screen summary", isOn: $summaryLoop)
+            }
+            Section("Microphone and speech recognition") {
+                Picker("Microphone", selection: $micUID) {
+                    Text("System default (\(AudioDevices.defaultInput()?.name ?? "none"))").tag("")
+                    ForEach(microphones) { Text($0.name).tag($0.id) }
+                }
+                .onChange(of: micUID) { _, uid in Preferences.inputDeviceUID = uid.isEmpty ? nil : uid }
+                Picker("Language", selection: $speechLocale) {
+                    ForEach(Self.languages, id: \.id) { Text($0.name).tag($0.id) }
+                }
+                .onChange(of: speechLocale) { _, value in Preferences.speechLocale = value }
+                Toggle("Keep my voice on this Mac (more private, a little less accurate)", isOn: $onDeviceOnly)
+                    .onChange(of: onDeviceOnly) { _, value in Preferences.speechOnDeviceOnly = value }
+                Button("Refresh microphone list") { microphones = AudioDevices.inputDevices() }
+                voiceCheckSection
             }
             Section("Voice (ElevenLabs)") {
                 TextField("Voice ID", text: $voiceID)
@@ -166,6 +192,25 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 520)
+    }
+
+    @ViewBuilder
+    private var voiceCheckSection: some View {
+        HStack {
+            Button(voiceCheck.state == .recording ? "Listening… say something (\(voiceCheck.secondsLeft)s)" : "Test microphone and speech (5 s)") {
+                Task { await voiceCheck.run() }
+            }
+            .disabled(voiceCheck.state == .recording)
+            if voiceCheck.canPlayBack { Button("Play back") { voiceCheck.playBack() } }
+        }
+        if voiceCheck.needsDictation {
+            Button("Open Keyboard settings to turn on Dictation") { NSWorkspace.shared.open(SpeechStats.dictationSettingsURL) }
+        }
+        if voiceCheck.state != .idle {
+            ProgressView(value: Double(voiceCheck.level)).tint(voiceCheck.level < 0.15 ? .orange : .green)
+            if !voiceCheck.heard.isEmpty { Text("Heard: \"\(voiceCheck.heard)\"").font(.callout) }
+            if !voiceCheck.message.isEmpty { Text(voiceCheck.message).font(.caption).foregroundStyle(.secondary) }
+        }
     }
 
     private func binding(for key: SecretKey) -> Binding<String> {

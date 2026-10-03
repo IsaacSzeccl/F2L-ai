@@ -53,7 +53,14 @@ echo 'export SIGN_IDENTITY="Apple Development: you@example.com (ABCDE12345)"' >>
 source ~/.zshrc
 ```
 
-Paste the exact quoted name from the first command into the second.
+Paste the exact quoted name from the first command into the second (`ABCDE12345` is a placeholder; use the real code from your output).
+
+If the first command says **0 valid identities found**, install Apple's intermediate certificate and run it again:
+
+```bash
+curl -O https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer
+security add-certificates -k ~/Library/Keychains/login.keychain-db AppleWWDRCAG3.cer
+```
 
 ## Step 4: Run it
 
@@ -67,7 +74,13 @@ This builds the app, launches it, and shows live logs (press Ctrl-C to stop watc
 2. After allowing Screen Recording, click **Restart Beacon**. macOS only applies that permission after a restart.
 3. Tick "I've closed anything private", then click **Start**.
 4. A small black bar appears at the top of the screen. Hover over it, click **⋯**, then **Settings…**.
-5. Paste the z.ai and ElevenLabs keys, set the Voice ID, and click **Save**. Then click **Test voice**: you should hear the coach speak.
+5. Give the app its keys, either way:
+   - **Easiest:** in the project folder run `cp .env.example .env`, paste the keys after the `=` signs, and relaunch Beacon. `.env` is git-ignored.
+   - **Or** in Settings: paste the z.ai and ElevenLabs keys, set the Voice ID, and click **Save**.
+
+   Then use **Settings**, then **Test voice**: you should hear the coach speak.
+
+To quit Beacon: click the beacon icon in the menu bar, then **Quit Beacon** (or hover the top bar, click **⋯**, then **Quit Beacon**). In Terminal: `pkill -x Beacon`.
 
 ## Step 5: Try it
 
@@ -107,8 +120,28 @@ The goal is under 2.5 seconds.
 | The coach says it couldn't reach the AI service | Check the z.ai key and balance. See the log for an `HTTP 4xx` line. |
 | z.ai error mentions the **image** | Report it. It's a one-line fix in `ImageAttachment.dataURL` in `Sources/CoachCore/Models.swift`. |
 | Circles are dashed "around here", not exact | Chrome isn't exposing its buttons. Open `chrome://accessibility` and turn on **Web accessibility**, then retry. |
-| It hears nothing | Check the microphone permission and the input device in System Settings, then Sound. |
+| It mishears or hears nothing | See [Speech not working](#speech-not-working) below. |
 | Can't find the bar on a MacBook | It sits around the notch; use the menu-bar beacon icon instead. |
+
+## Speech not working
+
+Work through these in order. Each takes under a minute.
+
+0. **Turn on Dictation first.** In System Settings, go to **Keyboard**, then **Dictation**, and switch it on (confirm the prompt). macOS refuses to run speech recognition at all while it's off, even though Beacon's recognition runs on your Mac. The symptom is a working microphone but "no words recognised", and the log line `kLSRErrorDomain 201: Siri and Dictation are disabled`.
+1. **Run the built-in test.** Hover the top bar, click **⋯**, then **Settings…**, and press **Test microphone and speech (5 s)**. Say a sentence. It shows the microphone's name, how loud it was, what was heard, and what's wrong. **Play back** lets you hear what the Mac actually recorded.
+2. **Pick the right microphone.** In Settings, set **Microphone** to your Mac's own mic (for example "MacBook Air Microphone"), not "External Microphone", BlackHole, Zoom or Teams. "System default" follows whatever macOS has chosen, which is often the wrong one.
+3. **Change the language** to match your accent. English (Hong Kong) or English (UK) often works better than English (US) for Hong Kong speakers.
+4. **Turn off "Keep my voice on this Mac"** for better accuracy. Apple's servers then do the recognising, so your voice leaves the Mac; the start screen text updates to say so.
+5. **Wait for "Listening…"** before you speak, and keep holding the key until you finish. Beacon records a quarter of a second past the release to catch the last word.
+6. **Use the text box** if speech still fails: hover the bar and type under "Or type your question…", or use the menu-bar icon, then **Type a question…**.
+
+Watch what the recogniser hears, live:
+
+```bash
+log stream --info --predicate 'subsystem == "app.beacon.coach" AND category == "voice"'
+```
+
+You'll see lines like `Listening: mic=… locale=… onDevice=…` and `Heard (3.1s, peak -18 dBFS): "…"`. A peak below -40 means the microphone is too quiet or the wrong one.
 
 ## What goes where in the code
 

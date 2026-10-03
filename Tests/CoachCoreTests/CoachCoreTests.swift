@@ -250,6 +250,36 @@ private func context(elements: [ScreenElement] = [
     }
 }
 
+@Suite struct DotEnvTests {
+    @Test func parsesCommonForms() {
+        let text = """
+        # keys
+        ZAI_API_KEY=abc123
+        export ELEVENLABS_API_KEY = "quoted value"
+        ANTHROPIC_API_KEY='single'   
+        EMPTY=
+        WITH_COMMENT=value # trailing
+        not a line
+        """
+        let env = DotEnv.parse(text)
+        #expect(env["ZAI_API_KEY"] == "abc123")
+        #expect(env["ELEVENLABS_API_KEY"] == "quoted value")
+        #expect(env["ANTHROPIC_API_KEY"] == "single")
+        #expect(env["WITH_COMMENT"] == "value")
+        #expect(env["EMPTY"] == nil)
+        #expect(env.count == 4)
+    }
+
+    @Test func findsFileInParentFolders() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("dotenv-\(UUID().uuidString)")
+        let nested = root.appendingPathComponent("build/inner", isDirectory: true)
+        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+        try "ZAI_API_KEY=found".write(to: root.appendingPathComponent(".env"), atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: root) }
+        #expect(DotEnv.load(from: nested)["ZAI_API_KEY"] == "found")
+    }
+}
+
 @Suite struct SpikeScoringTests {
     @Test func scoresElementHitsAndMisses() {
         let c = SpikeCase(name: "send", question: "how do I send?", context: context(), expectedElementID: "e2")

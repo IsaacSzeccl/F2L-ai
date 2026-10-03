@@ -19,6 +19,12 @@ final class IslandModel: ObservableObject {
     @Published var expanded = false
     /// Width of the camera housing on notched MacBooks (0 elsewhere); the island lays out around it.
     @Published var notchWidth: CGFloat = 0
+    /// Microphone loudness 0...1 while listening.
+    @Published var micLevel: Double = 0
+    /// The text box has focus or text in it: keep the bar open.
+    @Published var inputActive = false
+    /// Bumped to ask the text box to take keyboard focus.
+    @Published var focusRequest = 0
 }
 
 /// The orchestrator: push-to-talk → transcript → screen context → LLM (streamed) → voice + circle.
@@ -67,6 +73,7 @@ final class CoachSession {
             guard let self, self.model.phase == .listening else { return }
             self.model.heard = text
         }
+        speechInput.onLevel = { [weak self] level in self?.model.micLevel = Double(level) }
         speechOutput.onFirstAudio = { [weak self] in self?.markFirstAudio() }
         speechOutput.onFinished = { [weak self] in self?.speechFinished() }
         watcher.onFrameChanged = { [weak self] frame in self?.overlay.move(to: frame) }
@@ -114,18 +121,40 @@ final class CoachSession {
         model.status = "Thinking…"
         listenTask = Task {
             let transcript = await speechInput.stop()
+            model.micLevel = 0
             guard !Task.isCancelled else { return }
             listenTask = nil
             latency = TurnLatency()
             latency.speechEnded = released
             guard !cancelled, !transcript.isEmpty else {
                 model.phase = .idle
-                model.status = cancelled ? "Cancelled" : "I didn't catch that. Hold right ⌥ and try again."
+                if cancelled {
+                    model.status = "Cancelled"
+                } else {
+                    // Say why, not just "didn't catch that": a silent microphone and a mis-heard word need different fixes.
+                    model.status = speechInput.stats.diagnosis ?? "I didn't catch that. Hold right ⌥ and try again."
+                    model.hasError = speechInput.stats.diagnosis != nil
+                }
                 return
             }
             model.heard = transcript
             startTurn(prompt: PromptBuilder.learnerUtterance(transcript), freshFrame: ScreenReference.needsFreshFrame(transcript))
         }
+    }
+
+    // MARK: - Typed questions
+
+    /// The same path as a spoken question, starting from text.
+    func submitText(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        if model.phase == .listening { speechInput.cancel() }
+        cancelTurn()
+        latency = TurnLatency()
+        latency.speechEnded = Date()
+        model.heard = trimmed
+        model.hasError = false
+        startTurn(prompt: PromptBuilder.learnerUtterance(trimmed), freshFrame: ScreenReference.needsFreshFrame(trimmed))
     }
 
     // MARK: - Controls

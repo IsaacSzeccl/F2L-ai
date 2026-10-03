@@ -92,9 +92,11 @@ guard let options = parseOptions() else {
 }
 
 let keyName = options.provider == .zai ? "ZAI_API_KEY" : "ANTHROPIC_API_KEY"
-let apiKey = ProcessInfo.processInfo.environment[keyName] ?? ""
+// Shell variable first, then a .env file in the current folder or above.
+let dotEnv = DotEnv.load(from: URL(fileURLWithPath: FileManager.default.currentDirectoryPath))
+let apiKey = ProcessInfo.processInfo.environment[keyName] ?? dotEnv[keyName] ?? ""
 guard !apiKey.isEmpty else {
-    print("Set \(keyName) in the environment.")
+    print("Set \(keyName) in the environment or in a .env file.")
     exit(2)
 }
 

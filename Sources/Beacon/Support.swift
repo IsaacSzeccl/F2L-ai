@@ -37,6 +37,14 @@ enum Secrets {
     private static let service = "app.beacon.coach"
     /// Keychain reads can block on an access prompt, so each key is read once and kept in memory.
     private static var cache: [SecretKey: String] = [:]
+    /// Keys from a `.env` file next to the project (development convenience), read once at first use.
+    /// The app lives in <project>/build/Beacon.app, so the search starts above the bundle.
+    private static let dotEnv: [String: String] = {
+        let bundleParent = Bundle.main.bundleURL.deletingLastPathComponent()
+        var values = DotEnv.load(from: bundleParent)
+        if values.isEmpty { values = DotEnv.load(from: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)) }
+        return values
+    }()
 
     static func read(_ key: SecretKey) -> String {
         if let cached = cache[key] { return cached }
@@ -47,6 +55,7 @@ enum Secrets {
 
     private static func readUncached(_ key: SecretKey) -> String {
         if let env = ProcessInfo.processInfo.environment[key.rawValue], !env.isEmpty { return env }
+        if let fromFile = dotEnv[key.rawValue], !fromFile.isEmpty { return fromFile }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -116,6 +125,24 @@ enum Preferences {
         set { defaults.set(newValue, forKey: "ttsModel") }
     }
 
+    /// Which English (or Chinese) model Apple's recognizer uses. en-HK often suits Hong Kong accents better.
+    static var speechLocale: String {
+        get { nonEmpty(defaults.string(forKey: "speechLocale")) ?? "en-US" }
+        set { defaults.set(newValue, forKey: "speechLocale") }
+    }
+
+    /// True keeps your voice on this Mac (more private). False lets Apple's servers recognise it (usually more accurate).
+    static var speechOnDeviceOnly: Bool {
+        get { defaults.object(forKey: "speechOnDeviceOnly") as? Bool ?? true }
+        set { defaults.set(newValue, forKey: "speechOnDeviceOnly") }
+    }
+
+    /// CoreAudio UID of the chosen microphone; nil follows the system default.
+    static var inputDeviceUID: String? {
+        get { nonEmpty(defaults.string(forKey: "inputDeviceUID")) }
+        set { defaults.set(newValue, forKey: "inputDeviceUID") }
+    }
+
     /// Shows developer tools (spike snapshots) in the menu: `defaults write app.beacon.coach developerMode -bool true`.
     static var developerMode: Bool { defaults.bool(forKey: "developerMode") }
 
@@ -161,7 +188,7 @@ enum PrivacyCopy {
         }
         lines.append(onDeviceSpeech
             ? "Your voice is turned into text on this Mac by Apple. It is not sent anywhere."
-            : "Your voice is turned into text by Apple's speech service (this Mac can't do it on its own).")
+            : "Your voice is sent to Apple's speech service to be turned into text. You can change this in Settings.")
         lines += [
             "Only the coach's replies are sent to ElevenLabs, to give it a voice. ElevenLabs never sees your screen.",
             "Beacon itself never saves pictures of your screen. Nothing is kept after you quit.",

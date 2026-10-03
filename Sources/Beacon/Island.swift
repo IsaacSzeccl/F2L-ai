@@ -6,7 +6,7 @@ import SwiftUI
 @MainActor
 final class IslandController {
     static let collapsedSize = CGSize(width: 260, height: 38)
-    static let expandedSize = CGSize(width: 440, height: 215)
+    static let expandedSize = CGSize(width: 440, height: 250)
 
     private let panel: NSPanel
     private let model: IslandModel
@@ -32,7 +32,16 @@ final class IslandController {
         }
     }
 
+    /// Opens the bar and puts the cursor in the text box (menu-bar "Type a question…").
+    func focusInput() {
+        setExpanded(true)
+        panel.makeKeyAndOrderFront(nil)
+        model.focusRequest += 1
+    }
+
     func setExpanded(_ expanded: Bool) {
+        // Don't fold away while the learner is typing.
+        if !expanded, model.inputActive { return }
         guard expanded != model.expanded else { return }
         model.expanded = expanded
         layout(expanded: expanded, animate: true)
@@ -55,7 +64,8 @@ final class IslandController {
 }
 
 private final class IslandPanel: NSPanel {
-    override var canBecomeKey: Bool { false }
+    // Key-capable so the text box can take typing; it's non-activating, so the learner's app stays in front.
+    override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 }
 
@@ -91,6 +101,7 @@ struct IslandActions {
     var releaseTalk: () -> Void
     var togglePause: () -> Void
     var clearPointer: () -> Void
+    var submitText: (String) -> Void
     var newConversation: () -> Void
     var openSettings: () -> Void
     var openOnboarding: () -> Void
@@ -103,11 +114,13 @@ private struct IslandView: View {
     let actions: IslandActions
 
     @State private var holding = false
+    @State private var draft = ""
+    @FocusState private var inputFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
-                Orb(phase: model.phase, paused: model.paused)
+                Orb(phase: model.phase, paused: model.paused, level: model.micLevel)
                     .frame(width: 24, height: 24)
                     .gesture(
                         DragGesture(minimumDistance: 0)
@@ -135,6 +148,14 @@ private struct IslandView: View {
         .padding(.vertical, 7)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(UnevenRoundedRectangle(bottomLeadingRadius: 18, bottomTrailingRadius: 18).fill(Color.black))
+    }
+
+    private func sendDraft() {
+        let text = draft
+        guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        draft = ""
+        inputFocused = false
+        actions.submitText(text)
     }
 
     private var statusText: some View {
@@ -165,6 +186,11 @@ private struct IslandView: View {
                     .foregroundStyle(.white.opacity(0.6))
                     .lineLimit(2)
             }
+            if model.phase == .listening {
+                ProgressView(value: model.micLevel)
+                    .tint(model.micLevel < 0.15 ? .orange : .green)
+                    .controlSize(.small)
+            }
             ScrollView {
                 Text(model.reply.isEmpty ? "Ask me anything about using AI tools. I'll circle where to click." : model.reply)
                     .font(.system(size: 13, design: .rounded))
@@ -172,6 +198,25 @@ private struct IslandView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(maxHeight: 70)
+            HStack(spacing: 6) {
+                TextField("Or type your question…", text: $draft)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13, design: .rounded))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Color.white.opacity(0.14)))
+                    .focused($inputFocused)
+                    .onSubmit(sendDraft)
+                Button(action: sendDraft) {
+                    Image(systemName: "arrow.up.circle.fill").font(.system(size: 22)).foregroundStyle(draft.isEmpty ? .gray : Color.orange)
+                }
+                .buttonStyle(.plain)
+                .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            .onChange(of: inputFocused) { _, focused in model.inputActive = focused || !draft.isEmpty }
+            .onChange(of: draft) { _, text in model.inputActive = inputFocused || !text.isEmpty }
+            .onChange(of: model.focusRequest) { _, _ in inputFocused = true }
             HStack(spacing: 8) {
                 IslandButton(title: model.paused ? "Resume" : "Pause", systemImage: model.paused ? "eye" : "eye.slash", action: actions.togglePause)
                 IslandButton(title: "Clear circle", systemImage: "circle.slash", action: actions.clearPointer)
@@ -223,6 +268,8 @@ private struct IslandButton: View {
 struct Orb: View {
     let phase: CoachPhase
     let paused: Bool
+    /// Microphone loudness 0...1; makes the orb swell with your voice while listening.
+    var level: Double = 0
 
     var body: some View {
         TimelineView(.animation) { timeline in
@@ -230,7 +277,7 @@ struct Orb: View {
             ZStack {
                 Circle()
                     .fill(RadialGradient(colors: [core, glow.opacity(0.0)], center: .center, startRadius: 1, endRadius: 14))
-                    .scaleEffect(1 + amplitude * sin(t * speed))
+                    .scaleEffect(1 + amplitude * sin(t * speed) + (phase == .listening ? level * 0.5 : 0))
                 Circle()
                     .fill(RadialGradient(colors: [.white, core], center: .init(x: 0.4, y: 0.35), startRadius: 0, endRadius: 8))
                     .frame(width: 13, height: 13)
