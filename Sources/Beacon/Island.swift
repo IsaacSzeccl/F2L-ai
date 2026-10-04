@@ -42,6 +42,7 @@ final class IslandController {
     func setExpanded(_ expanded: Bool) {
         // Don't fold away while the learner is typing.
         if !expanded, model.inputActive { return }
+        if expanded { model.bugReportsEnabled = BugReports.isEnabled }
         guard expanded != model.expanded else { return }
         model.expanded = expanded
         layout(expanded: expanded, animate: true)
@@ -103,6 +104,7 @@ struct IslandActions {
     var clearPointer: () -> Void
     var submitText: (String) -> Void
     var newConversation: () -> Void
+    var reportBug: () -> Void
     var openSettings: () -> Void
     var openOnboarding: () -> Void
     var saveSnapshot: () -> Void
@@ -219,8 +221,11 @@ private struct IslandView: View {
             .onChange(of: model.focusRequest) { _, _ in inputFocused = true }
             HStack(spacing: 8) {
                 IslandButton(title: model.paused ? "Resume" : "Pause", systemImage: model.paused ? "eye" : "eye.slash", action: actions.togglePause)
-                IslandButton(title: "Clear circle", systemImage: "circle.slash", action: actions.clearPointer)
+                IslandButton(title: "Clear", systemImage: "circle.slash", action: actions.clearPointer)
                 IslandButton(title: "Start over", systemImage: "arrow.counterclockwise", action: actions.newConversation)
+                if model.bugReportsEnabled {
+                    IslandButton(title: "Bug", systemImage: "ladybug", action: actions.reportBug)
+                }
                 Spacer()
                 if !model.latency.isEmpty {
                     Text(model.latency).font(.system(size: 10, design: .monospaced)).foregroundStyle(.white.opacity(0.4))
@@ -228,6 +233,7 @@ private struct IslandView: View {
                 Menu {
                     Button("Settings…", action: actions.openSettings)
                     Button("Privacy & permissions…", action: actions.openOnboarding)
+                    if model.bugReportsEnabled { Button("Report a bug…", action: actions.reportBug) }
                     if Preferences.developerMode {
                         Divider()
                         Button("Save spike snapshot (developer)", action: actions.saveSnapshot)

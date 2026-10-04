@@ -25,6 +25,8 @@ final class IslandModel: ObservableObject {
     @Published var inputActive = false
     /// Bumped to ask the text box to take keyboard focus.
     @Published var focusRequest = 0
+    /// Whether the Bug button is shown (BEACON_BUG_REPORTS), refreshed each time the bar opens.
+    @Published var bugReportsEnabled = BugReports.isEnabled
 }
 
 /// The orchestrator: push-to-talk → transcript → screen context → LLM (streamed) → voice + circle.
@@ -45,6 +47,8 @@ final class CoachSession {
     /// What the coach did on screen last turn, told to the model as context rather than written into its
     /// own words (where it would imitate and speak it).
     private var lastActions: [String] = []
+    /// What the most recent turn was shown and did, for bug reports.
+    private var lastTurn: TurnDebug?
     private var turnTask: Task<Void, Never>?
     private var listenTask: Task<Void, Never>?
     private var currentTurn: UUID?
@@ -140,6 +144,26 @@ final class CoachSession {
             model.heard = transcript
             startTurn(prompt: PromptBuilder.learnerUtterance(transcript), freshFrame: ScreenReference.needsFreshFrame(transcript))
         }
+    }
+
+    // MARK: - Bug reports
+
+    /// A snapshot of everything useful for a bug report, taken at the moment the button is pressed.
+    func bugSnapshot(permissions: [String: Bool]) -> BugSnapshot {
+        BugSnapshot(
+            phase: String(describing: model.phase),
+            status: model.status,
+            heard: model.heard,
+            reply: model.reply,
+            paused: model.paused,
+            history: history,
+            lastActions: lastActions,
+            turn: lastTurn,
+            latency: latency.summary(),
+            speech: speechInput.stats,
+            circle: overlay.current,
+            permissions: permissions
+        )
     }
 
     // MARK: - Typed questions
@@ -245,10 +269,19 @@ final class CoachSession {
         model.status = "Thinking…"
         let (context, references) = await buildContext(freshFrame: freshFrame)
         guard isCurrent(id) else { return }
+        let settings = Preferences.llmSettings()
+        // With bug reports off, nothing about the turn (including the screenshot) is kept in memory.
+        lastTurn = !BugReports.isEnabled ? nil : TurnDebug(
+            trigger: prompt, provider: settings.provider.rawValue, model: settings.model,
+            appName: context.appName, windowTitle: context.windowTitle, windowFrame: context.windowFrame,
+            summary: context.summary, elements: context.elements,
+            promptContext: PromptBuilder.describe(context), screenshot: context.screenshot
+        )
+        Log.app.notice("Turn: \(prompt, privacy: .public) | app=\(context.appName, privacy: .public) controls=\(context.elements.count) screenshot=\(context.screenshot != nil)")
 
         let learnerText = lastActions.isEmpty ? prompt : "(On screen after your last reply: \(lastActions.joined(separator: "; ")).)\n\(prompt)"
         let messages = PromptBuilder.messages(history: history, context: context, learnerText: learnerText, attachScreenshot: context.screenshot != nil)
-        let client = LLMClients.make(Preferences.llmSettings())
+        let client = LLMClients.make(settings)
         var chunker = SentenceChunker()
         var spoken = ""
         var actions: [String] = []
@@ -268,10 +301,14 @@ final class CoachSession {
                 case let .text(text):
                     spoken += text
                     model.reply = spoken
+                    lastTurn?.spoken = spoken
                     for sentence in chunker.append(text) { speak(sentence, turn: id) }
                 case let .toolCall(call):
                     let result = await apply(call, context: context, references: references, turn: id)
                     guard isCurrent(id) else { return }
+                    let outcome = Self.describe(result)
+                    lastTurn?.toolCalls.append("`\(call.name)` \(call.argumentsJSON) → \(outcome)")
+                    Log.app.notice("Tool \(call.name, privacy: .public) \(call.argumentsJSON, privacy: .public) → \(outcome, privacy: .public)")
                     switch result {
                     case let .drew(action, caption):
                         actions.append(action)
@@ -296,11 +333,14 @@ final class CoachSession {
                     : "Hmm, I couldn't find that on your screen. Could you tell me what you see?"
                 spoken = line
                 model.reply = line
+                lastTurn?.spoken = line
+                lastTurn?.toolCalls.append("(no spoken text came with the tool call; the app said: \(line))")
                 speak(line, turn: id)
             }
         } catch {
             guard isCurrent(id) else { return }
             Log.llm.error("Turn failed: \(error.localizedDescription, privacy: .public)")
+            lastTurn?.error = error.localizedDescription
             let apology = "Sorry, I couldn't reach the AI service just now. Please try again in a moment."
             model.reply = apology
             speak(apology, turn: id)
@@ -325,6 +365,15 @@ final class CoachSession {
         enqueuedSpeech = true
         speechOutput.enqueue(sentence)
         model.phase = .speaking
+    }
+
+    private static func describe(_ result: ApplyResult) -> String {
+        switch result {
+        case let .drew(action, _): "drew a circle (\(action))"
+        case .cleared: "cleared the circle"
+        case .notOnScreen: "REFUSED: that control is not in the on-screen list, so nothing was drawn"
+        case .ignored: "ignored (unknown tool, bad arguments, or the turn was replaced)"
+        }
     }
 
     private enum ApplyResult {

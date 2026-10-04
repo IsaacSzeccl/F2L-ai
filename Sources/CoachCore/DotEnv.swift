@@ -21,6 +21,12 @@ public enum DotEnv {
         return result
     }
 
+    /// Whether a setting is switched off: `off`, `0`, `false`, `no` or `disabled` (any case). Unset means on.
+    public static func isOff(_ value: String?) -> Bool {
+        guard let value else { return false }
+        return ["off", "0", "false", "no", "disabled"].contains(value.trimmingCharacters(in: .whitespaces).lowercased())
+    }
+
     /// Looks for a `.env` file in `directory` and each parent, up to `maxLevels` levels.
     public static func find(from directory: URL, maxLevels: Int = 6) -> URL? {
         var current = directory.standardizedFileURL

@@ -251,6 +251,12 @@ private func context(elements: [ScreenElement] = [
 }
 
 @Suite struct DotEnvTests {
+    @Test func offSwitchValues() {
+        for value in ["off", "OFF", " false ", "0", "no", "disabled"] { #expect(DotEnv.isOff(value), "\(value)") }
+        for value in ["on", "1", "true", "yes", ""] { #expect(!DotEnv.isOff(value), "\(value)") }
+        #expect(!DotEnv.isOff(nil))
+    }
+
     @Test func parsesCommonForms() {
         let text = """
         # keys

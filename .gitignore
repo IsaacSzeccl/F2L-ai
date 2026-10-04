@@ -7,7 +7,10 @@ DerivedData/
 .omc/
 # Spike snapshots contain screenshots; never commit them.
 spike-cases/
+# Bug reports contain screen content and typed text.
+bug-reports/
 *.env
+*.cer
 .env
 .env.*
 !.env.example

@@ -1,8 +1,9 @@
 import AppKit
+import CoachCore
 import SwiftUI
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let permissions = PermissionCenter()
     private let model = IslandModel()
     private var overlay: OverlayController?
@@ -12,6 +13,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var onboarding: HostedWindow?
     private var settings: HostedWindow?
     private var statusItem: NSStatusItem?
+    private let bugReporter = BugReportController()
+    private var bugMenuItem: NSMenuItem?
 
     func applicationDidFinishLaunching(_: Notification) {
         guard Bundle.main.bundleIdentifier != nil else {
@@ -19,6 +22,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Log.app.fault("Beacon must run as Beacon.app. Build it with scripts/build-app.sh.")
             print("Beacon must run as an app bundle: run ./scripts/run.sh")
             NSApp.terminate(nil)
+            return
+        }
+        if CommandLine.arguments.contains("--write-test-bug-report") {
+            writeTestBugReport()
             return
         }
         onboarding = HostedWindow(title: "Beacon", size: CGSize(width: 560, height: 640)) { [unowned self] in
@@ -53,6 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             clearPointer: { session.clearPointer() },
             submitText: { session.submitText($0) },
             newConversation: { session.resetConversation() },
+            reportBug: { [unowned self] in reportBug() },
             openSettings: { [unowned self] in settings?.show() },
             openOnboarding: { [unowned self] in onboarding?.show() },
             saveSnapshot: { [unowned self] in saveSnapshot() },
@@ -85,12 +93,55 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(MenuAction.item("Pause / Resume") { [unowned self] in session?.togglePause() })
         menu.addItem(MenuAction.item("Start over") { [unowned self] in session?.resetConversation() })
         menu.addItem(.separator())
+        let bugItem = MenuAction.item("Report a bug…") { [unowned self] in reportBug() }
+        bugMenuItem = bugItem
+        menu.addItem(bugItem)
         menu.addItem(MenuAction.item("Settings…") { [unowned self] in settings?.show() })
         menu.addItem(MenuAction.item("Privacy & permissions…") { [unowned self] in onboarding?.show() })
         menu.addItem(.separator())
         menu.addItem(MenuAction.item("Quit Beacon") { NSApp.terminate(nil) })
+        menu.delegate = self
         item.menu = menu
         statusItem = item
+    }
+
+    /// Re-checks BEACON_BUG_REPORTS each time the menu opens, so the item appears and disappears live.
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        bugMenuItem?.isHidden = !BugReports.isEnabled
+    }
+
+    /// Headless check of the bug-report writer: `Beacon.app/Contents/MacOS/Beacon --write-test-bug-report`.
+    private func writeTestBugReport() {
+        Log.app.notice("Self-test: writing a sample bug report")
+        var turn = TurnDebug(trigger: "Learner said: \"where do I type?\"", provider: "zai", model: "glm-4.6v", appName: "Google Chrome",
+                             windowTitle: "ChatGPT", windowFrame: CGRect(x: 0, y: 25, width: 1440, height: 875))
+        turn.elements = [ScreenElement(id: "e1", role: "AXTextArea", label: "Ask anything", frame: CGRect(x: 400, y: 600, width: 600, height: 50))]
+        turn.promptContext = PromptBuilder.describe(ScreenContext(appName: "Google Chrome", windowTitle: "ChatGPT", windowFrame: turn.windowFrame, elements: turn.elements))
+        turn.spoken = "Click the box that says Ask anything."
+        turn.toolCalls = ["`point_at` {\"element_id\":\"e1\"} → drew a circle (you circled \"Ask anything\")"]
+        turn.screenshot = ImageAttachment(jpegBase64: "QUJD", pixelWidth: 1, pixelHeight: 1)
+        let snapshot = BugSnapshot(phase: "idle", status: "Hold right ⌥ to reply", heard: "where do I type?", reply: turn.spoken,
+                                   history: [ChatMessage(role: .user, text: "hi"), ChatMessage(role: .assistant, text: "Hello!")],
+                                   turn: turn, latency: "self-test", permissions: ["Microphone": true, "Screen Recording": false])
+        do {
+            let folder = try BugReportWriter.write(snapshot, note: "Self test: the circle was in the wrong place", includeScreenshot: true)
+            print("WROTE \(folder.path)")
+        } catch {
+            print("FAILED \(error)")
+        }
+        NSApp.terminate(nil)
+    }
+
+    /// Captures the state right now (before the learner writes their note), then opens the report window.
+    private func reportBug() {
+        guard BugReports.isEnabled else {
+            model.status = "Bug reports are turned off (BEACON_BUG_REPORTS=off)"
+            return
+        }
+        guard let session else { return }
+        permissions.refresh()
+        let granted = Dictionary(uniqueKeysWithValues: Permission.allCases.map { ($0.title, permissions.granted[$0] == true) })
+        bugReporter.present(session.bugSnapshot(permissions: granted))
     }
 
     private func saveSnapshot() {

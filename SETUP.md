@@ -106,6 +106,10 @@ Beacon turns on Chrome's web accessibility automatically, so it can circle exact
 
 Open Settings (hover the top bar, **⋯**, **Settings…**) and use **Test microphone and speech**. It reports the microphone, its loudness, and what was heard, with a **Play back** button. The usual fixes are choosing the right microphone, changing the language to English (Hong Kong) or English (UK), or turning off "Keep my voice on this Mac". The full list is in [docs/TEAM_SETUP.md](docs/TEAM_SETUP.md#speech-not-working). You can also type questions in the bar's text box.
 
+## 8a. Bug reports (optional switch)
+
+The **Bug** button saves a report into `bug-reports/` for later debugging (see [docs/TEAM_SETUP.md](docs/TEAM_SETUP.md#report-a-bug)). To turn the feature off, put `BEACON_BUG_REPORTS=off` in `.env`. Remove the line, or set `on`, to turn it back on. No restart is needed.
+
 ## 8. Measure latency (10 min)
 
 Each spoken reply logs a line like `speech→request …, request→first token …, TOTAL speech→audio …`, and the island shows "1.8s to first word".

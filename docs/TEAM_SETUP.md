@@ -123,6 +123,16 @@ The goal is under 2.5 seconds.
 | It mishears or hears nothing | See [Speech not working](#speech-not-working) below. |
 | Can't find the bar on a MacBook | It sits around the notch; use the menu-bar beacon icon instead. |
 
+## Report a bug
+
+Something wrong? Hover the top bar and press the **Bug** button (or use the menu-bar icon, then **Report a bug…**). Write what you did and what went wrong, then **Save report**.
+
+The report is saved in the project's `bug-reports/` folder: your note, the last question, what the coach saw and said, which circles it tried to draw, the screenshot it was given, logs, settings and permissions. It stays on your Mac and is git-ignored.
+
+**To turn bug reports off**, add `BEACON_BUG_REPORTS=off` to your `.env` file (or export it before launching). The Bug buttons disappear and nothing is captured or saved; the screenshot and last-turn details are not even kept in memory. Delete the line, or set it to `on`, to bring it back. Changes to `.env` apply the next time the top bar opens, with no restart. Accepted off values: `off`, `0`, `false`, `no`, `disabled`.
+
+Then ask Claude: *"read the latest bug report in bug-reports/ and fix it."*
+
 ## Speech not working
 
 Work through these in order. Each takes under a minute.

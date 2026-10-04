@@ -87,6 +87,26 @@ enum Secrets {
     static func has(_ key: SecretKey) -> Bool { !read(key).isEmpty }
 }
 
+// MARK: - Local switches
+
+/// Reads a setting from the real environment, then from the project's `.env` file. The file is read fresh
+/// every time, so editing it takes effect without restarting Beacon.
+enum LocalEnv {
+    static func value(_ key: String) -> String? {
+        if let env = ProcessInfo.processInfo.environment[key], !env.isEmpty { return env }
+        let bundleParent = Bundle.main.bundleURL.deletingLastPathComponent()
+        var values = DotEnv.load(from: bundleParent)
+        if values.isEmpty { values = DotEnv.load(from: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)) }
+        return values[key]
+    }
+}
+
+enum BugReports {
+    /// `BEACON_BUG_REPORTS=off` (environment or `.env`) turns the whole feature off: the buttons disappear,
+    /// nothing is captured, and nothing is written.
+    static var isEnabled: Bool { !DotEnv.isOff(LocalEnv.value("BEACON_BUG_REPORTS")) }
+}
+
 // MARK: - Settings
 
 /// Non-secret preferences, stored in UserDefaults.
@@ -191,7 +211,7 @@ enum PrivacyCopy {
             : "Your voice is sent to Apple's speech service to be turned into text. You can change this in Settings.")
         lines += [
             "Only the coach's replies are sent to ElevenLabs, to give it a voice. ElevenLabs never sees your screen.",
-            "Beacon itself never saves pictures of your screen. Nothing is kept after you quit.",
+            "Beacon never saves pictures of your screen on its own. The only exception is the Report a bug button: it saves the last screenshot, your note and the logs into a folder on this Mac, only when you press it.",
             "No pictures are taken while a password box is selected, and you can pause Beacon at any time from the bar at the top of your screen.",
         ]
         return lines
