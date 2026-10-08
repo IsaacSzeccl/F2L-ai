@@ -1,6 +1,6 @@
 # F2L AI handoff
 
-Last updated 8 October 2026. Development checkout: `f2l-optimize`. The GitHub publication uses `f2l-secure-update`, a reviewed snapshot based on remote `main`; the old local signing-password commits are excluded. See SECURITY.md for credential protections.
+Last updated 8 October 2026. Development checkout: `f2l-optimize`. The publication candidate is `f2l-secure-update`, a reviewed snapshot based on remote `main`; the old local signing-password commits are excluded. Upload is pending GitHub write authentication: the connected app rejects content writes with HTTP 403, and terminal Git has no working HTTPS or SSH login. See SECURITY.md for credential protections.
 
 ## 1. Goal
 
@@ -81,6 +81,6 @@ Tests: `Tests/CoachCoreTests/*` (Swift). Docs: `README.md`, `CHANGELOG.md`, `Win
 2. If a circle is still wrong: use **Save pointing diagnostics** (Pip's ··· menu) while it is on screen. Then read `~/Library/Application Support/F2L/diagnostics/<time>/report.json` and `window.jpg`, plus `pointing.log`, and fix from those facts.
 3. Check from the diagnostics whether Excel for Mac exposes ribbon controls (names like "Fill Color") through Accessibility. If not, consider asking the AI a second, focused question with a crop of the area around its guess, to find icon-only buttons.
 4. Run the Windows harness on a PC (`dotnet run --project Windows/F2L.Windows.Tests`) and fix compile errors. Nothing on Windows has been compiled since these changes.
-5. Review the published `f2l-secure-update` snapshot before merging it into `main`.
+5. Authenticate GitHub writes, publish `f2l-secure-update`, and review the snapshot before merging it into `main`.
 6. Before later pushes, run the secret checks documented in SECURITY.md. Only DeepSeek has been tested live; verify other providers locally before relying on them.
 7. Optional: `npx @nanonets/graft init --agents claude --no-global` (owner) to wire graft into Claude Code; its map is already built in `graft/`.
