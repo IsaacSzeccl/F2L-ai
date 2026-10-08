@@ -1,0 +1,13 @@
+# Source and scripts use LF everywhere so Mac shell scripts and plists keep working after a Windows checkout.
+* text=auto eol=lf
+# Windows launchers must keep CRLF to run in cmd.exe.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.png binary
+*.ttf binary
+
+# Preserve archived asset bytes, including prompts/licences, so their SHA-256
+# inventory remains valid on both Windows and macOS checkouts.
+Windows/F2L.Windows/Assets/** -text
+docs/companion-concepts/** -text
+docs/previews/** -text

@@ -1,0 +1,409 @@
+import AppKit
+import CoachCore
+
+/// Pip's reply card beside the character: words appear one by one, and a lesson moves one step at a time with
+/// Done / Show me again / I'm stuck and ticks Excel steps by itself.
+/// Mirrors Windows/F2L.Windows/ReplyBubbleWindow.cs.
+@MainActor
+final class ReplyBubble: CompanionPanel {
+    fileprivate enum Page: Equatable {
+        case text(String, last: Bool)
+        case step(Int)
+        case finished
+    }
+
+    private let box = RoundedBox(fill: Palette.panel, radius: 22, border: Palette.panelBorder)
+    private let selection = makeLabel("", size: 11, color: Palette.verified, wraps: true)
+    /// What the lesson achieves, shown above its steps (a lesson starts straight at step 1).
+    private let summary = makeLabel("", size: 12, color: Palette.hex(0x82858D), wraps: true)
+    private let counter = makeLabel("", size: 10, weight: .medium, color: Palette.lavenderInk)
+    private let text = NSTextField(wrappingLabelWithString: "")
+    private let status = makeLabel("", size: 12, weight: .medium, color: Palette.verified, wraps: true)
+    private let closeButton = FlatButton("×", size: 15, ink: Palette.hex(0x9699A2), fill: nil)
+    private let back = FlatButton("←", size: 13, ink: Palette.hex(0x9699A2), fill: nil)
+    private var buttons: [FlatButton] = []
+
+    private var steps: [String] = []
+    private var pages: [Page] = []
+    private var index = 0
+    private var areas: [String] = []
+    private var areasAtStepStart: [String] = []
+    private var ticked = false
+    private var timer: Timer?
+    private var advanceTimer: Timer?
+    private var started = Date()
+    private var words: [NSRange] = []
+    private var anchor = CGRect.zero
+    private var protectedTarget: CGRect?
+    private var inputBounds: CGRect?
+
+    /// The learner asked for help with a step ("I'm stuck") or for more ("Explain more"): ask Pip this question.
+    var onAsk: ((String) -> Void)?
+    /// Moving to another page clears the screen highlight of the previous one.
+    var onPage: (() -> Void)?
+    /// What the shown page is about, so Pip can go to that place on screen.
+    enum Focus: Equatable { case reply, step(Int), nothing }
+    var onFocus: ((Focus) -> Void)?
+    /// A ticked step: Pip waves.
+    var onCelebrate: (() -> Void)?
+    var onAskSomethingElse: (() -> Void)?
+    var reducedMotion = false { didSet { if reducedMotion { finishReveal() } } }
+    var isShowing: Bool { !pages.isEmpty }
+    var isLesson: Bool { !steps.isEmpty }
+
+    override init() {
+        super.init()
+        title = "Pip’s reply"
+        contentView = box
+        hasShadow = true
+        level = .statusBar
+        text.isSelectable = false
+        text.setAccessibilityLabel("Pip’s reply")
+        closeButton.padding = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        closeButton.toolTip = "Hide Pip’s reply"
+        closeButton.setAccessibilityLabel("Hide Pip’s reply")
+        closeButton.onClick = { [weak self] in self?.dismiss() }
+        back.padding = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        back.toolTip = "Previous step"
+        back.setAccessibilityLabel("Previous step")
+        back.onClick = { [weak self] in self?.go(to: (self?.index ?? 1) - 1) }
+        [selection, summary, counter, text, status, closeButton, back].forEach(box.addSubview)
+        let reveal = NSClickGestureRecognizer(target: self, action: #selector(textClicked))
+        text.addGestureRecognizer(reveal)
+    }
+    required init?(coder: NSCoder) { fatalError() }
+
+    // MARK: - Content
+
+    /// A short line from Pip with no lesson: a greeting, "Thinking…" or a problem.
+    func say(_ line: String) {
+        steps = []
+        summary.stringValue = ""
+        pages = [.text(line, last: true)]
+        go(to: 0, buttons: false)
+        orderFrontRegardless()
+    }
+
+    func show(reply: String, steps: [String] = []) {
+        self.steps = steps
+        summary.stringValue = steps.isEmpty ? "" : Self.withoutEmoji(TeachingReply.clean(reply))
+        if steps.isEmpty {
+            let paragraphs = ReplyPhrases.pages(reply: reply, steps: [])
+            pages = paragraphs.enumerated().map { .text($0.element, last: $0.offset == paragraphs.count - 1) }
+            if pages.isEmpty { pages = [.text(TeachingReply.clean(reply), last: true)] }
+        } else {
+            pages = steps.indices.map { .step($0) } + [.finished]
+        }
+        go(to: 0)
+        orderFrontRegardless()
+    }
+
+    func resume() { if isShowing { orderFrontRegardless() } }
+
+    func dismiss() {
+        timer?.invalidate(); timer = nil
+        advanceTimer?.invalidate(); advanceTimer = nil
+        orderOut(nil)
+        pages = []; steps = []
+    }
+
+    /// Excel's live selection: shown on the card, and used to tick selection steps the learner has really done.
+    func updateSelection(_ context: ExcelContext?, line: String) {
+        if selection.stringValue != line {
+            selection.stringValue = line
+            selection.toolTip = line
+            arrange()
+        }
+        areas = context?.areas ?? []
+        checkStep()
+    }
+
+    private func checkStep() {
+        guard pages.indices.contains(index), case .step(let number) = pages[index], !ticked, !areas.isEmpty, areas != areasAtStepStart
+        else { return }
+        switch StepCheck.check(step: steps[number], earlier: Array(steps[..<number]), selected: areas) {
+        case .done:
+            ticked = true
+            setStatus("That’s it! Excel shows \(areas.joined(separator: ", ")).", good: true)
+            onCelebrate?()
+            let timer = Timer(timeInterval: reducedMotion ? 0.6 : 1.4, repeats: false) { [weak self] _ in
+                MainActor.assumeIsolated { self?.go(to: (self?.index ?? 0) + 1) }
+            }
+            RunLoop.main.add(timer, forMode: .common)
+            advanceTimer = timer
+        case .missing(let needed):
+            setStatus("Not yet: \(needed.joined(separator: ", ")) still \(needed.count == 1 ? "needs" : "need") selecting.", good: false)
+        case .notCheckable:
+            break
+        }
+    }
+
+    // MARK: - Pages
+
+    private func go(to page: Int, buttons showButtons: Bool = true) {
+        guard pages.indices.contains(page) else { return }
+        if page != index { onPage?() }
+        advanceTimer?.invalidate(); advanceTimer = nil
+        index = page
+        ticked = false
+        areasAtStepStart = areas
+        status.stringValue = ""
+        buildButtons(showButtons)
+        let line = phrase
+        words = ReplyPhrases.words(in: line)
+        text.attributedStringValue = Self.body(line, color: Palette.ink)
+        text.setAccessibilityValue(line)
+        NSAccessibility.post(element: text, notification: .valueChanged)
+        switch pages[page] {
+        case .step(let number): counter.stringValue = "STEP \(number + 1) OF \(steps.count)"
+        default: counter.stringValue = ""
+        }
+        back.isHidden = !(pages[page].isStep && page > 0)
+        arrange()
+        startReveal()
+        onFocus?(showButtons ? focus : .nothing)
+    }
+
+    private var focus: Focus {
+        guard pages.indices.contains(index) else { return .nothing }
+        switch pages[index] {
+        case .step(let number): return .step(number)
+        case .text: return index == 0 && steps.isEmpty ? .reply : .nothing
+        default: return .nothing
+        }
+    }
+
+    private var phrase: String { Self.withoutEmoji(rawPhrase) }
+
+    /// Pip's card never shows emoji, even if a reply contains some.
+    static func withoutEmoji(_ text: String) -> String {
+        var scalars = String.UnicodeScalarView()
+        scalars.append(contentsOf: text.unicodeScalars.filter { s in
+            !(s.properties.isEmoji && s.value >= 0x203C) && s.value != 0xFE0F && s.value != 0x200D && !(0x1F3FB...0x1F3FF).contains(s.value)
+        })
+        return String(scalars).replacingOccurrences(of: "  ", with: " ").trimmingCharacters(in: .whitespaces)
+    }
+
+    private var rawPhrase: String {
+        guard pages.indices.contains(index) else { return "" }
+        switch pages[index] {
+        case .text(let line, _): return line
+        case .step(let number): return steps[number]
+        case .finished: return steps.isEmpty ? "" : "All done. You did every step."
+        }
+    }
+
+    private func buildButtons(_ show: Bool) {
+        buttons.forEach { $0.removeFromSuperview() }
+        buttons = []
+        guard show, pages.indices.contains(index) else { return }
+        func add(_ title: String, primary: Bool = false, _ action: @escaping () -> Void) {
+            let button = FlatButton(title, size: 12, ink: primary ? .white : Palette.ink, fill: primary ? Palette.send : Palette.button)
+            button.weight = primary ? .semibold : .regular
+            button.padding = NSEdgeInsets(top: 7, left: 13, bottom: 7, right: 13)
+            button.onClick = action
+            buttons.append(button)
+        }
+        switch pages[index] {
+        case .text(let line, let last):
+            if !last { add("Next →", primary: true) { [weak self] in self?.go(to: (self?.index ?? 0) + 1) } }
+            else if line != ConversationSession.pendingText {
+                add("Got it", primary: true) { [weak self] in self?.dismiss() }
+                add("Explain more") { [weak self] in self?.onAsk?("Explain that a little more, with an example.") }
+            }
+        case .step(let number):
+            add("Done", primary: true) { [weak self] in self?.go(to: (self?.index ?? 0) + 1) }
+            add("Show me again") { [weak self] in self?.replay() }
+            add("I’m stuck") { [weak self] in
+                guard let self else { return }
+                onAsk?("I'm stuck on step \(number + 1): \(steps[number]) What should I do from here?")
+            }
+        case .finished:
+            add("Ask something else", primary: true) { [weak self] in self?.dismiss(); self?.onAskSomethingElse?() }
+            add("Start again") { [weak self] in self?.go(to: 0) }
+        }
+        buttons.forEach(box.addSubview)
+    }
+
+    private func replay() {
+        onPage?()
+        onFocus?(focus)
+        ticked = false
+        areasAtStepStart = areas
+        status.stringValue = ""
+        arrange()
+        startReveal()
+    }
+
+    /// A short note under the current page with one action, such as how to make pointing exact.
+    func tip(_ line: String, action title: String, _ action: @escaping () -> Void) {
+        guard !ticked else { return }
+        setStatus(line, good: false)
+        let button = FlatButton(title, size: 12, fill: Palette.button)
+        button.padding = NSEdgeInsets(top: 7, left: 13, bottom: 7, right: 13)
+        button.onClick = action
+        buttons.append(button)
+        box.addSubview(button)
+        arrange()
+    }
+
+    private func setStatus(_ line: String, good: Bool) {
+        status.stringValue = line
+        status.textColor = good ? Palette.verified : Palette.approximate
+        arrange()
+    }
+
+    // MARK: - Word by word
+
+    static func body(_ string: String, color: NSColor) -> NSAttributedString {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.lineSpacing = 3
+        return NSAttributedString(string: string, attributes: [.font: Fonts.inter(16), .foregroundColor: color, .paragraphStyle: paragraph])
+    }
+
+    private func startReveal() {
+        timer?.invalidate()
+        started = Date()
+        setButtonsVisible(false)
+        if reducedMotion || words.isEmpty { finishReveal(); return }
+        drawWords()
+        let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.drawWords() } }
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
+        let pop = CABasicAnimation(keyPath: "transform.translation.y")
+        pop.fromValue = 7; pop.toValue = 0; pop.duration = 0.22
+        pop.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        box.layer?.add(pop, forKey: "phrase-pop")
+    }
+
+    private func drawWords() {
+        let progress = Date().timeIntervalSince(started) / 0.14
+        if progress >= Double(words.count) { finishReveal(); return }
+        let line = phrase
+        let value = NSMutableAttributedString(attributedString: Self.body(line, color: .clear))
+        for (word, range) in words.enumerated() where NSMaxRange(range) <= (line as NSString).length {
+            let opacity = min(1, max(0, (progress - Double(word)) / 0.8))
+            if opacity > 0 { value.addAttribute(.foregroundColor, value: Palette.ink.withAlphaComponent(opacity), range: range) }
+        }
+        text.attributedStringValue = value
+    }
+
+    func finishReveal() {
+        timer?.invalidate(); timer = nil
+        text.attributedStringValue = Self.body(phrase, color: Palette.ink)
+        setButtonsVisible(true)
+        checkStep()
+    }
+
+    private func setButtonsVisible(_ visible: Bool) {
+        for button in buttons {
+            button.isHidden = !visible
+            if visible, !reducedMotion {
+                button.alphaValue = 0
+                NSAnimationContext.runAnimationGroup { $0.duration = 0.2; button.animator().alphaValue = 1 }
+            }
+        }
+    }
+
+    @objc private func textClicked() { if timer != nil { finishReveal() } }
+
+    // MARK: - Placement
+
+    func follow(_ rect: CGRect, avoiding target: CGRect? = nil, input: CGRect? = nil) {
+        anchor = rect; protectedTarget = target; inputBounds = input
+        arrange()
+    }
+
+    private func arrange() {
+        let work = ScreenSpace.workArea(at: CGPoint(x: anchor.midX, y: anchor.midY))
+        let width = min(360, work.width - 24)
+        let inner = width - 36
+        func height(_ field: NSTextField) -> CGFloat {
+            field.stringValue.isEmpty ? 0 : ceil(field.attributedStringValue.boundingRect(
+                with: NSSize(width: inner, height: 10_000), options: [.usesLineFragmentOrigin, .usesFontLeading]).height) + 2
+        }
+        var y: CGFloat = 16
+        let selectionHeight = height(selection)
+        selection.frame = NSRect(x: 18, y: y, width: inner - 20, height: selectionHeight)
+        if selectionHeight > 0 { y += selectionHeight + 8 }
+        let summaryHeight = height(summary)
+        summary.frame = NSRect(x: 18, y: y, width: inner - 40, height: summaryHeight)
+        if summaryHeight > 0 { y += summaryHeight + 6 }
+        let counterHeight: CGFloat = counter.stringValue.isEmpty ? 0 : 14
+        counter.frame = NSRect(x: 18, y: y, width: inner - 20, height: counterHeight)
+        if counterHeight > 0 { y += counterHeight + 6 }
+        let measured = ceil(Self.body(phrase, color: Palette.ink).boundingRect(
+            with: NSSize(width: inner, height: 10_000), options: [.usesLineFragmentOrigin, .usesFontLeading]).height) + 4
+        text.frame = NSRect(x: 16, y: y, width: inner + 4, height: max(22, measured))
+        y = text.frame.maxY + 6
+        let statusHeight = height(status)
+        status.frame = NSRect(x: 18, y: y, width: inner, height: statusHeight)
+        if statusHeight > 0 { y += statusHeight + 4 }
+        if !buttons.isEmpty {
+            y += 10
+            var x: CGFloat = 18
+            for button in buttons {
+                let w = button.intrinsicContentSize.width
+                if x + w > 18 + inner, x > 18 { x = 18; y += 38 }
+                button.frame = NSRect(x: x, y: y, width: w, height: 32)
+                x += w + 8
+            }
+            y += 32
+        }
+        let total = y + 16
+        back.frame = NSRect(x: width - 66, y: 8, width: 28, height: 26)
+        closeButton.frame = NSRect(x: width - 38, y: 8, width: 28, height: 26)
+
+        // Beside Pip first, then above or below it, then the corners of the screen: the card must never cover the
+        // place Pip is pointing at, then should stay off Pip and the input bar, and otherwise stay close to Pip.
+        let size = CGSize(width: width, height: total)
+        let candidates = [CGRect(x: anchor.minX - width - 8, y: anchor.minY, width: width, height: total),
+                          CGRect(x: anchor.maxX + 8, y: anchor.minY, width: width, height: total),
+                          CGRect(x: anchor.minX - width - 8, y: anchor.maxY - total, width: width, height: total),
+                          CGRect(x: anchor.maxX + 8, y: anchor.maxY - total, width: width, height: total),
+                          CGRect(x: anchor.midX - width / 2, y: anchor.minY - total - 8, width: width, height: total),
+                          CGRect(x: anchor.midX - width / 2, y: anchor.maxY + 8, width: width, height: total),
+                          CGRect(origin: CGPoint(x: work.minX + 8, y: work.minY + 8), size: size),
+                          CGRect(origin: CGPoint(x: work.maxX - width - 8, y: work.minY + 8), size: size),
+                          CGRect(origin: CGPoint(x: work.minX + 8, y: work.maxY - total - 8), size: size),
+                          CGRect(origin: CGPoint(x: work.maxX - width - 8, y: work.maxY - total - 8), size: size)]
+        let clamped = candidates.map { r -> CGRect in
+            var r = r
+            r.origin.x = min(max(r.minX, work.minX + 8), work.maxX - width - 8)
+            r.origin.y = min(max(r.minY, work.minY + 8), work.maxY - total - 8)
+            return r
+        }
+        let anchor = self.anchor, protectedTarget = self.protectedTarget, inputBounds = self.inputBounds
+        func area(_ a: CGRect, _ b: CGRect?) -> CGFloat {
+            guard let b else { return 0 }
+            let i = a.intersection(b)
+            return i.isNull ? 0 : i.width * i.height
+        }
+        func cost(_ r: CGRect) -> CGFloat {
+            area(r, protectedTarget) * 100 + (area(r, anchor) + area(r, inputBounds)) * 4 + hypot(r.midX - anchor.midX, r.midY - anchor.midY)
+        }
+        let frame = clamped.enumerated().min { (cost($0.element), $0.offset) < (cost($1.element), $1.offset) }?.element ?? clamped[0]
+        setFrame(ScreenSpace.toAppKit(frame), display: true)
+    }
+
+    // MARK: - Test hooks
+
+    func sampleStep(selection line: String, areas: [String]) {
+        go(to: 0)
+        finishReveal()
+        self.areas = []
+        areasAtStepStart = []
+        updateSelection(ExcelContext(sheet: "Budget", selection: areas.joined(separator: ","), activeCell: areas.last ?? "A1"), line: line)
+        advanceTimer?.invalidate()
+    }
+
+}
+
+private extension ReplyBubble.Page {
+    var isStep: Bool {
+        switch self {
+        case .step: true
+        default: false
+        }
+    }
+}

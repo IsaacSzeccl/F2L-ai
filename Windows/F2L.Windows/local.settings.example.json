@@ -1,0 +1,13 @@
+{
+  "Provider": "deepseek",
+  "DeepSeekApiKey": "",
+  "DeepSeekModel": "",
+  "OpenAIApiKey": "",
+  "OpenAIModel": "",
+  "GeminiApiKey": "",
+  "GeminiModel": "",
+  "ClaudeApiKey": "",
+  "ClaudeModel": "",
+  "GLMApiKey": "",
+  "GLMModel": ""
+}

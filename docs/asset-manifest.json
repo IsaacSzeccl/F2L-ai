@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "auditedOn": "2026-10-08",
+  "hashAlgorithm": "SHA-256",
+  "pathBase": "repository-root",
+  "assets": [
+    {
+      "path": "Windows/F2L.Windows/Assets/Pip/expressions.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-08; reference: character-studies-f2l.png",
+      "bytes": 1444664,
+      "sha256": "27547e158e48319334a9164906f064c4ef14a7c8e472deaa835e13459d965e68",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Pip/directions.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-08; reference: expressions.png",
+      "bytes": 1439884,
+      "sha256": "2dfb47a1c6c9b369210a8733f0bd3e102134458f87b862312db0d0c7b38170aa",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Pip/ARTWORK.md",
+      "role": "generation-prompts",
+      "provenance": "Production artwork prompts and frame review notes",
+      "bytes": 5523,
+      "sha256": "7997bc2977efff6f045ff34b4449a089b9936d671fdc81b7210934ad279e4db5"
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Fonts/Inter-Regular.ttf",
+      "role": "runtime-font",
+      "provenance": "Inter 4.1 official release; SIL Open Font License",
+      "bytes": 411640,
+      "sha256": "40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82"
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Fonts/Inter-Medium.ttf",
+      "role": "runtime-font",
+      "provenance": "Inter 4.1 official release; SIL Open Font License",
+      "bytes": 417300,
+      "sha256": "97ad806f526e41546d46365bb3a393145f75b7b1568913db74549ad8b8dba872"
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Fonts/Inter-SemiBold.ttf",
+      "role": "runtime-font",
+      "provenance": "Inter 4.1 official release; SIL Open Font License",
+      "bytes": 419744,
+      "sha256": "78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3"
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Fonts/LICENSE.txt",
+      "role": "font-license",
+      "provenance": "Licence shipped with Inter 4.1",
+      "bytes": 4380,
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    },
+    {
+      "path": "docs/companion-concepts/character-studies.png",
+      "role": "original-concept",
+      "provenance": "Built-in image generation, 2026-10-07; original sheet",
+      "bytes": 1712403,
+      "sha256": "dc3f9b190f182fae06099ac827909b6912537b303769c200382ec1acd768707b",
+      "width": 1774,
+      "height": 887
+    },
+    {
+      "path": "docs/companion-concepts/character-studies-f2l.png",
+      "role": "original-concept",
+      "provenance": "Built-in image generation, 2026-10-07; F2L branding revision",
+      "bytes": 1867210,
+      "sha256": "d161526fb46cf44f2b06656179d25b0e4326a8b947ae462512b32d7240bba48d",
+      "width": 1774,
+      "height": 887
+    },
+    {
+      "path": "docs/companion-concepts/IMAGE_PROMPT.md",
+      "role": "generation-prompts",
+      "provenance": "Original concept and branding revision prompts",
+      "bytes": 3641,
+      "sha256": "cd0697b7c571b50072837b8d6ed586ec67b2f044551c2f7d34a04f52836a9d89"
+    },
+    {
+      "path": "docs/companion-concepts/layout-exploration-2026-10-07.html",
+      "role": "historical-layout",
+      "provenance": "Unchanged archive of beacon-companion-layouts.html from conversation visualization workspace",
+      "bytes": 21091,
+      "sha256": "5f2657d6da7593d1262c371dc7e836c3b379973fb0d3f422a6cbc62e9263fb60"
+    },
+    {
+      "path": "docs/previews/pip-ui-before-textures.png",
+      "role": "historical-ui-preview",
+      "provenance": "Controlled WPF render with sample text; source: Windows/artifacts/pip-conversation.png",
+      "bytes": 98009,
+      "sha256": "52e8e7cddcfe61867931d3954dca7df9441df0355843d3e42cc2a75557a1cc89",
+      "width": 948,
+      "height": 939
+    },
+    {
+      "path": "docs/previews/pip-ui-textured.png",
+      "role": "current-ui-preview",
+      "provenance": "Controlled WPF render with sample text; source: Windows/artifacts/pip-textured-ui.png",
+      "bytes": 122827,
+      "sha256": "455407f9bbc013b84b55186cfb160a2f59e7c8a922aa99afbeed148c2798b453",
+      "width": 948,
+      "height": 939
+    }
+  ]
+}

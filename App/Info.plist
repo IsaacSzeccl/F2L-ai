@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>Beacon</string>
+	<string>F2L</string>
 	<key>CFBundleDisplayName</key>
-	<string>Beacon</string>
+	<string>F2L</string>
 	<key>CFBundleIdentifier</key>
-	<string>app.beacon.coach</string>
+	<string>ai.f2l.companion</string>
 	<key>CFBundleExecutable</key>
-	<string>Beacon</string>
+	<string>F2L</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.0</string>
+	<string>0.2.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSMinimumSystemVersion</key>
@@ -23,8 +23,10 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Beacon listens while you hold the talk key, so you can ask the coach questions out loud.</string>
+	<string>F2L listens while you dictate a question to Pip, so you can ask out loud.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>F2L reads your selected Excel cell ranges to give accurate steps. It does not edit your workbook.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Beacon turns what you say into text on this Mac so the coach can understand you.</string>
+	<string>F2L turns what you say into text on this Mac so Pip can understand you.</string>
 </dict>
 </plist>
