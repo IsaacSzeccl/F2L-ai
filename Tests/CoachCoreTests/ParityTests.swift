@@ -35,7 +35,7 @@ import Testing
                 expectQuoted(value, in: providers)
             }
         }
-        for setting in ["[\"temperature\"] = 0.2", "[\"max_tokens\"] = 650", "[\"stream\"] = false", "thinking\"] = new { type = \"disabled\" }",
+        for setting in ["[\"temperature\"] = 0.2", "[\"max_tokens\"] = maxTokens ?? 650", "[\"stream\"] = false", "thinking\"] = new { type = \"disabled\" }",
                         "response_format\"] = new { type = \"json_object\" }", "TakeLast(20)", "detail = \"high\"",
                         "[\"max_completion_tokens\"] = 4000", "[\"reasoning_effort\"] = \"minimal\"", "[\"max_tokens\"] = 4096",
                         "new { effort = \"low\" }", "[\"fallbacks\"] = \"default\"", "\"anthropic-version\", \"2023-06-01\"",
@@ -77,14 +77,33 @@ import Testing
                               (CoachClient.fenceStart, coach), (CoachClient.fenceEnd, coach)] {
             #expect(text.contains("@\"\(regex.pattern)\""), "pattern differs: \(regex.pattern)")
         }
-        for label in ["Friendly", "Focused", "Thinking", "Curious"] { expectQuoted(label, in: intents) }
+    }
+
+    @Test func profilePromptAndCatalogMatch() throws {
+        let profile = try source("LearnerProfile.cs")
+        #expect(try rawString(after: "internal const string SystemPrompt", in: profile) == StarterPlan.systemPrompt)
+        for tool in ToolCatalog.all {
+            for value in [tool.id, tool.name, tool.purpose, tool.url] { expectQuoted(value, in: profile) }
+        }
+        for option in LearnerProfile.experiences { for value in [option.0, option.1, option.2] { expectQuoted(value, in: profile) } }
+        for focus in LearnerProfile.focuses.map(\.0) {
+            var learner = LearnerProfile(); learner.focus = focus
+            for idea in LearnerProfile.learningIdeas(for: learner) { expectQuoted(idea, in: profile) }
+        }
+        #expect(profile.contains("\"" + LearnerProfile.lessonQuestion("{topic}") + "\""))
+        #expect(profile.contains("Adapt examples to this background, and to what they chose to learn, when relevant."))
+    }
+
+    @Test func namedPlaceRulesMatch() throws {
+        let named = try source("NamedPlace.cs")
+        #expect(named.contains("@\"" + NamedPlace.action.pattern + "\""))
+        for word in NamedPlace.keys.union(NamedPlace.filler) { expectQuoted(word, in: named) }
     }
 
     @Test func conversationWordingAndFileMatch() throws {
         let conversation = try source("ConversationSession.cs")
         expectQuoted(ConversationSession.pendingText, in: conversation)
         expectQuoted(ConversationSession.stoppedText, in: conversation)
-        for label in ["Thinking", "Stopped", "Couldn't finish", "You", "Pip"] { expectQuoted(label, in: conversation) }
         #expect(conversation.contains("TakeLast(500)") && conversation.contains("TakeLast(20)"))
         #expect(conversation.contains("\"conversation.json\"") && conversation.contains("\".bak\""))
         // Five saved fields: everything else on ConversationEntry must stay out of the file.

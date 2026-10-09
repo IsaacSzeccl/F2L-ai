@@ -15,6 +15,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         termination.setEventHandler { NSApp.terminate(nil) }
         termination.resume()
         self.termination = termination
+        if let index = CommandLine.arguments.firstIndex(of: "--export-emotes") {
+            // Default: the shared artwork folder found from the binary (Windows/F2L.Windows/Assets/Pip/Emotes), not the shell's folder.
+            let given = CommandLine.arguments.indices.contains(index + 1) ? URL(fileURLWithPath: CommandLine.arguments[index + 1]) : nil
+            guard let target = given ?? Assets.url("Pip/Emotes") else { print("FAIL: Pip's artwork folder wasn't found"); exit(1) }
+            let directory = target.path
+            let failures = PipEmote.export(to: target)
+            failures.forEach { print("FAIL: \($0)") }
+            if failures.isEmpty { print("Exported \(PipEmote.allCases.count) emotes to \(directory)") }
+            exit(failures.isEmpty ? 0 : 1)
+        }
+        if let index = CommandLine.arguments.firstIndex(of: "--soak") {
+            let seconds = CommandLine.arguments.indices.contains(index + 1) ? Double(CommandLine.arguments[index + 1]) ?? 10 : 10
+            SoakCheck.run(seconds: seconds)
+            return
+        }
         if let index = CommandLine.arguments.firstIndex(of: "--render") {
             let directory = CommandLine.arguments.indices.contains(index + 1) ? CommandLine.arguments[index + 1] : "build/render"
             RenderCheck.run(into: URL(fileURLWithPath: directory))
@@ -95,10 +110,14 @@ enum RenderCheck {
             try? await Task.sleep(for: .milliseconds(100))
             if let view = stillIntro.contentView { write(view, to: directory.appendingPathComponent("intro-reduced-motion.png"), failures: &failures) }
             stillIntro.finish()
-            companion.greet()
+            companion.sampleGreeting()
             companion.revealSample()
             try? await Task.sleep(for: .milliseconds(100))
             if let reply = companion.replyView { write(reply, to: directory.appendingPathComponent("pip-greeting.png"), failures: &failures) }
+            companion.samplePersonalGreeting()
+            companion.revealSample()
+            try? await Task.sleep(for: .milliseconds(100))
+            if let reply = companion.replyView { write(reply, to: directory.appendingPathComponent("pip-greeting-personal.png"), failures: &failures) }
             companion.seedSample(question: "How do I add up column B?", reply: "Click the empty cell under your numbers, then type =SUM(B2:B10) and press Return.")
             companion.revealSample()
             try? await Task.sleep(for: .milliseconds(100))
@@ -113,6 +132,27 @@ enum RenderCheck {
             if let reply = companion.replyView { write(reply, to: directory.appendingPathComponent("pip-lesson-start.png"), failures: &failures) }
             if let input = companion.inputView { write(input, to: directory.appendingPathComponent("pip-input.png"), failures: &failures) }
             if !companion.inputIsCentred { failures.append("input is not centred on the work area") }
+            let profileURL = FileManager.default.temporaryDirectory.appendingPathComponent("f2l-profile-preview-\(UUID().uuidString).json")
+            let welcome = PersonalizeWindow(store: ProfileStore(url: profileURL), coach: CoachClient(apiKey: { "" }))
+            var learner = LearnerProfile()
+            learner.name = "Alex"; learner.role = "Operations coordinator"; learner.goal = "Make weekly reporting easier and grow into a team lead role."
+            learner.experience = "some"; learner.focus = "analyze"; learner.existingTools = ["excel", "notion"]
+            learner.learning = ["Pivot tables", "Charts for reports"]
+            for (step, name) in [(0, "setup-your-world.png"), (1, "setup-your-pace.png"), (2, "setup-your-path.png")] {
+                welcome.preview(step: step, profile: learner)
+                welcome.orderFrontRegardless()
+                try? await Task.sleep(for: .milliseconds(150))
+                if let view = welcome.contentView { write(view, to: directory.appendingPathComponent(name), failures: &failures) }
+            }
+            welcome.close()
+            try? FileManager.default.removeItem(at: profileURL)
+            // Settings only reads here: which providers have a key (never the key) and what macOS allows.
+            let settings = SettingsWindow(hooks: .init(reducedMotion: { false }, setReducedMotion: { _ in }, followTargets: { false },
+                                                       setFollowTargets: { _ in }, resetPermissions: {}, saveDiagnostics: {}))
+            settings.orderFrontRegardless()
+            try? await Task.sleep(for: .milliseconds(150))
+            if let view = settings.contentView { write(view, to: directory.appendingPathComponent("settings.png"), failures: &failures) }
+            settings.close()
             companion.sampleStep()
             try? await Task.sleep(for: .milliseconds(100))
             if let reply = companion.replyView { write(reply, to: directory.appendingPathComponent("pip-step.png"), failures: &failures) }

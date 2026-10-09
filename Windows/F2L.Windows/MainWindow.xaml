@@ -12,26 +12,8 @@
     <local:PipView x:Name="PipArtView" Width="144" Height="164"/>
    </Button>
    <Button x:Name="MoreButton" Content="···" Background="#F5F5F8" Width="29" Height="24" MinHeight="24" Padding="0" Margin="0,-2,0,0"
-    HorizontalAlignment="Center" Click="More_Click" ToolTip="Pip controls" AutomationProperties.Name="Pip controls">
-    <Button.ContextMenu><ContextMenu>
-     <MenuItem Header="New chat" Click="NewChat_Click"/>
-     <MenuItem Header="Hide input" Click="HideInput_Click"/>
-     <MenuItem Header="Put input back at the bottom" Click="ResetInput_Click"/>
-     <Separator/>
-     <MenuItem Header="AI provider" x:Name="ProviderMenuItem" SubmenuOpened="ProviderMenu_Opened"><MenuItem Header="DeepSeek"/></MenuItem>
-     <MenuItem Header="Share active app window" x:Name="ScreenSharingMenuItem" IsCheckable="True" IsChecked="True" Click="ScreenSharing_Click"/>
-     <MenuItem Header="Pip follows teaching targets" x:Name="FollowTargetsMenuItem" IsCheckable="True" IsChecked="False" Click="FollowTargets_Click"/>
-     <MenuItem Header="Reduce animation" x:Name="ReducedMotionMenuItem" IsCheckable="True" Click="ReducedMotion_Click"/>
-     <MenuItem Header="Pip size">
-      <MenuItem Header="Small" Tag="small" IsCheckable="True" Click="PipSize_Click"/>
-      <MenuItem Header="Medium" Tag="medium" IsCheckable="True" IsChecked="True" Click="PipSize_Click"/>
-      <MenuItem Header="Large" Tag="large" IsCheckable="True" Click="PipSize_Click"/>
-     </MenuItem>
-     <MenuItem Header="Clear screen highlight" Click="ClearHighlight_Click"/>
-     <MenuItem Header="Move to other corner" Click="Move_Click"/>
-     <MenuItem Header="Settings…" Click="Settings_Click"/>
-     <Separator/><MenuItem Header="Quit F2L" Click="Quit_Click"/>
-    </ContextMenu></Button.ContextMenu>
+    HorizontalAlignment="Center" Click="More_Click" ContextMenuService.IsEnabled="False" ToolTip="Pip controls" AutomationProperties.Name="Pip controls">
+    <Button.ContextMenu><ContextMenu/></Button.ContextMenu>
    </Button>
   </StackPanel>
  </Canvas>

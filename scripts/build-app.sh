@@ -3,8 +3,8 @@
 #
 #   SIGN_IDENTITY="Apple Development: you@example.com (TEAMID)" ./scripts/build-app.sh
 #
-# Without SIGN_IDENTITY the app is ad-hoc signed. That works, but macOS treats every rebuild as a
-# new app and asks for Screen Recording again. See SETUP.md, step 2.
+# Without SIGN_IDENTITY it uses F2L's private certificate (scripts/setup-signing.sh), or else signs ad-hoc. Ad-hoc
+# works, but macOS treats every rebuild as a new app and asks for Screen Recording again. See SETUP.md, step 2.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -25,6 +25,13 @@ cp "$ROOT/App/Info.plist" "$APP/Contents/Info.plist"
 cp "$ASSETS/Pip/"*.png "$ASSETS/Pip/frames.json" "$APP/Contents/Resources/Assets/Pip/"
 cp "$ASSETS/Fonts/"*.ttf "$ASSETS/Fonts/LICENSE.txt" "$APP/Contents/Resources/Assets/Fonts/"
 
+# Every build (the launcher, run.sh or a check) uses F2L's private certificate once scripts/setup-signing.sh has made
+# one. An ad-hoc build looks like a new app to macOS, which then asks for Screen Recording and Accessibility again
+# even though they are switched on.
+if [[ -z "${SIGN_IDENTITY:-}" ]]; then
+  source "$ROOT/scripts/local-signing.sh"
+  if f2l_signing_ready >/dev/null 2>&1; then SIGN_IDENTITY="$F2L_SIGNING_NAME"; fi
+fi
 IDENTITY="${SIGN_IDENTITY:--}"
 codesign --force --options runtime --timestamp=none \
   --entitlements "$ROOT/App/F2L.entitlements" \

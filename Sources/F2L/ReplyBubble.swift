@@ -46,6 +46,12 @@ final class ReplyBubble: CompanionPanel {
     var onFocus: ((Focus) -> Void)?
     /// A ticked step: Pip waves.
     var onCelebrate: (() -> Void)?
+    private let emoteView = NSImageView()
+    private var emote: PipEmote?
+    private var sayEmote: PipEmote?
+    /// The buttons under a short line: things to choose, such as what to learn. Empty for a plain line.
+    typealias Choice = (title: String, primary: Bool, action: () -> Void)
+    private var sayChoices: [Choice] = []
     var onAskSomethingElse: (() -> Void)?
     var reducedMotion = false { didSet { if reducedMotion { finishReveal() } } }
     var isShowing: Bool { !pages.isEmpty }
@@ -67,7 +73,9 @@ final class ReplyBubble: CompanionPanel {
         back.toolTip = "Previous step"
         back.setAccessibilityLabel("Previous step")
         back.onClick = { [weak self] in self?.go(to: (self?.index ?? 1) - 1) }
-        [selection, summary, counter, text, status, closeButton, back].forEach(box.addSubview)
+        [selection, summary, counter, emoteView, text, status, closeButton, back].forEach(box.addSubview)
+        emoteView.imageScaling = .scaleProportionallyUpOrDown
+        emoteView.setAccessibilityElement(false)
         let reveal = NSClickGestureRecognizer(target: self, action: #selector(textClicked))
         text.addGestureRecognizer(reveal)
     }
@@ -75,17 +83,22 @@ final class ReplyBubble: CompanionPanel {
 
     // MARK: - Content
 
-    /// A short line from Pip with no lesson: a greeting, "Thinking…" or a problem.
-    func say(_ line: String) {
+    /// A short line from Pip with no lesson: a greeting, "Thinking…" or a problem, with one of Pip's own emotes
+    /// (never a system emoji) and optionally buttons to choose from.
+    func say(_ line: String, emote: PipEmote? = nil, choices: [Choice] = []) {
         steps = []
         summary.stringValue = ""
+        sayEmote = emote
+        sayChoices = choices
         pages = [.text(line, last: true)]
-        go(to: 0, buttons: false)
+        go(to: 0, buttons: !choices.isEmpty)
         orderFrontRegardless()
     }
 
     func show(reply: String, steps: [String] = []) {
         self.steps = steps
+        sayEmote = nil
+        sayChoices = []
         summary.stringValue = steps.isEmpty ? "" : Self.withoutEmoji(TeachingReply.clean(reply))
         if steps.isEmpty {
             let paragraphs = ReplyPhrases.pages(reply: reply, steps: [])
@@ -125,6 +138,7 @@ final class ReplyBubble: CompanionPanel {
         case .done:
             ticked = true
             setStatus("That’s it! Excel shows \(areas.joined(separator: ", ")).", good: true)
+            setEmote(.cheer)
             onCelebrate?()
             let timer = Timer(timeInterval: reducedMotion ? 0.6 : 1.4, repeats: false) { [weak self] _ in
                 MainActor.assumeIsolated { self?.go(to: (self?.index ?? 0) + 1) }
@@ -149,6 +163,9 @@ final class ReplyBubble: CompanionPanel {
         areasAtStepStart = areas
         status.stringValue = ""
         buildButtons(showButtons)
+        emote = pages[page] == .finished ? .cheer : sayEmote
+        emoteView.image = emote?.image(side: 44)
+        emoteView.isHidden = emote == nil
         let line = phrase
         words = ReplyPhrases.words(in: line)
         text.attributedStringValue = Self.body(line, color: Palette.ink)
@@ -206,7 +223,9 @@ final class ReplyBubble: CompanionPanel {
         }
         switch pages[index] {
         case .text(let line, let last):
-            if !last { add("Next →", primary: true) { [weak self] in self?.go(to: (self?.index ?? 0) + 1) } }
+            if !sayChoices.isEmpty {
+                for choice in sayChoices { add(choice.title, primary: choice.primary) { [weak self] in self?.dismiss(); choice.action() } }
+            } else if !last { add("Next →", primary: true) { [weak self] in self?.go(to: (self?.index ?? 0) + 1) } }
             else if line != ConversationSession.pendingText {
                 add("Got it", primary: true) { [weak self] in self?.dismiss() }
                 add("Explain more") { [weak self] in self?.onAsk?("Explain that a little more, with an example.") }
@@ -244,6 +263,13 @@ final class ReplyBubble: CompanionPanel {
         button.onClick = action
         buttons.append(button)
         box.addSubview(button)
+        arrange()
+    }
+
+    private func setEmote(_ new: PipEmote?) {
+        emote = new
+        emoteView.image = new?.image(side: 44)
+        emoteView.isHidden = new == nil
         arrange()
     }
 
@@ -332,9 +358,12 @@ final class ReplyBubble: CompanionPanel {
         let counterHeight: CGFloat = counter.stringValue.isEmpty ? 0 : 14
         counter.frame = NSRect(x: 18, y: y, width: inner - 20, height: counterHeight)
         if counterHeight > 0 { y += counterHeight + 6 }
+        // Pip's emote sits left of the words when there is one.
+        let indent: CGFloat = emote == nil ? 0 : 52
         let measured = ceil(Self.body(phrase, color: Palette.ink).boundingRect(
-            with: NSSize(width: inner, height: 10_000), options: [.usesLineFragmentOrigin, .usesFontLeading]).height) + 4
-        text.frame = NSRect(x: 16, y: y, width: inner + 4, height: max(22, measured))
+            with: NSSize(width: inner - indent - 24, height: 10_000), options: [.usesLineFragmentOrigin, .usesFontLeading]).height) + 4
+        emoteView.frame = NSRect(x: 14, y: y - 8, width: 44, height: 44)
+        text.frame = NSRect(x: 16 + indent, y: y, width: inner + 4 - indent - 24, height: max(emote == nil ? 22 : 30, measured))
         y = text.frame.maxY + 6
         let statusHeight = height(status)
         status.frame = NSRect(x: 18, y: y, width: inner, height: statusHeight)

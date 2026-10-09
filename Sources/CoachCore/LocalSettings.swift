@@ -71,12 +71,23 @@ public enum LocalSettings {
     /// Writes the chosen provider into the settings file in use (creating it from the template), keeping every key.
     @discardableResult
     public static func setProvider(_ provider: Provider, file: URL? = nil) -> Bool {
-        let url = file ?? prepareFile()
+        update(file ?? prepareFile()) { $0["Provider"] = provider.rawValue }
+    }
+
+    /// Saves a provider's key from Settings into the settings file in use; an empty value removes it.
+    @discardableResult
+    public static func setKey(_ key: Key, _ value: String, file: URL? = nil) -> Bool {
+        update(file ?? prepareFile()) { $0[key.fileProperty] = value.trimmingCharacters(in: .whitespacesAndNewlines) }
+    }
+
+    /// Changes one settings file, keeping everything else in it, readable only by this user (it can hold keys).
+    private static func update(_ url: URL, _ change: (inout [String: Any]) -> Void) -> Bool {
         var object = (try? Data(contentsOf: url)).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
-        object["Provider"] = provider.rawValue
-        guard let data = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
-        else { return false }
-        return (try? data.write(to: url, options: .atomic)) != nil
+        change(&object)
+        guard let data = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]),
+              (try? data.write(to: url, options: .atomic)) != nil else { return false }
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        return true
     }
 
     public static var userFile: URL {
@@ -132,6 +143,7 @@ public enum LocalSettings {
         try? fm.createDirectory(at: userFile.deletingLastPathComponent(), withIntermediateDirectories: true)
         if !fm.fileExists(atPath: userFile.path) {
             try? Data(template.utf8).write(to: userFile, options: .withoutOverwriting)
+            try? fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: userFile.path)
         }
         return userFile
     }

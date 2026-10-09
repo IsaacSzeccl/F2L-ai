@@ -30,6 +30,11 @@ internal sealed partial class ReplyBubbleWindow : Window
     private readonly TextBlock _selection = new() { FontSize = 11, Foreground = Good, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8) };
     private readonly TextBlock _summary = new() { FontSize = 12, Foreground = Frozen(Color.FromRgb(130, 133, 141)), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 6) };
     private readonly TextBlock _counter = new() { FontSize = 10, FontWeight = FontWeights.Medium, Foreground = Frozen(Color.FromRgb(112, 101, 129)), Margin = new Thickness(0, 0, 0, 6) };
+    private readonly Image _emote = new() { Width = 44, Height = 44, Margin = new Thickness(-4, -8, 10, 0), VerticalAlignment = VerticalAlignment.Top, Visibility = Visibility.Collapsed };
+    private PipEmote? _sayEmote;
+    /// <summary>A button under a short line: something to choose, such as what to learn.</summary>
+    internal sealed record Choice(string Title, bool Primary, Action Action);
+    private Choice[] _sayChoices = [];
     private readonly TextBlock _text = new() { FontSize = 16, TextWrapping = TextWrapping.Wrap, Foreground = Ink, LineHeight = 23 };
     private readonly TextBlock _status = new() { FontSize = 12, FontWeight = FontWeights.Medium, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 6, 0, 0) };
     private readonly WrapPanel _buttons = new() { Margin = new Thickness(0, 10, 0, 0) };
@@ -72,7 +77,11 @@ internal sealed partial class ReplyBubbleWindow : Window
         titles.Children.Add(_selection); titles.Children.Add(_summary); titles.Children.Add(_counter);
         header.Children.Add(titles);
         var stack = new StackPanel();
-        stack.Children.Add(header); stack.Children.Add(_text); stack.Children.Add(_status);
+        // Pip's emote sits left of the words when there is one.
+        var line = new DockPanel();
+        DockPanel.SetDock(_emote, Dock.Left);
+        line.Children.Add(_emote); line.Children.Add(_text);
+        stack.Children.Add(header); stack.Children.Add(line); stack.Children.Add(_status);
         stack.Children.Add(_buttons);
         Content = new Border
         {
@@ -97,19 +106,22 @@ internal sealed partial class ReplyBubbleWindow : Window
 
     // ---- Content ----
 
-    /// <summary>A short line from Pip with no lesson: a greeting, "Thinking…" or a problem.</summary>
-    internal void Say(string line)
+    /// <summary>A short line from Pip with no lesson: a greeting, "Thinking…" or a problem, with one of Pip's own emotes
+    /// (never a system emoji) and optionally buttons to choose from.</summary>
+    internal void Say(string line, PipEmote? emote = null, params Choice[] choices)
     {
         _steps = [];
+        _sayEmote = emote; _sayChoices = choices;
         _summary.Text = ""; _summary.Visibility = Visibility.Collapsed;
         _pages = [new Page(PageKind.Text, line, Last: true)];
-        GoTo(0, buttons: false);
+        GoTo(0, buttons: choices.Length > 0);
         if (!IsVisible) Show();
     }
 
     internal void ShowReply(string reply, IReadOnlyList<string>? steps = null)
     {
         _steps = steps ?? [];
+        _sayEmote = null; _sayChoices = [];
         // A lesson starts straight at step 1, with what it achieves above the steps.
         _summary.Text = _steps.Count == 0 ? "" : WithoutEmoji(TeachingReply.Clean(reply));
         _summary.Visibility = _summary.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
@@ -156,6 +168,7 @@ internal sealed partial class ReplyBubbleWindow : Window
         {
             _ticked = true;
             SetStatus($"That’s it! Excel shows {string.Join(", ", _areas)}.", true);
+            SetEmote(PipEmote.Cheer);
             Celebrate?.Invoke();
             _advance.Interval = TimeSpan.FromMilliseconds(_reducedMotion ? 600 : 1400);
             _advance.Start();
@@ -174,6 +187,7 @@ internal sealed partial class ReplyBubbleWindow : Window
         _index = page; _ticked = false; _areasAtStepStart = _areas;
         _status.Text = ""; _status.Visibility = Visibility.Collapsed;
         BuildButtons(buttons);
+        SetEmote(_pages[page].Kind == PageKind.Finished ? PipEmote.Cheer : _sayEmote);
         _counter.Text = _pages[page].Kind switch
         {
             PageKind.Step => $"STEP {_pages[page].Step + 1} OF {_steps.Count}",
@@ -233,6 +247,9 @@ internal sealed partial class ReplyBubbleWindow : Window
         var page = _pages[_index];
         switch (page.Kind)
         {
+            case PageKind.Text when _sayChoices.Length > 0:
+                foreach (var choice in _sayChoices) Add(choice.Title, choice.Primary, () => { Dismiss(); choice.Action(); });
+                break;
             case PageKind.Text when !page.Last:
                 Add("Next →", true, () => GoTo(_index + 1));
                 break;
@@ -259,6 +276,12 @@ internal sealed partial class ReplyBubbleWindow : Window
         _ticked = false; _areasAtStepStart = _areas;
         _status.Visibility = Visibility.Collapsed;
         StartReveal();
+    }
+
+    private void SetEmote(PipEmote? emote)
+    {
+        _emote.Source = emote is { } e ? PipEmotes.Image(e) : null;
+        _emote.Visibility = _emote.Source is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void SetStatus(string line, bool good)

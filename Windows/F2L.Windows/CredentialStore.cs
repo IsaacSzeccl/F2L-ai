@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -10,7 +9,6 @@ namespace F2L.Windows;
 internal static class CredentialStore
 {
     private const uint GenericCredential = 1;
-    private const uint PersistLocalMachine = 2;
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct NativeCredential
@@ -29,17 +27,9 @@ internal static class CredentialStore
         public IntPtr UserName;
     }
 
-    [DllImport("Advapi32.dll", EntryPoint = "CredWriteW", CharSet = CharSet.Unicode, SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool CredWrite(ref NativeCredential credential, uint flags);
-
     [DllImport("Advapi32.dll", EntryPoint = "CredReadW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CredRead(string target, uint type, uint flags, out IntPtr credential);
-
-    [DllImport("Advapi32.dll", EntryPoint = "CredDeleteW", CharSet = CharSet.Unicode, SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool CredDelete(string target, uint type, uint flags);
 
     [DllImport("Advapi32.dll", EntryPoint = "CredFree")]
     private static extern void CredFree(IntPtr buffer);
@@ -127,13 +117,19 @@ internal static class CredentialStore
         new[] { $"  \"{provider.KeyProperty()}\": \"\"", $"  \"{provider.ModelProperty()}\": \"\"" }))) + "\n}\n";
 
     /// <summary>Writes the chosen provider into the settings file in use (creating it), keeping every key.</summary>
-    internal static bool SetProvider(Provider provider)
+    internal static bool SetProvider(Provider provider) => Update(settings => settings["Provider"] = provider.Id());
+
+    /// <summary>Saves a provider's key from Settings into the settings file in use; an empty value removes it.</summary>
+    internal static bool SetKey(Provider provider, string value) => Update(settings => settings[provider.KeyProperty()] = value.Trim());
+
+    /// <summary>Changes one settings file, keeping everything else in it. The file lives in the user's own folders.</summary>
+    private static bool Update(Action<System.Text.Json.Nodes.JsonObject> change)
     {
         var path = PrepareSettingsFile();
         try
         {
             var settings = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(path)) as System.Text.Json.Nodes.JsonObject ?? new();
-            settings["Provider"] = provider.Id();
+            change(settings);
             File.WriteAllText(path, settings.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
             return true;
         }
@@ -154,43 +150,5 @@ internal static class CredentialStore
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
         return path;
-    }
-
-    public static void Write(string name, string value)
-    {
-        var target = $"F2L/{name}";
-        var trimmed = value.Trim();
-        if (trimmed.Length == 0)
-        {
-            CredDelete(target, GenericCredential, 0);
-            return;
-        }
-
-        var targetPointer = Marshal.StringToHGlobalUni(target);
-        var userPointer = Marshal.StringToHGlobalUni(Environment.UserName);
-        var bytes = Encoding.Unicode.GetBytes(trimmed);
-        var blobPointer = Marshal.AllocHGlobal(bytes.Length);
-        try
-        {
-            Marshal.Copy(bytes, 0, blobPointer, bytes.Length);
-            var credential = new NativeCredential
-            {
-                Type = GenericCredential,
-                TargetName = targetPointer,
-                UserName = userPointer,
-                CredentialBlob = blobPointer,
-                CredentialBlobSize = (uint)bytes.Length,
-                Persist = PersistLocalMachine,
-            };
-            if (!CredWrite(ref credential, 0)) throw new Win32Exception(Marshal.GetLastWin32Error());
-        }
-        finally
-        {
-            Marshal.FreeHGlobal(targetPointer);
-            Marshal.FreeHGlobal(userPointer);
-            Marshal.Copy(new byte[bytes.Length], 0, blobPointer, bytes.Length);
-            Marshal.FreeHGlobal(blobPointer);
-            Array.Clear(bytes);
-        }
     }
 }

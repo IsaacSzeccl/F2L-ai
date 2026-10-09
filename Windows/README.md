@@ -31,13 +31,13 @@ Pip now uses the original amber lantern design as generated, transparent 2D pain
 
 Replies start with the action or answer. The default is one useful step in 1–3 short sentences; the coach omits praise, preambles and invitations to ask more. Requested explanations can still be longer. A final cleanup removes common standalone filler without cutting formulas or essential warnings.
 
-With **Pip follows teaching targets** enabled, Pip moves from its resting place to a safe slot beside the marker and uses a pointing pose facing the target. Its teaching window passes clicks through. It disappears briefly when your pointer or a visible text caret approaches, and avoids crossing the target or conversation panel during travel. If no slot fits, Pip stays at its resting place. The conversation stays accessible; minimising it brings Pip back.
+With **Pip walks to what it’s teaching** turned on in Settings, Pip moves from its resting place to a safe slot beside the marker and uses a pointing pose facing the target. Its teaching window passes clicks through. It disappears briefly when your pointer or a visible text caret approaches, and avoids crossing the target or conversation panel during travel. If no slot fits, Pip stays at its resting place. The conversation stays accessible; minimising it brings Pip back.
 
 Use the **···** menu in the panel header or beside resting Pip to disable target following or enable **Reduce animation**. Reduced motion holds still frames and skips travel animation. The initial setting respects Windows animation preferences. These controls currently apply to the running session.
 
 ## Screen guidance
 
-With **Share active app window** enabled, F2L remembers the last external app you used, so clicking Pip or typing in its panel keeps that app selected. Submitting a question pins that window, briefly hides Pip, brings the selected app forward and captures its visible client area. General questions and that image go to DeepSeek. Screen images are not written to disk. Window tracking remembers identity only; it does not capture images in the background.
+With **Share my screen with Pip** on, F2L remembers the last external app you used, so clicking Pip or typing in its panel keeps that app selected. Submitting a question pins that window, briefly hides Pip, brings the selected app forward and captures its visible client area. General questions and that image go to DeepSeek. Screen images are not written to disk. Window tracking remembers identity only; it does not capture images in the background.
 
 If the window closes, is minimised, or changes during capture, a general question is still sent without an image, and the panel explains that screen context was unavailable. A direct cell-pointing request gives a screen-context explanation instead of inventing a position. Enter is handled before the multiline text box consumes it; Shift+Enter inserts a newline, and Enter used to confirm IME typing does not send.
 

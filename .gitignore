@@ -44,3 +44,5 @@ diagnostics/
 sessions/
 conversation.json
 keychain-password
+profile.json
+profile.json.*

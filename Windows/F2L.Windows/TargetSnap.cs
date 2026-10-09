@@ -10,7 +10,7 @@ internal sealed record ControlCandidate(Rect Frame, string Name);
 /// tab or menu. Mirrors Sources/CoachCore/TargetSnap.swift.</summary>
 internal static class TargetSnap
 {
-    private static readonly HashSet<string> Generic = ["", "next step", "here", "this", "button", "target", "cell"];
+    internal static readonly HashSet<string> Generic = ["", "next step", "here", "this", "button", "target", "cell"];
     private static readonly HashSet<string> Trailing = ["tab", "button", "menu", "icon", "option", "command", "control"];
 
     /// <summary>"Insert tab" → "insert"; "Pie Chart button…" → "pie chart".</summary>
@@ -87,7 +87,7 @@ internal static class TargetSnap
                 var root = AutomationElement.FromHandle(window);
                 var types = new[] { ControlType.Button, ControlType.TabItem, ControlType.MenuItem, ControlType.SplitButton, ControlType.CheckBox,
                     ControlType.RadioButton, ControlType.ComboBox, ControlType.Hyperlink, ControlType.ListItem, ControlType.Edit, ControlType.Text };
-                var condition = new OrCondition(types.Select(type => (Condition)new PropertyCondition(AutomationElement.ControlTypeProperty, type)).ToArray());
+                var condition = new OrCondition(types.Select(type => (System.Windows.Automation.Condition)new PropertyCondition(AutomationElement.ControlTypeProperty, type)).ToArray());
                 foreach (AutomationElement element in root.FindAll(TreeScope.Descendants, condition))
                 {
                     if (found.Count >= 4000) break;

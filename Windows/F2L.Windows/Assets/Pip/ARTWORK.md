@@ -39,3 +39,15 @@ Row 4: BACK view of Pip (back of amber cloak and folded cap, no face); same back
 These are animated desktop teaching poses. Point with a clear mitten gesture and gaze; no handheld pointer, no arrows, no extra props. Keep every sprite consistent as one original character. Clean antialiased alpha edges and clean transparent gaps, no floating painted flecks outside silhouettes.
 ```
 
+
+## Welcome illustration
+
+`welcome-journey.png` (1254 × 1254, transparent) is the illustration on the first-time setup window: Pip reading a page on a stack of books beside a winding path. It was made with an image-generation tool during the setup work on 8 October, using this file's production Pip as the character reference; the exact prompt was not recorded.
+
+## Pip emotes
+
+`Emotes/*.png` (256 × 256, transparent) replace system emoji everywhere in F2L: `hello` (wave, motion lines), `happy` (smile, heart), `cheer` (smile and wave, sparkles), `thinking` (hand at chin, thought dots), `curious` (head tilt, question mark) and `focused` (attentive, target ring). Each is a painted pose from `expressions.png` (frames 14, 3, 15, 4, 8 and 12) with a small accent drawn in Pip's amber and teal by `PipEmote` in `Sources/F2L/Pip.swift`. The Mac app draws them live; the PNGs for Windows are regenerated with:
+
+```bash
+swift build --product F2L && "$(swift build --show-bin-path)/F2L" --export-emotes Windows/F2L.Windows/Assets/Pip/Emotes
+```

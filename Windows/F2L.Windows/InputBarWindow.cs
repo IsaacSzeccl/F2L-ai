@@ -108,5 +108,6 @@ internal sealed class InputBarWindow : Window
         Place();
     }
 
+    internal bool IsMoved => _moved;
     internal void ResetPosition() { _moved = false; _dodging = false; Place(); }
 }

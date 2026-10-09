@@ -37,13 +37,4 @@ public static partial class QuestionIntentClassifier
             return QuestionIntent.QuickFact;
         return QuestionIntent.Procedural;
     }
-
-    public static string Label(QuestionIntent intent) => intent switch
-    {
-        QuestionIntent.QuickFact => "Friendly",
-        QuestionIntent.Procedural => "Focused",
-        QuestionIntent.MultiPart => "Thinking",
-        QuestionIntent.ClarificationNeeded => "Curious",
-        _ => "Ready",
-    };
 }

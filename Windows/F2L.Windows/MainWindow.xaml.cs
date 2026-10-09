@@ -31,6 +31,11 @@ public partial class MainWindow : Window
     private ConversationEntry? _pendingReply;
     private GuideOverlayWindow? _guide;
     private IntroWindow? _intro;
+    private readonly ProfileStore _profileStore = new();
+    private ProfileDocument? _profileDocument;
+    /// <summary>Read once and again when the setup window closes, not on every question.</summary>
+    private ProfileDocument Profile => _profileDocument ??= _testing ? new ProfileDocument() : _profileStore.Load();
+    private PersonalizeWindow? _personalize;
     private CapturedScreen? _targetCapture;
     private CellReference? _targetCell;
     private string? _targetSheet;
@@ -63,7 +68,6 @@ public partial class MainWindow : Window
         _capture = capture ?? new ScreenCaptureService();
         _screenSharingEnabled = !testing;
         InitializeComponent();
-        ReducedMotionMenuItem.IsChecked = _reducedMotion;
         PipArtView.SetReducedMotion(_reducedMotion);
         _input.SendRequested += () => { if (!IsRequestPending) _ = SubmitAsync(_input.QuestionBox.Text); };
         _input.SendButton.Click += Send_Click;
@@ -90,7 +94,6 @@ public partial class MainWindow : Window
         _watchTarget.Tick += WatchTarget;
         _watchTarget.Tick += WatchSelection;
         _wave.Tick += (_, _) => { _wave.Stop(); PipArtView.SetWaving(false); _teachingPip?.Pip.SetWaving(false); };
-        ScreenSharingMenuItem.IsChecked = _screenSharingEnabled;
         LayoutCompanion();
         Loaded += (_, _) =>
         {
@@ -115,7 +118,8 @@ public partial class MainWindow : Window
             Opacity = 1;
             OpenConversation();
             Wave(TimeSpan.FromSeconds(2.4));
-            Say(Greeting);
+            Greet();
+            if (!_testing && !Profile.OnboardingComplete) ShowProfile();
         });
     }
 
@@ -210,46 +214,77 @@ public partial class MainWindow : Window
     }
 
     private void Character_Click(object sender, RoutedEventArgs e) => OpenConversation();
-    private void HideInput_Click(object sender, RoutedEventArgs e) => MinimiseConversation();
 
-    /// <summary>"AI provider": one item per provider, the current one ticked, providers without a key marked. Choosing
-    /// one writes "Provider" into local.settings.json; the next question uses it.</summary>
-    private void ProviderMenu_Opened(object sender, RoutedEventArgs e)
-    {
-        if (e.OriginalSource != ProviderMenuItem) return;
-        ProviderMenuItem.Items.Clear();
-        var current = CoachSettings.Current().Provider;
-        foreach (var provider in Providers.All)
-        {
-            var hasKey = !string.IsNullOrWhiteSpace(CredentialStore.Read(provider.KeyVariable()));
-            var item = new MenuItem { Header = provider.Name() + (hasKey ? "" : " · add a key in Settings"), IsCheckable = true, IsChecked = provider == current };
-            item.Click += (_, _) => CredentialStore.SetProvider(provider);
-            ProviderMenuItem.Items.Add(item);
-        }
-    }
-    private void ResetInput_Click(object sender, RoutedEventArgs e) { _input.ResetPosition(); PositionBubble(); }
+    /// <summary>Pip's ··· menu, built each time it opens so it shows what is true now (which AI has a key, whether a
+    /// highlight or a moved input bar can be put back). Preferences and keys live in Settings. Same as the Mac.</summary>
     private void More_Click(object sender, RoutedEventArgs e)
     {
-        if (MoreButton.ContextMenu is { } menu) { menu.PlacementTarget = MoreButton; menu.IsOpen = true; }
+        if (MoreButton.ContextMenu is not { } menu) return;
+        menu.Items.Clear();
+        MenuItem Item(string header, Action action, bool? check = null)
+        {
+            var item = new MenuItem { Header = header, IsCheckable = check is not null, IsChecked = check == true };
+            item.Click += (_, _) => action();
+            return item;
+        }
+        menu.Items.Add(Item("New chat", NewChat));
+        menu.Items.Add(Item("My learning & profile…", ShowProfile));
+        menu.Items.Add(new Separator());
+        var current = CoachSettings.Current().Provider;
+        var providers = new MenuItem { Header = $"AI: {current.Name()}" };
+        foreach (var provider in Providers.All)
+        {
+            var ready = !string.IsNullOrWhiteSpace(CredentialStore.Read(provider.KeyVariable()));
+            providers.Items.Add(Item($"{provider.Name()} · {(ready ? "Key added" : "No key yet · add it in Settings")}", () =>
+            {
+                CredentialStore.SetProvider(provider);
+                if (!ready) ShowSettings();
+            }, provider == current));
+        }
+        providers.Items.Add(new Separator());
+        providers.Items.Add(Item("Add or change keys…", ShowSettings));
+        menu.Items.Add(providers);
+        menu.Items.Add(Item("Share my screen with Pip", () => SetScreenSharing(!_screenSharingEnabled), _screenSharingEnabled));
+        var sizes = new MenuItem { Header = "Pip size" };
+        foreach (var (title, width, height) in PipSizes)
+            sizes.Items.Add(Item(title, () =>
+            {
+                if (_userPositioned) Top -= (height - PipArtView.Height) / 2;
+                PipArtView.Width = width; PipArtView.Height = height;
+                LayoutCompanion();
+            }, PipArtView.Height == height));
+        menu.Items.Add(sizes);
+        menu.Items.Add(Item("Move Pip to the other side", () => { _leftAnchor = !_leftAnchor; _userPositioned = false; LayoutCompanion(); }));
+        if (_guide is not null) menu.Items.Add(Item("Clear the highlight", ClearHighlight));
+        if (_input.IsMoved) menu.Items.Add(Item("Put the input bar back", () => { _input.ResetPosition(); PositionBubble(); }));
+        menu.Items.Add(Item("Hide the input bar", MinimiseConversation));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Item("Settings…", ShowSettings));
+        menu.Items.Add(Item("Quit F2L", Close));
+        menu.PlacementTarget = MoreButton; menu.IsOpen = true;
     }
-    private void PipSize_Click(object sender, RoutedEventArgs e)
+
+    internal void SetScreenSharing(bool on)
     {
-        if (sender is not MenuItem { Tag: string size } item) return;
-        var oldHeight = PipArtView.Height;
-        var (width, height) = size switch { "small" => (112d, 128d), "large" => (180d, 205d), _ => (144d, 164d) };
-        if (_userPositioned) Top -= (height - oldHeight) / 2;
-        PipArtView.Width = width; PipArtView.Height = height;
-        if (item.Parent is MenuItem menu)
-            foreach (var option in menu.Items.OfType<MenuItem>()) option.IsChecked = ReferenceEquals(option, item);
-        LayoutCompanion();
+        _screenSharingEnabled = on;
+        if (!on) { ClearHighlight(); _selectionEnabled = false; _bubble.UpdateSelection(null, ""); }
     }
-    private void Move_Click(object sender, RoutedEventArgs e) { _leftAnchor = !_leftAnchor; _userPositioned = false; LayoutCompanion(); }
-    private void Settings_Click(object sender, RoutedEventArgs e) => new SettingsWindow { Owner = this }.ShowDialog();
-    private void Quit_Click(object sender, RoutedEventArgs e) => Close();
-    private void ScreenSharing_Click(object sender, RoutedEventArgs e)
+
+    private static readonly (string Title, double Width, double Height)[] PipSizes = [("Small", 112, 128), ("Medium", 144, 164), ("Large", 180, 205)];
+
+    private void ShowSettings() => new SettingsWindow(new SettingsWindow.Hooks(
+        () => _reducedMotion, SetReducedMotion, () => _followTargets, SetFollowTargets)) { Owner = _personalize is { IsVisible: true } ? _personalize : this }.ShowDialog();
+
+    private void ShowProfile()
     {
-        _screenSharingEnabled = ScreenSharingMenuItem.IsChecked;
-        if (!_screenSharingEnabled) { ClearHighlight(); _selectionEnabled = false; _bubble.UpdateSelection(null, ""); }
+        if (_personalize is { IsVisible: true }) { _personalize.Activate(); return; }
+        _panelOpen = false; _input.Hide(); _bubble.Hide();
+        _personalize = new PersonalizeWindow(_profileStore, _coach) { Owner = this };
+        _personalize.Done = () => { if (!_closed) { _profileDocument = null; OpenConversation(); Greet(); } };
+        // What they want to learn is saved as they change it, so the next answer already knows.
+        _personalize.Changed = () => { if (!_closed) _profileDocument = null; };
+        _personalize.OpenSettings = ShowSettings;
+        _personalize.Show();
     }
 
     private async void Send_Click(object sender, RoutedEventArgs e)
@@ -259,7 +294,25 @@ public partial class MainWindow : Window
     }
 
     /// <summary>Pip says a short line in its card: a greeting, a problem, or what it is doing.</summary>
-    private void Say(string line) { _bubble.Say(line); PositionBubble(); }
+    /// <summary>Notices and problems come with Pip's curious emote; pass another for greetings and progress.</summary>
+    private void Say(string line, PipEmote emote = PipEmote.Curious, params ReplyBubbleWindow.Choice[] choices)
+    {
+        _bubble.Say(line, emote, choices); PositionBubble();
+    }
+
+    /// <summary>"How can I help you, Alex?" with what they chose to learn, to pick from. Nothing starts until they choose.</summary>
+    private void Greet()
+    {
+        if (Profile.Profile is not { PersonalizationEnabled: true } profile) { Say(Greeting, PipEmote.Hello); return; }
+        var name = profile.Name.Trim();
+        var topics = (profile.Learning ?? []).Take(3).ToArray();
+        if (topics.Length == 0)
+            Say(name.Length == 0 ? Greeting : $"How can I help you, {name}?", PipEmote.Hello, new ReplyBubbleWindow.Choice("Choose what to learn", true, ShowProfile));
+        else
+            Say(name.Length == 0 ? "What would you like to learn today?" : $"What would you like to learn today, {name}?", PipEmote.Hello,
+                [.. topics.Select(topic => new ReplyBubbleWindow.Choice(topic, true, () => _ = SubmitAsync(LearnerProfile.LessonQuestion(topic)))),
+                 new ReplyBubbleWindow.Choice("Change what I learn", false, ShowProfile)]);
+    }
 
     private void Wave(TimeSpan duration)
     {
@@ -285,7 +338,7 @@ public partial class MainWindow : Window
         _turnCancellation = cancellation;
         var entry = _session.Begin(clean);
         _pendingReply = entry;
-        Say("Thinking…");
+        Say("Thinking…", PipEmote.Thinking);
         _input.QuestionBox.Clear();
         OpenConversation();
         SetBusy(true);
@@ -335,7 +388,7 @@ public partial class MainWindow : Window
             }
             else
             {
-                answer = await _coach.AnswerAsync(ExcelContext.Compose(clean, context), _session.ProviderHistory(entry.TurnId), captured?.JpegBytes,
+                answer = await _coach.AnswerAsync(ExcelContext.Compose(clean, context, Profile.Profile), _session.ProviderHistory(entry.TurnId), captured?.JpegBytes,
                     captured is null ? null : "image/jpeg", token);
             }
             token.ThrowIfCancellationRequested();
@@ -346,8 +399,9 @@ public partial class MainWindow : Window
             SetBusy(false);
             // Remember where the reply and each step happen; showing a page sends Pip there.
             _replyCapture = captured is null ? null : captured with { JpegBytes = [] };
-            _replyTarget = answer.Target;
-            _stepTargets = answer.StepTargets ?? [];
+            // A step or reply the AI left without a place still points at what it names.
+            _replyTarget = answer.PlaceForReply;
+            _stepTargets = answer.PlacesForSteps;
             _requestedCells = cells;
             _bubble.ShowReply(answer.Reply, answer.Steps);
             PositionBubble();
@@ -557,7 +611,6 @@ public partial class MainWindow : Window
         finally { _checkingHighlight = false; }
     }
 
-    private void ClearHighlight_Click(object sender, RoutedEventArgs e) => ClearHighlight();
     private void ClearHighlight()
     {
         _highlightVersion++;
@@ -638,7 +691,6 @@ public partial class MainWindow : Window
         StopDictation(); SetBusy(false); Say($"I couldn’t hear you ({error}). You can type instead.");
     });
 
-    private void NewChat_Click(object sender, RoutedEventArgs e) => NewChat();
 
     internal void NewChat()
     {
@@ -647,7 +699,7 @@ public partial class MainWindow : Window
         _input.QuestionBox.Clear(); _saveDraft.Stop();
         _selectionEnabled = false; _bubble.UpdateSelection(null, ""); _bubble.Dismiss();
         OpenConversation();
-        Say(Greeting);
+        Greet();
     }
 
     private void PositionBubble()
@@ -678,6 +730,14 @@ public partial class MainWindow : Window
     }
 
     private void SaveConversation() => _store.Save(_session, _input.QuestionBox.Text);
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        // Owned windows (setup, input, card) close before OnClosed; nothing may reopen them from here on.
+        _closed = true;
+        if (_personalize is not null) _personalize.AppClosing = true;
+        base.OnClosing(e);
+    }
 
     protected override void OnClosed(EventArgs e)
     {

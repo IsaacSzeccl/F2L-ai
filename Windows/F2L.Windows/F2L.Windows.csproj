@@ -14,6 +14,7 @@
     <InternalsVisibleTo Include="F2L.Windows.Tests" />
     <Resource Include="Assets/Fonts/*.ttf" />
     <Resource Include="Assets/Pip/*.png" />
+    <Resource Include="Assets/Pip/Emotes/*.png" />
     <Resource Include="Assets/Pip/frames.json" />
     <None Update="Assets/Fonts/LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="System.Speech" Version="10.0.12" />

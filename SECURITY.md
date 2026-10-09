@@ -6,6 +6,8 @@ API requests use fixed HTTPS provider endpoints. The production HTTP clients ref
 
 Local signing uses a per-machine random password stored in `~/Library/Application Support/F2L/Signing/keychain-password`, with mode `600`. Signing keys and passwords must stay outside Git. Older local development commits contained a shared signing password; the publication snapshot excludes those commits, and the development Mac's password was rotated without replacing its certificate.
 
+The learner profile (`profile.json`) is personal data, not a credential: it is written with mode `600`, kept out of Git with the other per-user data, and never contains keys.
+
 ## Before committing or pushing
 
 Python 3 and Git are required:

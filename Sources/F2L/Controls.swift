@@ -121,17 +121,17 @@ class FlippedView: NSView {
     override var isFlipped: Bool { true }
 }
 
-/// Closure-backed menu item target.
+/// Closure-backed menu item target. The item keeps its action alive, so a menu rebuilt each time it opens frees the
+/// old ones.
 final class MenuAction: NSObject {
     private let handler: (NSMenuItem) -> Void
-    private static var retained: [MenuAction] = []
     private init(_ handler: @escaping (NSMenuItem) -> Void) { self.handler = handler }
 
     static func item(_ title: String, checked: Bool? = nil, handler: @escaping (NSMenuItem) -> Void) -> NSMenuItem {
         let action = MenuAction(handler)
-        retained.append(action)
         let item = NSMenuItem(title: title, action: #selector(run), keyEquivalent: "")
         item.target = action
+        item.representedObject = action
         if let checked { item.state = checked ? .on : .off }
         return item
     }

@@ -67,7 +67,7 @@ public enum Provider: String, CaseIterable, Sendable {
     // MARK: - What the learner is told (same wording on Windows)
 
     public func notConfigured() -> String {
-        "\(name) isn't configured. Put an active key in \(key.fileProperty) in local.settings.json (Settings shows where it is), then try again."
+        "\(name) isn't configured. Add your \(name) key in Settings (Pip’s ··· menu), then try again."
     }
     public func noReply() -> String { "\(name) sent back an empty reply. Please ask again." }
     public func unreadable() -> String { "\(name) returned a response F2L couldn't read. Please try again." }

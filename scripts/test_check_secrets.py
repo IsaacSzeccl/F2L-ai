@@ -30,7 +30,8 @@ class SecretChecks(unittest.TestCase):
 
     def test_private_file_names(self):
         for path in ["nested/local.settings.json", "nested/local.settings.json.bak", ".env.production",
-                     "signing.p12", "keychain-password", "diagnostics/window.jpg", "sessions/1.json"]:
+                     "signing.p12", "keychain-password", "diagnostics/window.jpg", "sessions/1.json",
+                     "nested/profile.json", "profile.json.bak", "profile.json.123.tmp"]:
             self.assertTrue(private_path(path), path)
 
     def test_staged_secret_stays_blocked_after_worktree_cleanup_or_deletion(self):

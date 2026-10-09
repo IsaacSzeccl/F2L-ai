@@ -2,6 +2,37 @@
 
 This log records the local implementation and design work through 8 October 2026. Entries describe the working checkout; they are not release tags or a claim that changes have been committed or pushed. Earlier work is grouped by milestone where individual edit times were not recorded. Git history remains the record of previously committed changes.
 
+## 9 October 2026 — Circling without being asked
+
+- **Pip circles the place even when the AI leaves its position out.** A step without its own place borrows the reply's place when it names it (or is the only step); otherwise F2L takes the name the instruction points at ("Click the Japan tile" → Japan, "Open the Insert tab" → Insert, "click A4" → A4) and finds it on screen itself through screen text, Accessibility or Excel. Keys ("Command+C") and descriptions with nothing to click are left alone. New `NamedPlace` on both apps, with matching tests.
+- The teaching prompt now also asks for a place whenever the reply tells the learner to act on something visible.
+- Mac: 101 Swift tests, render and secret checks pass. Windows mirrored, not compiled.
+
+## 9 October 2026 — Choosing what to learn, a clearer menu and real Settings
+
+- **Pip no longer offers to start a task by itself.** The plan step of the welcome now begins with *What do you want to learn?*: ideas for your kind of work as round chips (up to 6) and a box for your own. Pip's greeting offers those topics as buttons plus *Change what I learn*; nothing starts until you pick one.
+- **My learning & profile…** in the ··· menu reopens that page any time. Topic changes save straight away and Pip uses them on the next question (they are sent with your background).
+- **The ··· menu was simplified** and is rebuilt each time it opens: the AI list says *Key added* or *No key yet*, and *Clear the highlight* and *Put the input bar back* only appear when there is something to do. Reduce animation, Pip walks to what it's teaching, permissions and pointing diagnostics moved to Settings.
+- **Settings is now real settings:** pick your AI and paste or remove its key (saved in the private, Git-ignored settings file), two Pip switches, and on Mac what macOS allows F2L to do, with Allow… buttons and Reset permissions. Error messages now point to Settings instead of the settings file.
+- **macOS kept asking for permission** because test builds were signed ad-hoc. Every build now signs with the F2L Local Signing certificate when it exists, and the launcher rebuilds an app that lost it.
+- Mac: 96 Swift tests, the render check (now including Settings), the soak check and the secret scan pass. Windows mirrored, still not compiled here.
+
+## 9 October 2026 — Debugging and resource check
+
+- **Resource use measured** with the new `F2L --soak` check (no network, microphone or keyboard focus): resting Pip with a greeting 0.2% CPU and about 28 MB; a lesson step 0.2%; a circle with the walking Pip 0.6% and 36 MB; 50 more replies added no memory. Reading a window picture for a step takes 0.1–0.2 s and brings memory to about 110 MB while Apple Vision's text model is loaded. (Under the `timeout` command the first read waited about 30 s; launched normally it is 0.2 s.)
+- **Fixed from a full review of the uncommitted work:** starter-plan replies with the closing fence on the last line, or prose instead of JSON, are handled like teaching replies (and show the same message on both apps); an empty duplicate tool can no longer hide a good one on Mac; the offline plan keeps capitals ("KPI dashboard", "I need…", "IT support") instead of lowercasing; DeepSeek's reply length is an explicit setting instead of a comparison of prompt text; the profile is read once (and after setup) instead of from disk on every question; `--export-emotes` refuses to write accent-only images and finds the artwork folder itself. Windows: emotes and the welcome art use resource paths that work from any host, setup uses the injected AI client (and names its provider), and quitting while setup is open no longer reopens closed windows or marks setup as done.
+- 97 Swift tests, the render check and the soak check pass. Windows is still not compiled here.
+- **Cleanup:** removed code left over from the old chat panel and role chips (message author, time and status labels and their change events; the mood label per question type; the fixed role list; four unused colours) and the unused Windows key writer, on both apps where it existed. Deleted junk files (`.Rhistory`, `.DS_Store`, Python cache, old test logs and render folders) and the stale Windows `bin`/`obj` build folders from the old target. 95 Swift tests (two that only checked the removed labels are gone), the render, soak and secret checks pass.
+
+## 8 October 2026 — First-time setup, personal starter plans and Pip emotes
+
+- **Welcome window (first launch, then "Your profile & starter plan…"):** three steps, *Your world* (name, role, goal), *Your pace* (AI experience, focus, tools already used, a personalisation switch) and *Your path* (2–3 recommended tools, a 3–4 step workflow with a human review step, and a first task). Optional and skippable; Forget my profile removes it. Built by a ChatGPT session and finished here.
+- **Starter plans:** Build my plan sends only role, goal, experience, focus and existing tools (no name, no screenshot) to the chosen provider with a dedicated prompt; replies are validated and limited to F2L's built-in tool catalogue (Excel, Notion, Canva, Gemini Notebook, Zapier, GitHub Copilot), so tools and links can't be invented. Keep it local makes a draft without AI.
+- **Personal help:** questions carry the background as user-supplied data while personalisation is on; Pip greets by name and offers the plan's first task in the greeting card ("Try my first task").
+- **Pip emotes instead of emoji:** six emotes (hello, happy, cheer, thinking, curious, focused) painted from Pip's own poses with drawn accents (`PipEmote`, exported to `Assets/Pip/Emotes` for Windows by `F2L --export-emotes`), shown on greetings, Thinking, notices, ticked steps, finished lessons and the setup window. New art `welcome-journey.png` illustrates the setup window. Asset manifest, inventory and ARTWORK.md updated (frames.json also listed now).
+- **Simpler, rounder, work-first (after the owner's review):** the role quick-picks and the focus chips are gone; the user types what they do at work and what they'd like help with at work, and the kind of help is inferred from that text (`inferFocus`). Steps are now *Your work / Your AI / Your plan* with numbered circles, pill fields and buttons, round experience cards with Pip emotes, and Pip's illustration in a circle.
+- Validation on the owner's Mac: build, Swift tests and the render check (including the three setup steps) pass. Windows mirrors everything but is not compiled here.
+
 ## 8 October 2026 — Credential protection and GitHub publication
 
 - Reviewed the Mac/Windows companion changes and prepared a clean publication snapshot, excluding local signing-password history.

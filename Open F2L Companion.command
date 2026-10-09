@@ -6,13 +6,12 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 APP="$ROOT/build/F2L.app"
 cd "$ROOT"
 
-# Sign with F2L's private certificate when scripts/setup-signing.sh has made one, so macOS keeps F2L's permissions.
-if [[ -z "${SIGN_IDENTITY:-}" && -f "$HOME/Library/Application Support/F2L/Signing/F2L-signing.keychain-db" ]]; then
-  export SIGN_IDENTITY="F2L Local Signing"
-fi
-
-# Rebuild only for real changes (Finder's .DS_Store files don't count): a rebuild can make macOS ask for permissions again.
-if [[ ! -x "$APP/Contents/MacOS/F2L" ]] || [[ -n "$(find Sources App Package.swift Windows/F2L.Windows/Assets -newer "$APP/Contents/MacOS/F2L" -type f ! -name .DS_Store -print -quit)" ]]; then
+# Rebuild only for real changes (Finder's .DS_Store files don't count), or when the app lost F2L's own signature (an
+# ad-hoc build makes macOS ask for permissions again). build-app.sh signs with F2L's private certificate.
+SIGNING="$HOME/Library/Application Support/F2L/Signing/F2L-signing.keychain-db"
+if [[ ! -x "$APP/Contents/MacOS/F2L" ]] \
+  || [[ -n "$(find Sources App Package.swift Windows/F2L.Windows/Assets -newer "$APP/Contents/MacOS/F2L" -type f ! -name .DS_Store -print -quit)" ]] \
+  || { [[ -f "$SIGNING" ]] && codesign -dvv "$APP" 2>&1 | grep -q "Signature=adhoc"; }; then
   echo "Building F2L (first run or code changed)…"
   "$ROOT/scripts/build-app.sh"
 fi

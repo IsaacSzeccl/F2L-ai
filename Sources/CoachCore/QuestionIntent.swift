@@ -21,13 +21,4 @@ public enum QuestionIntent: Sendable {
         if matches(quickFactPattern) { return .quickFact }
         return .procedural
     }
-
-    public var label: String {
-        switch self {
-        case .quickFact: "Friendly"
-        case .procedural: "Focused"
-        case .multiPart: "Thinking"
-        case .clarificationNeeded: "Curious"
-        }
-    }
 }

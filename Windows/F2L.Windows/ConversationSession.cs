@@ -1,30 +1,19 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Globalization;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace F2L.Windows;
 
-public sealed class ConversationEntry : INotifyPropertyChanged
+/// <summary>One message. These five fields are the whole conversation file, the same as on Mac.</summary>
+public sealed class ConversationEntry
 {
     private string _text = "";
     private string _status = "complete";
     public Guid TurnId { get; set; }
     public string Role { get; set; } = "assistant";
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
-    public string Text { get => _text; set { _text = value ?? ""; Changed(); } }
-    public string Status { get => _status; set { _status = value ?? "complete"; Changed(); Changed(nameof(CanReplay)); Changed(nameof(StatusLabel)); } }
-    // Display-only values stay out of conversation.json, so Mac and Windows write the same five fields.
-    [JsonIgnore] public bool IsUser => Role == "user";
-    [JsonIgnore] public bool CanReplay => Role == "assistant" && Status == "complete";
-    [JsonIgnore] public string Author => IsUser ? "You" : "Pip";
-    [JsonIgnore] public string TimeLabel => CreatedAt.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture);
-    [JsonIgnore] public string StatusLabel => Status switch { "pending" => "Thinking", "stopped" => "Stopped", "error" => "Couldn't finish", _ => "" };
-    public event PropertyChangedEventHandler? PropertyChanged;
-    private void Changed([CallerMemberName] string? property = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+    public string Text { get => _text; set => _text = value ?? ""; }
+    public string Status { get => _status; set => _status = value ?? "complete"; }
 }
 
 internal sealed class ConversationSession

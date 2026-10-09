@@ -29,7 +29,8 @@ internal static class Program
             try
             {
                 TestCellIdentity(); TestGeometry(); TestPersistence(); TestForegroundMemory();
-                TestDirectTeaching(); TestCompanionPlacement(); TestSpriteTextures(); TestProviderParsing();
+                TestDirectTeaching(); TestNamedPlaces(); TestCompanionPlacement(); TestSpriteTextures(); TestProviderParsing();
+                await TestProfilesAsync();
                 await TestCoachRetriesAsync();
                 await TestOverlayAsync();
                 await TestTeachingCompanionAsync();
@@ -67,6 +68,51 @@ internal static class Program
     {
         if (!condition) throw new InvalidOperationException("FAIL: " + message);
         _checks++;
+    }
+
+    private static async Task TestProfilesAsync()
+    {
+        var profile = new LearnerProfile { Name = "Alex", Role = "Operations", Goal = "Review weekly figures.", Focus = "analyze", ExistingTools = ["excel"] };
+        var store = new ProfileStore(Path.Combine(_scratch, "profile.json"));
+        Check(!store.Load().OnboardingComplete, "missing profile offers first-time setup");
+        var plan = StarterPlan.Draft(profile);
+        store.Save(new() { Profile = profile, Plan = plan, OnboardingComplete = true });
+        Check(store.Load().Profile?.Role == "Operations" && store.Load().Plan?.Source == "local", "role and local plan survive a fresh load");
+        var learner = new LearnerProfile { Focus = "analyze", Learning = [" Pivot tables ", "pivot tables", "", "a", "b", "c", "d", "e", "f"] }.Normalized();
+        Check(learner.Learning.Length == LearnerProfile.MaxLearning && learner.Learning[0] == "Pivot tables", "what they want to learn is tidied and capped");
+        Check(learner.BackgroundJson.Contains("\"learning\":[\"Pivot tables\""), "what they want to learn is sent with the background");
+        var ideas = LearnerProfile.LearningIdeas(new LearnerProfile { Focus = "analyze", Learning = ["My own topic"] }, plan);
+        Check(ideas[0] == "My own topic" && ideas.Contains("Pivot tables") && ideas.Distinct().Count() == ideas.Length, "their own topics come first, without repeats");
+        var older = System.Text.Json.JsonSerializer.Deserialize<LearnerProfile>("{\"role\":\"Ops\"}", ProfileStore.Json)!;
+        Check(older.Role == "Ops" && older.Learning.Length == 0, "profiles saved before learning topics still load");
+        Check(!plan.Summary.Contains("..") && plan.Tools[0].Id == "excel", "local draft prefers existing tools and handles punctuation");
+        Check(profile.CoachingContext.Contains("Operations") && !profile.CoachingContext.Contains("Alex"), "coaching gets explicit background without display name");
+        profile.PersonalizationEnabled = false;
+        Check(profile.CoachingContext.Length == 0, "opt-out prevents profile context on future questions");
+        profile.ExistingTools = ["excel", "excel", "untrusted"];
+        Check(profile.Normalized().ExistingTools.SequenceEqual(new[] { "excel" }), "unknown and duplicate tools are removed");
+        store.Forget();
+        Check(store.Load() is { OnboardingComplete: true, Profile: null, Plan: null }, "forget removes both profile and plan without reopening setup");
+        File.WriteAllText(store.FilePath, "broken");
+        Check(!store.Load().OnboardingComplete, "corrupt profile recovers to setup");
+        var text = JsonSerializer.Serialize(plan with { Source = "spoofed" }, ProfileStore.Json);
+        Check(StarterPlan.Parse(text, "DeepSeek").Source == "DeepSeek", "model cannot spoof plan source");
+        try { StarterPlan.Parse(text.Replace("excel", "https://untrusted.invalid"), "test"); Check(false, "invented tool should be rejected"); }
+        catch (CoachRequestException) { Check(true, "invented tool is rejected"); }
+        foreach (var provider in Enum.GetValues<Provider>())
+        {
+            var body = CoachClient.RequestBody(StarterPlan.Question(profile), [], null, null, true, provider, systemPrompt: StarterPlan.SystemPrompt);
+            using var json = JsonDocument.Parse(body);
+            Check(!body.Contains("image") && json.RootElement.GetProperty("messages").GetArrayLength() == (provider == Provider.Claude ? 1 : 2), "starter plan is text-only with no conversation history");
+        }
+        var stub = new StubHandler(Completion(text));
+        var result = await new CoachClient(new HttpClient(stub), () => "sk-test").StarterPlanAsync(profile, CancellationToken.None);
+        Check(result.Source == "DeepSeek" && stub.Bodies.Count == 1 && !stub.Bodies[0].Contains("Alex"), "starter plan uses the selected client and omits display name");
+        // Closing setup writes only the skip marker, never an unfinished profile.
+        File.Delete(store.FilePath);
+        var window = new PersonalizeWindow(store, new CoachClient(new HttpClient(new StubHandler()), () => ""));
+        window.Show(); window.Close();
+        Check(store.Load() is { OnboardingComplete: true, Profile: null, Plan: null }, "skip setup is persisted without a partial profile");
     }
 
     private static void TestCellIdentity()
@@ -121,7 +167,7 @@ internal static class Program
         for (var i = 0; i < 260; i++) { var reply = session.Begin("question " + i); reply.Status = "complete"; }
         store.Save(session, "");
         var capped = new ConversationSession(); store.Load(capped);
-        Check(capped.Entries.Count == 500 && capped.Entries[0].IsUser, "500-message cap preserves turn pairs");
+        Check(capped.Entries.Count == 500 && capped.Entries[0].Role == "user", "500-message cap preserves turn pairs");
     }
 
     private static string Completion(string content) => JsonSerializer.Serialize(new
@@ -305,6 +351,27 @@ internal static class Program
         Check(!ComposerKeys.ShouldSend(Key.ImeProcessed, ModifierKeys.None, false), "IME processed keys pass through to typing");
     }
 
+    // Same cases as NamedPlaces on Mac.
+    private static void TestNamedPlaces()
+    {
+        foreach (var (text, name) in new[] {
+            ("Click the Japan tile in the Recents row.", "Japan"), ("Open the Insert tab.", "Insert"),
+            ("Click Pause for 15 min to stop for a while.", "Pause"), ("You can find it in the Home tab.", "Home"),
+            ("Choose \u201CRecommended Charts\u201D from the list.", "Recommended Charts"), ("Hold Shift and click A4.", "A4"),
+            ("Select A1:A4 first.", "A1:A4") })
+            Check(NamedPlace.Label(text) == name, $"finds the named place in: {text}");
+        foreach (var text in new[] { "This is a VPN app window. It shows you connected through Melbourne.", "Press Command+C to copy.",
+            "Click the empty cell under your numbers, then type =SUM(B2:B10).", "Hold Command and drag from D1 to D4." })
+            Check(NamedPlace.Label(text) is null, $"names nothing in: {text}");
+        Check(NamedPlace.Target("Click A4.")?.Cell == "A4" && NamedPlace.Target("Select A1:A4.")?.Cell == "A1", "named cells are checked with Excel");
+        var japan = new ScreenTarget(1, 1, 9, 9, "Japan"); var insert = new ScreenTarget(2, 2, 8, 8, "Insert");
+        Check(new CoachAnswer("Switch to Japan.", japan, ["Click the Japan tile."]).PlacesForSteps[0] == japan, "the only step borrows the reply's place");
+        var places = new CoachAnswer("Insert a chart.", insert, ["Open the Insert tab.", "Click Recommended Charts.", "Click OK."], [null, null, japan]).PlacesForSteps;
+        Check(places[0] == insert && places[1]?.Label == "Recommended Charts" && places[2] == japan, "steps without a place still point somewhere");
+        Check(new CoachAnswer("Click the Japan tile in the Recents row.", null).PlaceForReply?.Label == "Japan"
+            && new CoachAnswer("This is a VPN app.", null).PlaceForReply is null, "a reply that says what to click points at it");
+    }
+
     private static void TestDirectTeaching()
     {
         Check(TeachingReply.Clean("Great question! Sure! Select A1. Let me know if you need more help.") == "Select A1.", "stock preamble and trailing invitation removed");
@@ -419,8 +486,7 @@ internal static class Program
         try
         {
             window.Show(); window.OpenConversation(); await Pump();
-            var sharing = (MenuItem)window.FindName("ScreenSharingMenuItem");
-            sharing.IsChecked = true; sharing.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            window.SetScreenSharing(true);
             var question = window.ComposerWindow.QuestionBox;
             question.Text = "Help me with the app I'm using";
             var key = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(question), 0, Key.Enter)
@@ -547,17 +613,15 @@ internal static class Program
         var work = NativeDesktop.WorkAreaAt(new Point(100, 100));
         window.UpdateTeachingCompanion(new Rect(work.Left + 40, work.Top + 40, 80, 24)); await Pump();
         Check(!window.IsPipFollowing, "by default Pip stays in its corner and only the circle shows the place");
-        var followOn = (MenuItem)window.FindName("FollowTargetsMenuItem");
-        followOn.IsChecked = true; followOn.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        window.SetFollowTargets(true);
         window.UpdateTeachingCompanion(new Rect(work.Left + 40, work.Top + 40, 80, 24)); await Pump();
         Check(window.IsPipFollowing, "with following turned on, Pip stands beside a teaching target");
         window.MinimiseConversation();
         Check(!window.IsPipFollowing && ((FrameworkElement)window.FindName("CompanionPanel")).Visibility == Visibility.Visible,
             "minimising returns Pip so the conversation remains reachable");
         window.OpenConversation(); await Pump();
-        var followMenu = (MenuItem)window.FindName("FollowTargetsMenuItem");
-        followMenu.IsChecked = false; followMenu.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-        Check(!window.IsPipFollowing, "manual follow control keeps Pip at its chosen home");
+        window.SetFollowTargets(false);
+        Check(!window.IsPipFollowing, "turning following off in Settings keeps Pip at its chosen home");
 
         // A lesson: one step at a time, ticked from Excel's real selection.
         var lesson = window.ReplyBubble;

@@ -247,7 +247,7 @@ func withScratch(_ body: (URL) throws -> Void) rethrows {
             restored.onAppend = { appended += $0 }
             #expect(store.load(into: restored) == "draft survives")
             #expect(restored.entries.count == 6 && appended.count == 6)
-            #expect(restored.entries[0].text == "Where is A1?" && restored.entries[0].isUser)
+            #expect(restored.entries[0].text == "Where is A1?" && restored.entries[0].role == "user")
             #expect(restored.entries.allSatisfy { $0.status != "pending" }) // a quit mid-reply never restores a spinner
             #expect(restored.entries[5].text == ConversationSession.stoppedText)
             #expect(restored.entries[1].createdAt.timeIntervalSince(first.createdAt).magnitude < 0.001)
@@ -276,7 +276,7 @@ func withScratch(_ body: (URL) throws -> Void) rethrows {
             #expect(store.save(session, draft: ""))
             let capped = ConversationSession()
             _ = store.load(into: capped)
-            #expect(capped.entries.count == 500 && capped.entries[0].isUser && capped.entries[0].text == "question 13")
+            #expect(capped.entries.count == 500 && capped.entries[0].role == "user" && capped.entries[0].text == "question 13")
         }
     }
 
@@ -318,27 +318,6 @@ func withScratch(_ body: (URL) throws -> Void) rethrows {
             #expect(ConversationStore(url: url).load(into: session) == "" && session.entries.isEmpty)
         }
     }
-
-    @Test func labelsMatchWindows() {
-        let entry = ConversationEntry(turnID: UUID(), role: "assistant", text: "x", status: "error")
-        #expect(entry.author == "Pip" && entry.statusLabel == "Couldn't finish" && !entry.canReplay)
-        entry.status = "complete"
-        #expect(entry.canReplay && entry.statusLabel == "")
-        #expect(ConversationEntry(turnID: UUID(), role: "user").author == "You")
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        #expect(entry.timeLabel == formatter.string(from: entry.createdAt))
-    }
-
-    @Test func editsNotifyTheView() {
-        let entry = ConversationEntry(turnID: UUID())
-        var changes = 0
-        entry.onChange = { _ in changes += 1 }
-        entry.text = "a"
-        entry.status = "complete"
-        #expect(changes == 2)
-    }
 }
 
 // Same cases as TestDirectTeaching on Windows.
@@ -364,7 +343,6 @@ func withScratch(_ body: (URL) throws -> Void) rethrows {
         #expect(QuestionIntent.classify("What is a pivot? Why use one?") == .multiPart)
         #expect(QuestionIntent.classify("pivot tables") == .procedural)
         #expect(QuestionIntent.classify("圈出A1") == .procedural)
-        #expect([QuestionIntent.quickFact, .procedural, .multiPart, .clarificationNeeded].map(\.label) == ["Friendly", "Focused", "Thinking", "Curious"])
     }
 }
 

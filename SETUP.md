@@ -10,7 +10,7 @@ Teammates setting up their own computer should follow [docs/TEAM_SETUP.md](docs/
 | **DeepSeek** (required) | Answers, and reading the shared screen picture | https://platform.deepseek.com → API keys | F2L uses `deepseek-flash` with thinking off. Add a small balance; a 402 error in Pip means it ran out. |
 | **ElevenLabs** (optional) | A natural voice for spoken replies | https://elevenlabs.io → Profile → API key | Voice "George" (`JBFqnCBsd6RMkjVDRZzb`), model `eleven_flash_v2_5`. Without a key, F2L uses the computer's own voice. The free plan is non-commercial only. |
 
-Put them in `local.settings.json` (see [README › Keys](README.md#ai-providers-and-keys) for every place F2L looks). The quickest way: open Pip, choose **··· › Settings… › Show file**, and fill in the file it creates:
+Put them in `local.settings.json` (see [README › Keys](README.md#ai-providers-and-keys) for every place F2L looks). The quickest way: open Pip, choose **··· › Settings…**, pick your AI and paste its key. Or fill in the file yourself (**Show the settings file** creates it):
 
 ```json
 { "DeepSeekApiKey": "sk-…", "ElevenLabsApiKey": "" }
@@ -26,10 +26,9 @@ macOS ties Screen Recording and Accessibility permission to how an app is signed
 
 ```bash
 scripts/setup-signing.sh
-echo 'export SIGN_IDENTITY="F2L Local Signing"' >> ~/.zshrc && source ~/.zshrc
 ```
 
-Then rebuild (the launcher or `scripts/build-app.sh`) and grant F2L's permissions one last time. The script creates a private F2L signing certificate in its own keychain file under `~/Library/Application Support/F2L/Signing` (delete that folder to undo). Its random password is stored beside it in `keychain-password` with owner-only permissions; keep the entire Signing folder private. If you have an Apple Development certificate you can use it instead: `export SIGN_IDENTITY="Apple Development: you@example.com (TEAMID)"`.
+Every build then signs with it automatically (no environment variable needed). Rebuild (the launcher or `scripts/build-app.sh`) and grant F2L's permissions one last time. The script creates a private F2L signing certificate in its own keychain file under `~/Library/Application Support/F2L/Signing` (delete that folder to undo). Its random password is stored beside it in `keychain-password` with owner-only permissions; keep the entire Signing folder private. If you have an Apple Development certificate you can use it instead: `export SIGN_IDENTITY="Apple Development: you@example.com (TEAMID)"`.
 
 ## 3. Mac: permissions (5 min)
 

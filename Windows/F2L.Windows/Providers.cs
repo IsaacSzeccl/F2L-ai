@@ -67,7 +67,7 @@ internal static class Providers
 
     // What the learner is told (same wording on Mac).
     internal static string NotConfigured(this Provider p) =>
-        $"{p.Name()} isn't configured. Put an active key in {p.KeyProperty()} in local.settings.json (Settings shows where it is), then try again.";
+        $"{p.Name()} isn't configured. Add your {p.Name()} key in Settings (Pip’s ··· menu), then try again.";
     internal static string NoReply(this Provider p) => $"{p.Name()} sent back an empty reply. Please ask again.";
     internal static string Unreadable(this Provider p) => $"{p.Name()} returned a response F2L couldn't read. Please try again.";
     internal static string TooSlow(this Provider p) => $"{p.Name()} took too long to respond. Check your connection and try again.";

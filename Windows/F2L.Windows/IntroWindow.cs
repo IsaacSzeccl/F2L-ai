@@ -52,7 +52,7 @@ internal sealed class IntroWindow : Window
         AutomationProperties.SetName(_stage, $"{TitleText}. {Subtitle}. Click to skip.");
         // An accessible skip button also provides an explicit UI Automation invoke target.
         _skip = new Button { Content = "Skip intro", Opacity = 0.65, Background = Brushes.Transparent, Foreground = Brushes.White,
-            BorderThickness = new Thickness(0), FontSize = 12, Padding = new Thickness(12, 8), Cursor = System.Windows.Input.Cursors.Hand };
+            BorderThickness = new Thickness(0), FontSize = 12, Padding = new Thickness(12, 8, 12, 8), Cursor = System.Windows.Input.Cursors.Hand };
         Canvas.SetLeft(_skip, Width - 100); Canvas.SetTop(_skip, 24);
         _skip.Click += (_, _) => Finish(); _stage.Children.Add(_skip);
         _pip.SetReducedMotion(reducedMotion);

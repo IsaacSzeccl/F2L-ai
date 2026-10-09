@@ -219,6 +219,27 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     let client = CoachClient(apiKey: { "sk-test" }, session: StubURLProtocol.session)
     let history: [(role: String, content: String)] = [("user", "Hey what can you see"), ("assistant", "I can't see your screen right now.")]
 
+    @Test func starterPlanUsesSeparateTextOnlyRequest() async throws {
+        StubURLProtocol.reset([(200, completion(starterPlanFixture))])
+        var p = LearnerProfile(); p.name = "Private name"; p.role = "Operations"
+        let plan = try await client.starterPlan(for: p)
+        #expect(plan.source == "DeepSeek")
+        let requests = StubURLProtocol.requests
+        #expect(requests.count == 1)
+        let messages = try #require(requests.first?["messages"] as? [[String: Any]])
+        #expect(messages.count == 2 && messages.first?["content"] as? String == StarterPlan.systemPrompt)
+        let question = try #require(messages.last?["content"] as? String)
+        #expect(question.contains("Operations") && !question.contains("Private name"))
+    }
+
+    @Test func missingPlanKeyNeverCallsTheNetwork() async {
+        StubURLProtocol.reset([])
+        await #expect(throws: CoachRequestError.self) {
+            try await CoachClient(apiKey: { "" }, session: StubURLProtocol.session).starterPlan(for: LearnerProfile())
+        }
+        #expect(StubURLProtocol.requests.isEmpty)
+    }
+
     @Test func blankJSONModeReplyIsAskedAgainWithoutJSONMode() async throws {
         StubURLProtocol.reset([(200, completion("       ")), (200, completion(#"{"reply":"Select your data, then choose Insert › Pie.","target":null}"#))])
         let answer = try await client.answer(question: "Hey please teach me how to build a pi chart in excel", history: history, jpeg: nil)
@@ -310,6 +331,15 @@ struct LiveDeepSeek {
             // Switching keeps every key and model already in the file.
             let kept = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: String])
             #expect(kept["ClaudeApiKey"] == "k" && kept["ClaudeModel"] == "claude-sonnet-5-5")
+            // Settings saves a key next to the others, readable only by this user, and an empty one removes it.
+            #expect(LocalSettings.setKey(.gemini, " g-key \n", file: file))
+            #expect(LocalSettings.read(.gemini, environment: [:], file: file, keychain: { _ in "" }) == "g-key")
+            #expect(LocalSettings.read(.claude, environment: [:], file: file, keychain: { _ in "" }) == "k")
+            let mode = try FileManager.default.attributesOfItem(atPath: file.path)[.posixPermissions] as? NSNumber
+            #expect(mode?.intValue == 0o600)
+            #expect(LocalSettings.setKey(.gemini, "", file: file))
+            #expect(LocalSettings.read(.gemini, environment: [:], file: file, keychain: { _ in "" }) == "")
+            #expect(LocalSettings.provider(file: file) == .gemini)
             try Data(#"{"Provider":"chatgpt"}"#.utf8).write(to: file)
             #expect(LocalSettings.provider(file: file) == .openAI)
             try Data(#"{"Provider":"something else"}"#.utf8).write(to: file)
@@ -344,7 +374,7 @@ struct LiveDeepSeek {
         #expect(openAI["temperature"] == nil && openAI["max_completion_tokens"] as? Int == 4000 && openAI["reasoning_effort"] as? String == "minimal")
         #expect(try body(.openAI, model: "gpt-4.1")["reasoning_effort"] == nil)
         #expect(try body(.gemini, model: "gemini-2.5-pro")["model"] as? String == "gemini-2.5-pro")
-        #expect(CoachClient.explain(status: 401, body: Data(), provider: .gemini).contains("GeminiApiKey"))
+        #expect(CoachClient.explain(status: 401, body: Data(), provider: .gemini).contains("Gemini key in Settings"))
         #expect(CoachClient.explain(status: 404, body: Data(), provider: .openAI, model: "gpt-x").contains("OpenAIModel"))
         // Provider error bodies are untrusted and can echo credentials.
         #expect(CoachClient.explain(status: 400, body: Data(#"[{"error":{"message":"API key not valid"}}]"#.utf8), provider: .gemini).contains("Check the selected model"))

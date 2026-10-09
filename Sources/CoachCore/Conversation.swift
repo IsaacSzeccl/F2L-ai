@@ -6,10 +6,8 @@ public final class ConversationEntry: Codable, Identifiable, @unchecked Sendable
     public var turnID: UUID
     public var role: String
     public var createdAt: Date
-    public var text: String { didSet { onChange?(self) } }
-    public var status: String { didSet { onChange?(self) } }
-    /// Called whenever text or status changes, so the view can refresh just this message.
-    public var onChange: ((ConversationEntry) -> Void)?
+    public var text: String
+    public var status: String
 
     public init(turnID: UUID, role: String = "assistant", text: String = "", status: String = "complete", createdAt: Date = Date()) {
         self.turnID = turnID
@@ -20,27 +18,6 @@ public final class ConversationEntry: Codable, Identifiable, @unchecked Sendable
     }
 
     public var id: ObjectIdentifier { ObjectIdentifier(self) }
-    public var isUser: Bool { role == "user" }
-    public var canReplay: Bool { role == "assistant" && status == "complete" }
-    public var author: String { isUser ? "You" : "Pip" }
-    public var statusLabel: String {
-        switch status {
-        case "pending": "Thinking"
-        case "stopped": "Stopped"
-        case "error": "Couldn't finish"
-        default: ""
-        }
-    }
-    public var timeLabel: String { Self.timeFormatter.string(from: createdAt) }
-
-    // One shared formatter: making a DateFormatter per message is slow. Formatting is thread-safe.
-    private static let timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "HH:mm"
-        return formatter
-    }()
-
     enum CodingKeys: String, CodingKey {
         case turnID = "TurnId", role = "Role", createdAt = "CreatedAt", text = "Text", status = "Status"
     }
@@ -94,7 +71,7 @@ public final class ConversationSession {
     public static let pendingText = "Thinking…"
     static let stoppedText = "Reply stopped. Your question is still here; you can continue below."
     public private(set) var entries: [ConversationEntry] = []
-    /// Called after entries are added (not for edits; those use ConversationEntry.onChange).
+    /// Called after entries are added.
     public var onAppend: (([ConversationEntry]) -> Void)?
 
     public init() {}

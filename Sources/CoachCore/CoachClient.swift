@@ -67,7 +67,8 @@ public struct CoachClient: Sendable {
         {"reply":"Select cell A1.","steps":[],"target":{"cell":"A1","label":"A1","left":120,"top":210,"right":180,"bottom":228}}.
         The host checks cells with Excel where it can. Each step can point at its own place: write that step as
         {"text":"Open the Insert tab.","target":{"left":300,"top":40,"right":350,"bottom":60,"label":"Insert"}} instead
-        of a plain string. Give a target for every step whose place is visible; never guess a place you cannot see.
+        of a plain string. Give a target for every step whose place is visible, and for the reply whenever it tells the learner
+        to act on something visible; never guess a place you cannot see.
         Positions read from a screenshot are approximate; never claim an exact verified match.
         Use short paragraphs with blank lines for longer explanations so the learner can follow the reply.
         """
@@ -101,7 +102,8 @@ public struct CoachClient: Sendable {
 
     /// `jsonMode` asks for a JSON object where the provider supports it; the retry after an empty reply leaves it off.
     public static func requestBody(question: String, history: [(role: String, content: String)], jpeg: Data?, jsonMode: Bool = true,
-                                   provider: Provider = .deepSeek, model: String? = nil) throws -> Data {
+                                   provider: Provider = .deepSeek, model: String? = nil, systemPrompt: String = teachingPrompt,
+                                   maxTokens: Int? = nil) throws -> Data {
         let model = (model?.isEmpty == false ? model! : provider.defaultModel)
         let past: [[String: Any]] = history.suffix(20).map { ["role": $0.role, "content": $0.role == "assistant" ? historyReply($0.content) : $0.content] }
         let image = jpeg.flatMap { $0.isEmpty ? nil : $0.base64EncodedString() }
@@ -113,14 +115,14 @@ public struct CoachClient: Sendable {
             let body: [String: Any] = [
                 "model": model,
                 "max_tokens": 4096,
-                "system": teachingPrompt,
+                "system": systemPrompt,
                 "messages": past + [["role": "user", "content": content]],
                 "output_config": ["effort": "low"], // quick, short teaching replies
                 "fallbacks": "default", // answered by another Claude model if this one declines
             ]
             return try JSONSerialization.data(withJSONObject: body)
         }
-        var messages: [[String: Any]] = [["role": "system", "content": teachingPrompt]] + past
+        var messages: [[String: Any]] = [["role": "system", "content": systemPrompt]] + past
         if let image {
             var picture: [String: Any] = ["url": "data:image/jpeg;base64,\(image)"]
             if provider == .deepSeek || provider == .openAI { picture["detail"] = "high" }
@@ -133,7 +135,7 @@ public struct CoachClient: Sendable {
         case .deepSeek:
             body["thinking"] = ["type": "disabled"]
             body["temperature"] = 0.2
-            body["max_tokens"] = 650
+            body["max_tokens"] = maxTokens ?? 650 // short teaching replies; a starter plan asks for more
         case .openAI:
             // Reasoning models only take the default temperature and count their reasoning in this limit.
             body["max_completion_tokens"] = 4000
@@ -172,6 +174,22 @@ public struct CoachClient: Sendable {
 
     private func send(_ current: CoachSettings, question: String, history: [(role: String, content: String)], jpeg: Data?,
                       jsonMode: Bool) async throws -> CoachAnswer? {
+        let data = try await response(current, question: question, history: history, jpeg: jpeg, jsonMode: jsonMode)
+        return try Self.parse(responseBody: data, provider: current.provider)
+    }
+
+    /// Explicit, text-only setup request. No screenshot or conversation history is collected.
+    public func starterPlan(for profile: LearnerProfile) async throws -> StarterPlan {
+        let current = settings()
+        guard !current.apiKey.isEmpty else { throw CoachRequestError(current.provider.notConfigured()) }
+        let data = try await response(current, question: StarterPlan.question(for: profile), history: [], jpeg: nil,
+                                      jsonMode: true, systemPrompt: StarterPlan.systemPrompt, maxTokens: 2000)
+        guard let text = try Self.responseText(data, provider: current.provider) else { throw CoachRequestError(current.provider.noReply()) }
+        return try StarterPlan.parse(text, provider: current.provider.name)
+    }
+
+    private func response(_ current: CoachSettings, question: String, history: [(role: String, content: String)], jpeg: Data?,
+                          jsonMode: Bool, systemPrompt: String = teachingPrompt, maxTokens: Int? = nil) async throws -> Data {
         let provider = current.provider
         var request = URLRequest(url: provider.endpoint)
         request.httpMethod = "POST"
@@ -184,7 +202,7 @@ public struct CoachClient: Sendable {
             request.setValue("Bearer \(current.apiKey)", forHTTPHeaderField: "Authorization")
         }
         request.httpBody = try Self.requestBody(question: question, history: history, jpeg: jpeg, jsonMode: jsonMode,
-                                                provider: provider, model: current.model)
+                                                provider: provider, model: current.model, systemPrompt: systemPrompt, maxTokens: maxTokens)
 
         let data: Data, response: URLResponse
         do {
@@ -205,11 +223,16 @@ public struct CoachClient: Sendable {
         guard (200..<300).contains(status) else {
             throw CoachRequestError(Self.explain(status: status, body: data, provider: provider, model: current.model))
         }
-        return try Self.parse(responseBody: data, provider: provider)
+        return data
     }
 
     /// Reads a reply. Returns nil when it is blank or has no "reply", so the caller can ask again.
     public static func parse(responseBody data: Data, provider: Provider = .deepSeek) throws -> CoachAnswer? {
+        guard let text = try responseText(data, provider: provider) else { return nil }
+        return try readReply(text, provider: provider)
+    }
+
+    static func responseText(_ data: Data, provider: Provider) throws -> String? {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw CoachRequestError(provider.unreadable()) }
         var text: String?
         if provider == .claude {
@@ -228,7 +251,7 @@ public struct CoachClient: Sendable {
             }
         }
         guard let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
-        return try readReply(text, provider: provider)
+        return text
     }
 
     static let fenceStart = try! NSRegularExpression(pattern: #"\A```[A-Za-z]*"#)
@@ -265,10 +288,10 @@ public struct CoachClient: Sendable {
 
     /// The question as sent to the model: the learner's words, then which computer they use and, for desktop Excel,
     /// what Excel reports about the selection. Only the learner's words are saved in the conversation.
-    public static func compose(question: String, platform: String, excel: ExcelContext?) -> String {
+    public static func compose(question: String, platform: String, excel: ExcelContext?, profile: LearnerProfile? = nil) -> String {
         var context = "Learner's computer: \(platform)."
         if let excel { context += " " + excel.promptLine }
-        return question + "\n\n(" + context + ")"
+        return question + "\n\n(" + context + ")" + (profile?.coachingContext ?? "")
     }
 
     static func parseTarget(_ value: Any?) -> ScreenTarget? {
@@ -298,7 +321,7 @@ public struct CoachClient: Sendable {
     static func explain(status: Int, body: Data, provider: Provider = .deepSeek, model: String? = nil) -> String {
         let name = provider.name, model = model ?? provider.defaultModel
         return switch status {
-        case 401, 403: "\(name) rejected the configured API key (\(status)). Replace \(provider.key.fileProperty) in local.settings.json with an active \(name) API key, save the file, then try again."
+        case 401, 403: "\(name) rejected the configured API key (\(status)). Paste an active \(name) key in Settings (Pip’s ··· menu), then try again."
         case 402: "\(name) reports that the account has no available balance (402). Check the account's API balance, then try again."
         case 404: "\(name) couldn't find the requested model or endpoint (404). F2L is set to \(model); put a model your account can use in \(provider.modelProperty) in local.settings.json."
         case 429: "\(name) is rate-limiting requests (429). Wait a moment, then try again."

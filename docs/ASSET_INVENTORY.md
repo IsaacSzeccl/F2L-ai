@@ -10,6 +10,8 @@ See [CHANGELOG.md](../CHANGELOG.md) for implementation changes and validation, a
 |---|---|
 | [expressions.png](../Windows/F2L.Windows/Assets/Pip/expressions.png) | 1254 × 1254 transparent atlas; 16 painted expression/speech poses. Generated on 8 October from the original Pip concept. |
 | [directions.png](../Windows/F2L.Windows/Assets/Pip/directions.png) | 1254 × 1254 transparent atlas; 16 pointing, profile, walking and rear-view poses. Generated on 8 October using the expression atlas as the character reference. |
+| [welcome-journey.png](../Windows/F2L.Windows/Assets/Pip/welcome-journey.png) | 1254 × 1254 transparent illustration for the first-time setup window (Pip reading on a stack of books beside a path). Generated on 8 October with the production Pip as reference. |
+| [Emotes/](../Windows/F2L.Windows/Assets/Pip/Emotes) | Six 256 × 256 Pip emotes (hello, happy, cheer, thinking, curious, focused) used instead of system emoji. Generated from expressions.png poses with drawn accents by `F2L --export-emotes`; see ARTWORK.md. |
 | [ARTWORK.md](../Windows/F2L.Windows/Assets/Pip/ARTWORK.md) | Exact production generation prompts, reference link and reviewed frame-selection exceptions. |
 | [Inter-Regular.ttf](../Windows/F2L.Windows/Assets/Fonts/Inter-Regular.ttf) | Regular UI font from the official Inter 4.1 distribution. |
 | [Inter-Medium.ttf](../Windows/F2L.Windows/Assets/Fonts/Inter-Medium.ttf) | Medium UI font from the same distribution. |

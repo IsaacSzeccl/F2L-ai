@@ -29,6 +29,7 @@ def private_path(path):
     parts = Path(path).parts
     name = Path(path).name.lower()
     return (name == "local.settings.json" or name.startswith("local.settings.json.")
+            or name == "profile.json" or name.startswith("profile.json.")
             or (name.startswith(".env") and name not in (".env.example", ".env.template"))
             or name.endswith((".env", ".keychain", ".keychain-db", ".pem", ".key", ".p12", ".pfx", ".mobileprovision", ".log"))
             or name in (".rhistory", "conversation.json", "id_rsa", "id_ed25519", "keychain-password")

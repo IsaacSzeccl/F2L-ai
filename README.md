@@ -22,20 +22,35 @@ The launcher builds F2L the first time and whenever the code has changed, then o
 
 The opening introduces **F2L AI — A teaching companion** with bouncing letters, a word-by-word subtitle and Pip waving beside the name. Pip then walks down to its resting position with a short sparkle trail. Click anywhere to skip; **Reduce animation** uses a brief, still introduction.
 
-- **Click Pip** to show the input bar; **drag Pip** to move the character and its reply bubble. The input stays at the bottom centre. **Hide input** in Pip’s menu minimises the controls without discarding the current session.
+- **Click Pip** to show the input bar; **drag Pip** to move the character and its reply bubble. The input stays at the bottom centre. **Hide the input bar** in Pip’s menu minimises the controls without discarding the current session.
 - **Type** and press **Enter** to send; **Shift + Enter** adds a line. **◉** starts dictation and **■** puts the words in the box for you to check before sending. Click anywhere on the opening to skip it.
 - Replies appear **word by word** beside Pip (click the text to show it all). A short answer offers **Got it** and **Explain more**.
 - A task becomes a lesson that starts straight at step 1, with what it achieves shown above. **Done** moves on, **Show me again** replays the step, **I'm stuck** asks Pip for help from where you are. In Excel, a selection step ticks itself when Excel shows it done, and Pip says what is still missing (for example if you forgot to hold Command/Ctrl). Pip waves when a step is done.
 - Pip is silent for now: replies are shown, not spoken. **Reduce animation** shows complete phrases immediately and shortens the opening.
 - Each launch starts empty. **New chat** clears the visible reply, draft, active task and model history. Previous saved files remain on disk.
-- **···** beside Pip also has: share the active app window, follow teaching targets, Pip size, clear the highlight, move to the other corner, Settings and Quit.
+- **···** beside Pip: New chat, My learning & profile, which AI to use (each marked *Key added* or *No key yet*), Share my screen with Pip, Pip size, Move Pip to the other side, Hide the input bar, Settings and Quit. **Clear the highlight** and **Put the input bar back** appear only when there is something to clear or put back.
+- **Settings** holds the real settings: pick your AI and paste or remove its key, Reduce animation, Pip walks to what it’s teaching, and (Mac) what macOS allows F2L to do, with **Allow…** buttons and **Reset permissions** for when macOS keeps asking.
 - **Excel selections:** with sharing enabled, Pip reads all selected areas (including Command/Ctrl-click selections), sends those addresses with your question, and displays a live selection line above the steps. On Mac, accept the first **F2L → Microsoft Excel** Automation request. If denied, enable it in **System Settings → Privacy & Security → Automation**; typed questions still work without selection access. Windows uses Excel COM. Neither reader edits the workbook.
 - **"Circle A1"** (or 圈出A1) in desktop Excel: on Windows, F2L asks Excel where that cell is, checks it, and draws a green outline. It never selects, edits or scrolls your workbook, and if the cell isn't fully visible Pip says so instead of guessing. On Mac, Excel doesn't report cell positions, so a direct "circle A1" only names the cell.
-- **Circling the place:** every reply and every lesson step can point at where it happens (a cell, tab, button or icon in any app), and F2L circles it. Pip stays in its corner (**Pip follows teaching targets** in the menu makes it walk over). F2L reads the screen itself (on your computer, nothing is sent) to find the place: a button or tab where its name appears, a cell where its column letter and row number meet. It also uses what the app reports: the real button, tab or menu found by name through Accessibility (Mac) or UI Automation (Windows), a cell Excel confirms (Windows) or one measured from Excel's own row and column sizes (Mac). Green means the app reported the place; dashed amber means it is the model's estimate. Moving to the next step moves the circle. F2L looks at the app's main window, not a small popup in front of it.
+- **Circling the place:** every reply and every lesson step can point at where it happens (a cell, tab, button or icon in any app), and F2L circles it. Pip stays in its corner (**Pip walks to what it’s teaching** in Settings makes it walk over). F2L reads the screen itself (on your computer, nothing is sent) to find the place: a button or tab where its name appears, a cell where its column letter and row number meet. It also uses what the app reports: the real button, tab or menu found by name through Accessibility (Mac) or UI Automation (Windows), a cell Excel confirms (Windows) or one measured from Excel's own row and column sizes (Mac). Green means the app reported the place; dashed amber means it is the model's estimate. Moving to the next step moves the circle. F2L looks at the app's main window, not a small popup in front of it.
+
+## First-time setup and personalisation
+
+The first time Pip opens, after the opening animation, a three-step welcome window asks about you. It is optional ("Not now"), takes about a minute, and can be reopened any time from **My learning & profile…** in Pip's ··· menu.
+
+1. **Your work:** three questions you answer in your own words: what Pip should call you (optional), what you do at work, and what you'd like help with at work. Pip works out the kind of help from your answer, so there is nothing to pick.
+2. **Your AI:** how you use AI today (*Just getting started*, *Tried a few things*, *Part of my routine*, each a round card with Pip's emote) and, optionally, tools you already use at work.
+3. **Your plan:** a small toolkit of 2–3 recommended tools, each with one concrete use for your work, a 3–4 step workflow to try (always including a human review step), and **What do you want to learn?**: Pip's ideas for your kind of work as round chips to tick (up to 6), plus a box to add your own. **Make my plan** asks your AI provider, using text only (no screenshot) and only tools from F2L's built-in catalogue, so it never invents tools or links. **Plan without AI** makes a starter plan on your computer.
+
+The window is round like Pip: numbered circles for the steps, pill-shaped fields and buttons, and round cards.
+
+Afterwards Pip is personal: it greets you by name and asks what you'd like to learn today, offering the topics you ticked as buttons (plus **Change what I learn**). Nothing starts until you pick one. Changing your topics later in **My learning & profile…** saves straight away, so Pip's next answer already knows. Pip adds your role, goal, AI experience and topics to each question so examples and the amount of detail suit you (turn this off with *Use this to personalise Pip's help*). Pip never guesses ability from occupation. The profile is saved only on your computer (`profile.json`, readable only by you), and **Forget my profile** removes it.
+
+Pip's cards never use system emoji. Pip has its own emotes, painted from its poses: hello, happy, cheer, thinking, curious and focused.
 
 ## AI providers and keys
 
-F2L can teach with **DeepSeek, ChatGPT (OpenAI), Gemini, Claude or GLM**. Each needs its own API key; choose which one to use with **AI provider** in Pip's ··· menu, or with `"Provider"` in `local.settings.json`. The next question uses the new provider; no rebuild is needed.
+F2L can teach with **DeepSeek, ChatGPT (OpenAI), Gemini, Claude or GLM**. Each needs its own API key; choose which one to use and paste its key in **Settings** (or **AI** in Pip's ··· menu), or set `"Provider"` and the key in `local.settings.json` yourself. The next question uses the new provider; no rebuild is needed.
 
 ```json
 {
@@ -62,16 +77,17 @@ Pick a model that accepts images (all defaults do). Both apps look in the same p
 2. the first `local.settings.json` that exists of: your per-user file (Mac `~/Library/Application Support/F2L/`, Windows `%APPDATA%\F2L\`), the F2L folder's root, the older `Windows/F2L.Windows/` copy, or the file next to the app;
 3. the Mac login keychain (service `F2L`, account = the key variable) or Windows Credential Manager (`F2L/<key variable>`).
 
-**Settings** in Pip's menu shows the provider, the model and which file is in use; **Show file** creates an empty one if there isn't one yet.
+**Settings** saves keys into that same private file (readable only by you, ignored by Git); **Show the settings file** reveals it.
 
 **Keeping keys off GitHub:** private settings, `.env` files, signing material, logs and diagnostic exports are Git-ignored. With Python 3 installed, run `scripts/check-secrets.sh --install` to check staged files before commits and outgoing history before pushes. Run `scripts/check-secrets.sh --all` for the index and publishable working files, and `scripts/check-secrets.sh --history --ref HEAD` for the current branch's history. GitHub Actions repeats these checks. Findings never print key values. Keep keys in local settings, environment variables, or the OS credential store; never in code or docs. See [SECURITY.md](SECURITY.md) for scope and limitations.
 
 ## Privacy
 
-- With **Share active app window** on, sending a question takes one picture of the app you were last using (never the whole screen, never in the background) and sends it with your question to the AI provider you chose. Pictures are not saved. Turn sharing off from Pip's menu at any time.
+- With **Share my screen with Pip** on, sending a question takes one picture of the app you were last using (never the whole screen, never in the background) and sends it with your question to the AI provider you chose. Pictures are not saved. Turn sharing off from Pip's menu at any time.
 - "Circle A1" requests don't call the AI; they're answered on your computer by asking Excel.
 - The latest 500 messages and draft of each session are saved separately: Mac `~/Library/Application Support/F2L/sessions/<id>.json`, Windows `%LOCALAPPDATA%\F2L\sessions\<id>.json`. The legacy `conversation.json` is left untouched. Sessions are not automatically restored.
 - After an Excel question, the selection line refreshes while the input is open and sharing is enabled. These background reads stay local; only the selection at question time accompanies a model request.
+- Your profile (name, role, goal, AI experience, focus and tools) is saved only in `profile.json` in F2L's folder (Mac `~/Library/Application Support/F2L/`, Windows `%LOCALAPPDATA%\F2L\`). Your name is never sent; role, goal, experience, focus and tools go to the AI provider with your questions only while personalisation is on, and with **Make my plan**. **Forget my profile** deletes it locally; it cannot recall what was already sent.
 - Nothing is sent to ElevenLabs: spoken replies are off. Dictation uses the computer's own speech recognition.
 
 ## How it fits together
@@ -113,11 +129,13 @@ docs/                             Decisions, setup, design history, asset invent
 scripts/test.sh                 # Swift tests; works before Xcode's licence is accepted
 scripts/build-app.sh            # builds and signs build/F2L.app
 scripts/run.sh                  # builds, opens F2L and follows its log
-build/F2L.app/Contents/MacOS/F2L --render build/render   # draws Pip and the panel to PNGs, no network
+build/F2L.app/Contents/MacOS/F2L --render build/render   # draws every view to PNGs and checks screen reading, no network
+build/F2L.app/Contents/MacOS/F2L --soak 10              # CPU and memory per phase (idle, lesson, circle, 50 replies, screen reading)
+build/F2L.app/Contents/MacOS/F2L --export-emotes         # rewrites Windows/F2L.Windows/Assets/Pip/Emotes from Pip's poses
 F2L_LIVE_DEEPSEEK=1 scripts/test.sh --filter LiveDeepSeek    # one real question to DeepSeek with your key
 ```
 
-F2L must run as `build/F2L.app` (macOS grants microphone and screen permissions to app bundles). Run `scripts/setup-signing.sh` once and set `SIGN_IDENTITY="F2L Local Signing"` (see [SETUP.md](SETUP.md)) so macOS remembers those permissions across rebuilds.
+F2L must run as `build/F2L.app` (macOS grants microphone and screen permissions to app bundles). Run `scripts/setup-signing.sh` once (see [SETUP.md](SETUP.md)); every build then signs with that certificate automatically, so macOS remembers those permissions across rebuilds. The launcher also rebuilds an app that lost the signature.
 
 **Windows** (from the repository root)
 

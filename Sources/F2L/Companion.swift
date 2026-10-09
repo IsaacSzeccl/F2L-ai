@@ -72,22 +72,6 @@ private final class PipHost: FlippedView {
     override func accessibilityPerformPress() -> Bool { onClick?(); return true }
 }
 
-/// "AI provider" in Pip's menu: one item per provider, the current one ticked, providers without a key marked.
-/// Choosing one writes "Provider" into local.settings.json; the next question uses it.
-private final class ProviderMenu: NSObject, NSMenuDelegate {
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        menu.removeAllItems()
-        let current = LocalSettings.provider()
-        for provider in Provider.allCases {
-            let hasKey = !LocalSettings.read(provider.key).isEmpty
-            let item = MenuAction.item(provider.name + (hasKey ? "" : " · add a key in Settings"), checked: provider == current) { _ in
-                LocalSettings.setProvider(provider)
-            }
-            menu.addItem(item)
-        }
-    }
-}
-
 /// The input bar's background: dragging it moves the bar anywhere on screen; clicks on the text box and buttons
 /// still go to them.
 private final class DragArea: FlippedView {
@@ -131,8 +115,6 @@ final class CompanionController: NSObject {
     private let pipHost = PipHost(frame: .zero)
     private let moreButton = FlatButton("···", size: 12, fill: Palette.hex(0xF5F5F8))
     private let menu = NSMenu()
-    private let providerMenu = ProviderMenu()
-    private var sizeItems: [NSMenuItem] = []
 
     private let coach: CoachClient
     private var session = ConversationSession()
@@ -141,7 +123,11 @@ final class CompanionController: NSObject {
     private let excel = ExcelTargetResolver()
     private let dictation = DictationInput()
     private let testing: Bool
-    private var settingsWindow: NSWindow?
+    private var settingsWindow: SettingsWindow?
+    private let profileStore = ProfileStore()
+    /// Read once at launch and again when the setup window closes, not on every question.
+    private lazy var profileDocument: ProfileDocument = testing ? ProfileDocument() : profileStore.load()
+    private var personalizeWindow: PersonalizeWindow?
     private var intro: IntroWindow?
 
     private var turn = 0, dictationSession = 0, highlightVersion = 0
@@ -149,7 +135,7 @@ final class CompanionController: NSObject {
     private var pendingReply: ConversationEntry?
     private var isListening = false, finishingDictation = false, screenSharingEnabled = true
     private var panelOpen = false, leftAnchor = false, userPositioned = false, closed = false
-    /// Pip stays in its corner and only the circle shows the place; "Pip follows teaching targets" turns walking on.
+    /// Pip stays in its corner and only the circle shows the place; "Pip walks to what it’s teaching" in Settings turns walking on.
     private var followTargets = false
     private var reducedMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
     private var questionIntent = QuestionIntent.quickFact
@@ -184,7 +170,6 @@ final class CompanionController: NSObject {
         super.init()
         screenSharingEnabled = !testing
         buildViews()
-        buildMenu()
         bubble.reducedMotion = reducedMotion
         bubble.onPage = { [weak self] in self?.clearHighlight() }
         bubble.onFocus = { [weak self] focus in
@@ -232,7 +217,8 @@ final class CompanionController: NSObject {
             self.intro = nil
             appear()
             wave(for: 2.4)
-            say(Self.greeting)
+            greet()
+            if !testing && !profileDocument.onboardingComplete { showProfile() }
         }
     }
 
@@ -285,60 +271,59 @@ final class CompanionController: NSObject {
         stage.addSubview(companionPanel)
     }
 
+    /// Pip's ··· menu, built each time it opens so it shows what is true now (which AI has a key, whether a
+    /// highlight or a moved input bar can be put back). Preferences, permissions and keys live in Settings.
     private func buildMenu() {
+        menu.removeAllItems()
         menu.autoenablesItems = false
         menu.addItem(MenuAction.item("New chat") { [unowned self] _ in newChat() })
-        menu.addItem(MenuAction.item("Hide input") { [unowned self] _ in minimiseConversation() })
-        menu.addItem(MenuAction.item("Put input back at the bottom") { [unowned self] _ in inputMoved = false; layoutInputBar(); positionBubble() })
+        menu.addItem(MenuAction.item("My learning & profile…") { [unowned self] _ in showProfile() })
         menu.addItem(.separator())
+        let current = LocalSettings.provider()
         let providers = NSMenu()
-        providers.delegate = providerMenu
-        let providerItem = NSMenuItem(title: "AI provider", action: nil, keyEquivalent: "")
+        for provider in Provider.allCases {
+            let ready = !LocalSettings.read(provider.key).isEmpty
+            let item = MenuAction.item(provider.name, checked: provider == current) { [unowned self] _ in
+                LocalSettings.setProvider(provider)
+                if !ready { showSettings() }
+            }
+            item.subtitle = ready ? "Key added" : "No key yet · add it in Settings"
+            providers.addItem(item)
+        }
+        providers.addItem(.separator())
+        providers.addItem(MenuAction.item("Add or change keys…") { [unowned self] _ in showSettings() })
+        let providerItem = NSMenuItem(title: "AI: \(current.name)", action: nil, keyEquivalent: "")
         providerItem.submenu = providers
         menu.addItem(providerItem)
-        menu.addItem(MenuAction.item("Share active app window", checked: screenSharingEnabled) { [unowned self] item in
+        menu.addItem(MenuAction.item("Share my screen with Pip", checked: screenSharingEnabled) { [unowned self] _ in
             screenSharingEnabled.toggle()
-            item.state = screenSharingEnabled ? .on : .off
             if !screenSharingEnabled { clearHighlight(); selectionEnabled = false; bubble.updateSelection(nil, line: "") }
         })
-        menu.addItem(MenuAction.item("Pip follows teaching targets", checked: false) { [unowned self] item in
-            followTargets.toggle()
-            item.state = followTargets ? .on : .off
-            if followTargets, let target = lastTargetBounds { updateTeachingCompanion(target) } else { stopTeachingCompanion() }
-        })
-        menu.addItem(MenuAction.item("Reduce animation", checked: reducedMotion) { [unowned self] item in
-            reducedMotion.toggle()
-            bubble.reducedMotion = reducedMotion
-            item.state = reducedMotion ? .on : .off
-            pipHost.pip.setReducedMotion(reducedMotion)
-            teachingPip?.reducedMotion = reducedMotion
-            teachingPip?.pip.setReducedMotion(reducedMotion)
-        })
         let sizes = NSMenu()
-        for (title, size) in [("Small", CGSize(width: 112, height: 128)), ("Medium", CGSize(width: 144, height: 164)),
-                              ("Large", CGSize(width: 180, height: 205))] {
-            let item = MenuAction.item(title, checked: title == "Medium") { [unowned self] item in
+        for (title, size) in Self.pipSizes {
+            sizes.addItem(MenuAction.item(title, checked: size == pipSize) { [unowned self] _ in
                 if userPositioned { moveWindow(dy: -(size.height - pipSize.height) / 2) }
                 pipSize = size
-                sizeItems.forEach { $0.state = $0 === item ? .on : .off }
                 layoutCompanion()
-            }
-            sizeItems.append(item)
-            sizes.addItem(item)
+            })
         }
         let sizeMenu = NSMenuItem(title: "Pip size", action: nil, keyEquivalent: "")
         sizeMenu.submenu = sizes
         menu.addItem(sizeMenu)
-        menu.addItem(MenuAction.item("Clear screen highlight") { [unowned self] _ in clearHighlight() })
-        menu.addItem(MenuAction.item("Move to other corner") { [unowned self] _ in leftAnchor.toggle(); userPositioned = false; layoutCompanion() })
-        menu.addItem(MenuAction.item("Fix permissions…") { [unowned self] _ in fixPermissions() })
-        menu.addItem(MenuAction.item("Save pointing diagnostics") { [unowned self] _ in saveDiagnostics() })
-        menu.addItem(MenuAction.item("Settings…") { [unowned self] _ in showSettings() })
+        menu.addItem(MenuAction.item("Move Pip to the other side") { [unowned self] _ in leftAnchor.toggle(); userPositioned = false; layoutCompanion() })
+        if guide != nil { menu.addItem(MenuAction.item("Clear the highlight") { [unowned self] _ in clearHighlight() }) }
+        if inputMoved { menu.addItem(MenuAction.item("Put the input bar back") { [unowned self] _ in inputMoved = false; layoutInputBar(); positionBubble() }) }
+        menu.addItem(MenuAction.item("Hide the input bar") { [unowned self] _ in minimiseConversation() })
         menu.addItem(.separator())
+        menu.addItem(MenuAction.item("Settings…") { [unowned self] _ in showSettings() })
         menu.addItem(MenuAction.item("Quit F2L") { _ in NSApp.terminate(nil) })
     }
 
+    private static let pipSizes = [("Small", CGSize(width: 112, height: 128)), ("Medium", CGSize(width: 144, height: 164)),
+                                   ("Large", CGSize(width: 180, height: 205))]
+
     private func popUpMenu(from button: NSView) {
+        buildMenu()
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 2), in: button)
     }
 
@@ -491,9 +476,26 @@ final class CompanionController: NSObject {
     }
 
     /// Pip says a short line in its card: a greeting, a problem, or what it is doing.
-    private func say(_ line: String) {
-        bubble.say(line)
+    /// Notices and problems come with Pip's curious emote; pass another for greetings and progress.
+    private func say(_ line: String, emote: PipEmote = .curious, choices: [ReplyBubble.Choice] = []) {
+        bubble.say(line, emote: emote, choices: choices)
         positionBubble()
+    }
+
+    /// "How can I help you, Alex?" with what they chose to learn, to pick from. Nothing starts until they choose.
+    private func greet(_ saved: ProfileDocument? = nil) {
+        let document = saved ?? profileDocument
+        guard let profile = document.profile, profile.personalizationEnabled else { say(Self.greeting, emote: .hello); return }
+        let name = profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let topics = Array(profile.learning.prefix(3))
+        if topics.isEmpty {
+            say(name.isEmpty ? Self.greeting : "How can I help you, \(name)?", emote: .hello,
+                choices: [("Choose what to learn", true, { [weak self] in self?.showProfile() })])
+        } else {
+            say(name.isEmpty ? "What would you like to learn today?" : "What would you like to learn today, \(name)?", emote: .hello,
+                choices: topics.map { topic in (topic, true, { [weak self] in self?.submit(LearnerProfile.lessonQuestion(topic)) }) }
+                    + [("Change what I learn", false, { [weak self] in self?.showProfile() })])
+        }
     }
 
     private func wave(for seconds: TimeInterval = 1.6) {
@@ -527,7 +529,7 @@ final class CompanionController: NSObject {
         let myTurn = turn
         let entry = session.begin(clean)
         pendingReply = entry
-        say(ConversationSession.pendingText)
+        say(ConversationSession.pendingText, emote: .thinking)
         setComposer("")
         openConversation()
         setBusy(true)
@@ -590,7 +592,8 @@ final class CompanionController: NSObject {
                 answer = CoachAnswer(reply: result.verified || findOnScreen ? "Select \(cell.address): column \(cell.columnLetters), row \(cell.row)." : result.message,
                                      target: findOnScreen ? ScreenTarget(left: 0, top: 0, right: 0, bottom: 0, label: cell.address, cell: cell.address) : nil)
             } else {
-                answer = try await coach.answer(question: CoachClient.compose(question: question, platform: "macOS", excel: context), history: session.providerHistory(excluding: entry.turnID), jpeg: captured?.jpeg)
+                answer = try await coach.answer(question: CoachClient.compose(question: question, platform: "macOS", excel: context,
+                    profile: profileDocument.profile), history: session.providerHistory(excluding: entry.turnID), jpeg: captured?.jpeg)
             }
             try Task.checkCancellation()
             guard myTurn == turn else { return }
@@ -600,8 +603,9 @@ final class CompanionController: NSObject {
             setBusy(false)
             // Remember where the reply and each step happen; showing a page sends Pip there.
             replyCapture = captured.map { CapturedScreen(jpeg: Data(), windowID: $0.windowID, frame: $0.frame, app: $0.app) }
-            replyTarget = answer.target
-            stepTargets = answer.stepTargets
+            // A step or reply the AI left without a place still points at what it names.
+            replyTarget = answer.placeForReply
+            stepTargets = answer.placesForSteps
             requestedCells = cells
             bubble.show(reply: answer.reply, steps: answer.steps)
             positionBubble()
@@ -720,8 +724,8 @@ final class CompanionController: NSObject {
                 source = "model-estimate"
                 if !trusted, cell == nil, !shownAccessibilityTip {
                     shownAccessibilityTip = true
-                    bubble.tip("Approximate. Turn on F2L under Accessibility so I can find icons exactly. Already on? Use Fix permissions in Pip's menu.",
-                               action: "Open Settings") { DesktopAccessibility.openSettings() }
+                    bubble.tip("Approximate. Turn on F2L under Accessibility so I can find icons exactly. Already on? Use Reset permissions in Settings.",
+                               action: "Settings") { self.showSettings() }
                 }
             }
             log["source"] = source
@@ -873,7 +877,7 @@ final class CompanionController: NSObject {
         bubble.dismiss()
         bubble.updateSelection(nil, line: "")
         openConversation()
-        say(Self.greeting)
+        greet()
     }
 
     // MARK: - Dictation (mirrors Talk_Click)
@@ -948,10 +952,48 @@ final class CompanionController: NSObject {
     // MARK: - Settings, saving, quitting
 
     private func showSettings() {
-        if settingsWindow == nil { settingsWindow = SettingsWindow.make() }
+        if settingsWindow == nil {
+            settingsWindow = SettingsWindow(hooks: .init(
+                reducedMotion: { [unowned self] in reducedMotion },
+                setReducedMotion: { [unowned self] on in setReducedMotion(on) },
+                followTargets: { [unowned self] in followTargets },
+                setFollowTargets: { [unowned self] on in
+                    followTargets = on
+                    if on, let target = lastTargetBounds { updateTeachingCompanion(target) } else { stopTeachingCompanion() }
+                },
+                resetPermissions: { [unowned self] in fixPermissions() },
+                saveDiagnostics: { [unowned self] in saveDiagnostics() }))
+        }
         NSApp.activate()
         settingsWindow?.center()
         settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    private func setReducedMotion(_ on: Bool) {
+        reducedMotion = on
+        bubble.reducedMotion = on
+        pipHost.pip.setReducedMotion(on)
+        teachingPip?.reducedMotion = on
+        teachingPip?.pip.setReducedMotion(on)
+    }
+
+    private func showProfile() {
+        if let personalizeWindow, personalizeWindow.isVisible { personalizeWindow.makeKeyAndOrderFront(nil); return }
+        minimiseConversation()
+        let setup = PersonalizeWindow(store: profileStore, coach: coach)
+        personalizeWindow = setup
+        setup.onDone = { [weak self] in
+            guard let self else { return }
+            profileDocument = testing ? ProfileDocument() : profileStore.load()
+            openConversation(); greet()
+        }
+        setup.onChange = { [weak self] in
+            guard let self, !testing else { return }
+            profileDocument = profileStore.load()
+        }
+        setup.onSettings = { [weak self] in self?.showSettings() }
+        NSApp.activate()
+        setup.makeKeyAndOrderFront(nil)
     }
 
     private func saveConversation() {
@@ -963,6 +1005,7 @@ final class CompanionController: NSObject {
         cancelCurrentTurn()
         closed = true
         intro?.finish()
+        personalizeWindow?.close()
         saveDraftTimer?.invalidate()
         watchTimer?.invalidate()
         waveTimer?.invalidate()
@@ -993,7 +1036,13 @@ final class CompanionController: NSObject {
         updateTeachingCompanion(target)
     }
 
-    func greet() { say(Self.greeting) }
+    func sampleGreeting() { greet() }
+    func samplePersonalGreeting() {
+        var profile = LearnerProfile()
+        profile.name = "Alex"; profile.role = "Operations coordinator"; profile.goal = "Make weekly reporting easier"
+        profile.learning = ["Pivot tables", "Charts for reports"]
+        greet(ProfileDocument(profile: profile, plan: StarterPlan.draft(for: profile), onboardingComplete: true))
+    }
     func revealSample() { bubble.finishReveal() }
     func sampleStep() { bubble.sampleStep(selection: "Excel has selected A1:A4 · Budget", areas: ["A1:A4"]) }
     func makeIntro(reducedMotion: Bool = false) -> IntroWindow { IntroWindow(home: homeRect, reducedMotion: reducedMotion) }

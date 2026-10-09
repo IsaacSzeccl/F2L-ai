@@ -49,16 +49,16 @@ public partial class MainWindow
         PositionBubble();
     }
 
-    private void FollowTargets_Click(object sender, RoutedEventArgs e)
+    internal void SetFollowTargets(bool on)
     {
-        _followTargets = FollowTargetsMenuItem.IsChecked;
+        _followTargets = on;
         if (_followTargets && _lastTargetBounds is { } target) UpdateTeachingCompanion(target);
         else StopTeachingCompanion();
     }
 
-    private void ReducedMotion_Click(object sender, RoutedEventArgs e)
+    private void SetReducedMotion(bool on)
     {
-        _reducedMotion = ReducedMotionMenuItem.IsChecked;
+        _reducedMotion = on;
         _bubble.ReducedMotion = _reducedMotion;
         PipArtView.SetReducedMotion(_reducedMotion);
         if (_teachingPip is not null)

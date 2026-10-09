@@ -12,6 +12,11 @@ internal interface ICoachClient
 {
     bool IsConfigured { get; }
     string NotConfigured => Provider.DeepSeek.NotConfigured();
+    /// <summary>The provider named to the learner (the setup window says where a plan request goes).</summary>
+    string ProviderName => "DeepSeek";
+    /// <summary>A text-only starter-plan request; clients that can't make one say the AI isn't set up.</summary>
+    Task<StarterPlan> StarterPlanAsync(LearnerProfile profile, CancellationToken cancellationToken) =>
+        Task.FromException<StarterPlan>(new CoachRequestException(NotConfigured));
     Task<CoachAnswer> AnswerAsync(string question, IReadOnlyList<(string Role, string Content)> history,
         byte[]? imageBytes, string? imageContentType, CancellationToken cancellationToken);
 }
@@ -51,13 +56,15 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
         {"reply":"Select cell A1.","steps":[],"target":{"cell":"A1","label":"A1","left":120,"top":210,"right":180,"bottom":228}}.
         The host checks cells with Excel where it can. Each step can point at its own place: write that step as
         {"text":"Open the Insert tab.","target":{"left":300,"top":40,"right":350,"bottom":60,"label":"Insert"}} instead
-        of a plain string. Give a target for every step whose place is visible; never guess a place you cannot see.
+        of a plain string. Give a target for every step whose place is visible, and for the reply whenever it tells the learner
+        to act on something visible; never guess a place you cannot see.
         Positions read from a screenshot are approximate; never claim an exact verified match.
         Use short paragraphs with blank lines for longer explanations so the learner can follow the reply.
         """;
 
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_settings().ApiKey);
     public string NotConfigured => _settings().Provider.NotConfigured();
+    public string ProviderName => _settings().Provider.Name();
 
     public async Task<CoachAnswer> AnswerAsync(
         string question,
@@ -80,8 +87,10 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
     /// <summary><paramref name="jsonMode"/> asks for a JSON object where the provider supports it; the retry after an
     /// empty reply leaves it off.</summary>
     internal static string RequestBody(string question, IReadOnlyList<(string Role, string Content)> history,
-        byte[]? imageBytes, string? imageContentType, bool jsonMode, Provider provider = Provider.DeepSeek, string? model = null)
+        byte[]? imageBytes, string? imageContentType, bool jsonMode, Provider provider = Provider.DeepSeek, string? model = null, string? systemPrompt = null,
+        int? maxTokens = null)
     {
+        systemPrompt ??= TeachingPrompt;
         model = string.IsNullOrWhiteSpace(model) ? provider.DefaultModel() : model;
         var past = history.TakeLast(20).Select(message => (object)new
         {
@@ -100,13 +109,13 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
             {
                 ["model"] = model,
                 ["max_tokens"] = 4096,
-                ["system"] = TeachingPrompt,
+                ["system"] = systemPrompt,
                 ["messages"] = past,
                 ["output_config"] = new { effort = "low" }, // quick, short teaching replies
                 ["fallbacks"] = "default", // answered by another Claude model if this one declines
             });
         }
-        var messages = new List<object> { new { role = "system", content = TeachingPrompt } };
+        var messages = new List<object> { new { role = "system", content = systemPrompt } };
         messages.AddRange(past);
         object userContent = question;
         if (image is not null)
@@ -123,7 +132,7 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
             case Provider.DeepSeek:
                 payload["thinking"] = new { type = "disabled" };
                 payload["temperature"] = 0.2;
-                payload["max_tokens"] = 650;
+                payload["max_tokens"] = maxTokens ?? 650; // short teaching replies; a starter plan asks for more
                 break;
             case Provider.OpenAI:
                 // Reasoning models only take the default temperature and count their reasoning in this limit.
@@ -150,6 +159,22 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
         JsonSerializer.Serialize(new { reply = text, target = (string?)null }, HistoryJson);
 
     private async Task<CoachAnswer?> SendAsync(CoachSettings current, string payload, CancellationToken cancellationToken)
+    {
+        var body = await ResponseAsync(current, payload, cancellationToken);
+        return ParseResponse(body, current.Provider);
+    }
+
+    public async Task<StarterPlan> StarterPlanAsync(LearnerProfile profile, CancellationToken cancellationToken)
+    {
+        var current = _settings();
+        if (string.IsNullOrWhiteSpace(current.ApiKey)) throw new CoachRequestException(current.Provider.NotConfigured());
+        var payload = RequestBody(StarterPlan.Question(profile), [], null, null, true, current.Provider, current.Model, StarterPlan.SystemPrompt, 2000);
+        var body = await ResponseAsync(current, payload, cancellationToken);
+        var text = ResponseText(body, current.Provider) ?? throw new CoachRequestException(current.Provider.NoReply());
+        return StarterPlan.Parse(text, current.Provider.Name());
+    }
+
+    private async Task<string> ResponseAsync(CoachSettings current, string payload, CancellationToken cancellationToken)
     {
         var provider = current.Provider;
         using var request = new HttpRequestMessage(HttpMethod.Post, provider.Endpoint());
@@ -185,12 +210,18 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
             if (!response.IsSuccessStatusCode)
                 throw new CoachRequestException(ExplainProviderError((int)response.StatusCode, body, provider, current.Model));
-            return ParseResponse(body, provider);
+            return body;
         }
     }
 
     /// <summary>Reads a reply. Null means it was blank or had no "reply", so the caller can ask again.</summary>
     internal static CoachAnswer? ParseResponse(string body, Provider provider = Provider.DeepSeek)
+    {
+        var text = ResponseText(body, provider);
+        return text is null ? null : ReadReply(text, provider);
+    }
+
+    private static string? ResponseText(string body, Provider provider)
     {
         string? responseText = null;
         try
@@ -226,11 +257,11 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
         {
             throw new CoachRequestException(provider.Unreadable());
         }
-        return string.IsNullOrWhiteSpace(responseText) ? null : ReadReply(responseText, provider);
+        return string.IsNullOrWhiteSpace(responseText) ? null : responseText;
     }
 
-    [GeneratedRegex(@"\A```[A-Za-z]*")] private static partial Regex FenceStart();
-    [GeneratedRegex(@"```\s*\z")] private static partial Regex FenceEnd();
+    [GeneratedRegex(@"\A```[A-Za-z]*")] internal static partial Regex FenceStart();
+    [GeneratedRegex(@"```\s*\z")] internal static partial Regex FenceEnd();
 
     /// <summary>The model's message: a JSON object (optionally in a code fence), or plain text when JSON mode was off.</summary>
     internal static CoachAnswer? ReadReply(string text, Provider provider = Provider.DeepSeek)
@@ -313,7 +344,7 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
         model ??= provider.DefaultModel();
         return statusCode switch
         {
-            401 or 403 => $"{name} rejected the configured API key ({statusCode}). Replace {provider.KeyProperty()} in local.settings.json with an active {name} API key, save the file, then try again.",
+            401 or 403 => $"{name} rejected the configured API key ({statusCode}). Paste an active {name} key in Settings (Pip’s ··· menu), then try again.",
             402 => $"{name} reports that the account has no available balance (402). Check the account's API balance, then try again.",
             404 => $"{name} couldn't find the requested model or endpoint (404). F2L is set to {model}; put a model your account can use in {provider.ModelProperty()} in local.settings.json.",
             429 => $"{name} is rate-limiting requests (429). Wait a moment, then try again.",
@@ -333,6 +364,22 @@ internal sealed record CoachAnswer(string Reply, ScreenTarget? Target, IReadOnly
 {
     internal string Text => TeachingReply.Clean(Reply) + (Steps is { Count: > 0 }
         ? "\n\n" + string.Join("\n", Steps.Select((step, index) => $"{index + 1}. {step}")) : "");
+
+    /// <summary>Where each lesson step points: its own place; else the reply's place when the step names it (or is the
+    /// only step); else the thing the step names, found on screen by name. Same as CoachAnswer.placesForSteps on Mac.</summary>
+    internal IReadOnlyList<ScreenTarget?> PlacesForSteps => (Steps ?? []).Select((step, index) =>
+        StepTargets is { } own && index < own.Count && own[index] is { } mine ? mine
+        : Target is { } target && (Steps!.Count == 1 || Mentions(step, target.Label)) ? target
+        : NamedPlace.Target(step)).ToList();
+
+    /// <summary>Where a plain reply points: the AI's place, or the thing the reply tells the learner to act on.</summary>
+    internal ScreenTarget? PlaceForReply => Target ?? (Steps is { Count: > 0 } ? null : NamedPlace.Target(Reply));
+
+    private static bool Mentions(string step, string label)
+    {
+        var name = TargetSnap.Normalise(label);
+        return !TargetSnap.Generic.Contains(name) && TargetSnap.Normalise(step).Contains(name);
+    }
 }
 
 internal sealed record ScreenTarget(int Left, int Top, int Right, int Bottom, string Label, string? Cell = null)
