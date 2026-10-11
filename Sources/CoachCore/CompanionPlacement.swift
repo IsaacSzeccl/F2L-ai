@@ -81,12 +81,13 @@ public enum CompanionPlacement {
     }
 }
 
-/// Which painted pose Pip shows. Frame numbers index the 16 poses in expressions.png / directions.png.
+/// Which painted pose Pip shows. Each of the three atlases contains 16 poses.
 /// Timings mirror Windows/F2L.Windows/PipView.xaml.cs exactly.
 public struct PipPose: Equatable, Sendable {
     public var directions: Bool
     public var frame: Int
     public var mirrored: Bool
+    public var playful: Bool = false
 
     public struct State: Sendable {
         public var intent: QuestionIntent = .quickFact
@@ -95,11 +96,13 @@ public struct PipPose: Equatable, Sendable {
         public var speaking = false, listening = false, thinking = false, reducedMotion = false
         /// The warm smile and wave used for greetings and correct answers.
         public var waving = false
+        /// Chosen once per view, never per frame: playback remains smooth and testable.
+        public var personalitySeed: Int = 0
         public init() {}
     }
 
     public static func at(milliseconds: Int, _ s: State) -> PipPose {
-        let time = s.reducedMotion ? 0 : milliseconds % 1_000_000
+        let time = s.reducedMotion ? 0 : max(0, milliseconds) % 1_000_000
         if s.travelling != .none && !s.reducedMotion {
             let vertical = s.travelling == .up || s.travelling == .down
             return PipPose(directions: true, frame: vertical ? 12 + time / 250 % 2 : 10 + time / 170 % 2, mirrored: s.travelling == .left)
@@ -109,6 +112,11 @@ public struct PipPose: Equatable, Sendable {
             // The alternate up frame lowers the arm, so hold the verified upward pose.
             if s.speaking && !s.reducedMotion && s.pointing != .up { frame += time / 200 % 2 }
             return PipPose(directions: true, frame: frame, mirrored: false)
+        }
+        // Only play while resting. Task expressions and all active interactions take priority.
+        if !s.reducedMotion && !s.waving && !s.listening && !s.thinking && !s.speaking && s.intent == .quickFact,
+           let frame = playfulFrame(milliseconds: milliseconds, seed: s.personalitySeed) {
+            return PipPose(directions: false, frame: frame, mirrored: false, playful: true)
         }
         let frame: Int
         if s.waving { frame = s.reducedMotion ? 14 : sequence(time, [14, 15], [420, 420]) }
@@ -124,6 +132,18 @@ public struct PipPose: Equatable, Sendable {
             }
         }
         return PipPose(directions: false, frame: frame, mirrored: false)
+    }
+
+    /// A short vignette every 12 seconds, with a 6–9 second quiet lead-in.
+    /// An odd stride visits all four activities without adjacent repeats; timing varies each cycle.
+    public static func playfulFrame(milliseconds: Int, seed: Int) -> Int? {
+        let time = max(0, milliseconds), seed = max(0, seed) % 65_536
+        let cycle = time / 12_000, phase = time % 12_000
+        let delay = 6_000 + (seed * 73 + (cycle % 3_000) * 997) % 3_000
+        let elapsed = phase - delay
+        guard elapsed >= 0 && elapsed < 2_200 else { return nil }
+        let activity = (seed % 4 + (cycle % 4) * (1 + (seed / 4 % 2) * 2)) % 4
+        return activity * 4 + sequence(elapsed, [0, 1, 2, 3], [350, 650, 650, 550])
     }
 
     private static func sequence(_ time: Int, _ frames: [Int], _ durations: [Int]) -> Int {

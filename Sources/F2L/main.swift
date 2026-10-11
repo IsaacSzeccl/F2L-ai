@@ -25,6 +25,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if failures.isEmpty { print("Exported \(PipEmote.allCases.count) emotes to \(directory)") }
             exit(failures.isEmpty ? 0 : 1)
         }
+        // The checks draw real windows; keep them out of sight and click-through so a check never shows sample lessons
+        // ("Click A1, then hold Shift and click A4") on the learner's screen. Drawing them into files still works.
+        if CommandLine.arguments.contains("--soak") || CommandLine.arguments.contains("--render") {
+            // Below the desktop picture: drawn as usual (so the numbers are real) but never seen or clicked.
+            let hidden = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)) - 1)
+            let hideAll = { NSApp.windows.filter { $0.level != hidden || !$0.ignoresMouseEvents }.forEach { $0.level = hidden; $0.ignoresMouseEvents = true } }
+            NotificationCenter.default.addObserver(forName: NSApplication.didUpdateNotification, object: nil, queue: .main) { _ in
+                MainActor.assumeIsolated { hideAll() }
+            }
+            let hide = Timer(timeInterval: 0.05, repeats: true) { _ in MainActor.assumeIsolated { hideAll() } }
+            RunLoop.main.add(hide, forMode: .common)
+        }
         if let index = CommandLine.arguments.firstIndex(of: "--soak") {
             let seconds = CommandLine.arguments.indices.contains(index + 1) ? Double(CommandLine.arguments[index + 1]) ?? 10 : 10
             SoakCheck.run(seconds: seconds)
@@ -90,7 +102,8 @@ enum RenderCheck {
         var failures: [String] = []
         if let error = ExcelSelectionReader.validateScript() { failures.append(error) }
         failures += ScreenReadingCheck.run()
-        if PipSprites.expressions.count != 16 || PipSprites.directions.count != 16 { failures.append("Pip sprites did not load (expected 16 + 16)") }
+        if PipSprites.expressions.count != 16 || PipSprites.directions.count != 16 || PipSprites.playful.count != 16 { failures.append("Pip sprites did not load (expected 16 + 16 + 16)") }
+        for path in BrandArtwork.paths where BrandArtwork.image(path) == nil { failures.append("Brand artwork did not load: \(path)") }
         companion.show()
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(400))

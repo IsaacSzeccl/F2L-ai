@@ -1,6 +1,7 @@
 import AppKit
 import ImageIO
 import ScreenCaptureKit
+import CoachCore
 import UniformTypeIdentifiers
 
 struct ScreenCaptureError: LocalizedError {
@@ -86,6 +87,22 @@ final class ScreenCaptureService {
         }
         let biggest = windows.map { $0.1.width * $0.1.height }.max() ?? 0
         return windows.first { $0.1.width * $0.1.height >= biggest * 0.5 }
+    }
+
+    /// The part of a window picture that covers `crop` (screen points), as a sharper JPEG for a zoomed second look.
+    nonisolated static func cropJPEG(_ jpeg: Data, window: CGRect, to crop: CGRect) -> Data? {
+        guard let source = CGImageSourceCreateWithData(jpeg as CFData, nil), let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+        let rect = ZoomLocate.pixelRect(crop, window: window, pixels: CGSize(width: image.width, height: image.height))
+        guard rect.width >= 8, rect.height >= 8, let piece = image.cropping(to: rect) else { return nil }
+        return jpegData(piece, quality: 0.9)
+    }
+
+    /// The title of the app's front window ("ChatGPT" in a browser), for steps that are done once a page is open.
+    nonisolated static func windowTitle(of pid: pid_t) -> String {
+        guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
+        else { return "" }
+        return list.first { ($0[kCGWindowOwnerPID as String] as? pid_t) == pid && ($0[kCGWindowLayer as String] as? Int) == 0
+            && !(($0[kCGWindowName as String] as? String) ?? "").isEmpty }?[kCGWindowName as String] as? String ?? ""
     }
 
     /// The window's current frame, or nil if it closed, minimised or left the screen.

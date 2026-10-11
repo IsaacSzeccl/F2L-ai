@@ -17,6 +17,8 @@ public struct ControlCandidate: Equatable, Sendable {
 public enum TargetSnap {
     /// Labels that say nothing about which control is meant.
     static let generic: Set<String> = ["", "next step", "here", "this", "button", "target", "cell"]
+    /// Whether a label names nothing in particular ("Next step", "here").
+    public static func isGeneric(_ label: String) -> Bool { generic.contains(normalise(label)) }
 
     /// "Insert tab" → "insert"; "Pie Chart button…" → "pie chart".
     public static func normalise(_ text: String) -> String {

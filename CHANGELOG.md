@@ -2,6 +2,70 @@
 
 This log records the local implementation and design work through 8 October 2026. Entries describe the working checkout; they are not release tags or a claim that changes have been committed or pushed. Earlier work is grouped by milestone where individual edit times were not recorded. Git history remains the record of previously committed changes.
 
+## 11 October 2026 — Review of the brand and animation work
+
+- **Planned well and integrated cleanly:** one coordinated palette across the ten pictures, decorative images hidden from screen readers with the native text kept, every file listed with its hash (37 assets, all match), and the same pictures in the same places on Mac and Windows.
+- **Memory:** every picture was decoded and kept at full size (1254 px squares, about 6 MB each), and the opening's backdrop was redrawn by the processor 60 times a second. Squares are now decoded at most 512 px wide (sharp up to 256 points), the backdrop and Pip's glow are layers composited by the graphics card, and the backdrop is freed after the opening. Measured with `F2L --soak`: the opening went from 316 MB to about 180 MB at its peak, and memory after it from 70 MB to about 56 MB. The opening still uses about 17% of one core for its six seconds, the same as before the artwork.
+- **Packaging:** the 1.5 MB app-icon master is no longer copied into the Mac app or packed into the Windows app; the `.icns` and `.ico` carry the icon.
+- The soak check now measures the opening too. A parity test keeps the two apps' artwork loading identical. README's opening paragraph and file layout updated.
+- Notes for later: at 16 px the icon is mostly its dark plate (fine from 32 px up); a simpler small-size variant would read better in Finder lists and the Windows taskbar. The `.icns` has no 1x 16 and 32 px images (macOS scales the 2x ones).
+- Mac: 127 Swift tests, render, soak and secret checks pass. Windows updated, not compiled.
+
+## 11 October 2026 — Original F2L brand and application artwork
+
+- Added ten original images using built-in image generation: a book-and-doorway emblem, desktop icon, painted dusk entry backdrop, three setup illustrations, three experience badges and a Settings compass. The full prompt set and usage map live in `Assets/Brand/ARTWORK.md`; the visual catalog is `docs/previews/f2l-brand-board.png`.
+- Integrated the shared artwork into Mac and Windows entry, setup and Settings screens. Native titles and labels remain accessible; entry artwork follows the existing fade and Reduced Motion behavior. Existing Pip art remains available.
+- Packaged native `.icns` and `.ico` icons from the original PNG; configured both app builds to include the branding. Added reproducible icon packaging and visual catalog scripts, asset hashes and load checks in the Mac render check.
+- Validation: Mac production build and native render check passed (including the animated entry preview and all three setup screens); all 37 cataloged assets pass byte-size/hash/inventory checks, transparent masters retain alpha, and both icon containers decode. Windows implementation updated, not compiled on this Mac.
+
+## 11 October 2026 — Playful Pip and a clearer code layout
+
+- **Playful idle animations (added by the owner):** a third atlas, `playful.png`, with 16 painted poses (wink, dance, yawn and stretch, peekaboo). While resting, Pip plays one 2.2-second move every 12 seconds or so, in a varied order; anything active takes priority and Reduce animation keeps Pip still. Checked: the new poses match the others in scale and baseline, the asset manifest lists them, and the timing is identical on Mac and Windows (new parity test).
+- **Fixed so the moves actually appear:** after a lesson or a how-to answer, Pip kept its "working" pose, which blocks the idle moves. Pip now returns to its resting face whenever the reply card closes (`ReplyBubble.onDismiss`, `ReplyBubbleWindow.Dismissed`).
+- **Code layout:** the 1,170-line Mac companion is split by job into `Companion.swift`, `CompanionPointing.swift`, `CompanionLesson.swift` and `CompanionMenu.swift`; the Windows MainWindow the same way (`MainWindow.Pointing.cs`, `.Lesson.cs`, `.Menu.cs`). Unused helpers removed; README's "How it fits together" and "Project layout" and the handoff's goal, active files and next steps brought up to date.
+- Mac: 126 Swift tests, render, soak and secret checks pass. Windows mirrored, not compiled.
+
+## 11 October 2026 — Review: faster screen reading, a zoomed second look
+
+- **Zoomed second look:** when F2L can't confirm a place from the screen's words or the app's controls (an icon-only button, or a step in an app the learner switched to), it crops the window around the AI's first guess (or takes the whole window) and asks the same AI where the control is in that crop. Live test with DeepSeek on 22-point icons: off by 11–12 points zoomed, against 35–44 points (a neighbouring icon) across the whole window. One short extra request (about 80 output tokens), only when needed. A real control under the zoomed box makes it exact. `ZoomLocate` on both apps.
+- **Faster, lighter screen reading:** the Accessibility walk asks each element for everything in one request and skips containers outside the window (content scrolled away, other windows): same names found, 2–3x faster (Finder 0.14 → 0.05 s, Chrome 0.08 → 0.04 s). Electron apps (Notion, Slack, VS Code) are asked to build their accessibility tree. Windows asks UI Automation for names, places and visibility in one cached search.
+- **Before each question,** the screen's text and the app's controls are read in parallel, with the control walk capped at 0.6 s (Windows 0.8 s), so asking stays quick in big apps.
+- **Fixed:** typing into Pip's own question box could tick a "type…" step in the lesson.
+- GLM's default model is now `glm-4.6v` (half the price of `glm-4.5v`).
+- The tool library is now found from the app or the working folder, so the build machine's path is no longer compiled into the app.
+- Mac: 125 Swift tests, render, soak (worst 0.8% CPU) and secret checks pass. Windows mirrored, not compiled.
+
+## 11 October 2026 — Steps that finish by opening an app or a site
+
+- **"Open your browser" and "Go to chatgpt.com" now move on by themselves.** `StepGoal` (both apps) reads what a step asks for: any browser in front, a named app in front ("Open Excel"), or a site open in the browser (its window title or the tool's name from the library, e.g. "ChatGPT", "Google Gemini"). Twice a second Pip checks the app in front and its window title (Mac: CGWindowList; Windows: the foreground window) and ticks the step when it becomes true. If it was already true when the step appeared, Pip says "You're already there. Press Done to go on." While Pip itself is in front, the app the learner was using counts.
+- **Later steps circle in the new app:** after switching to the browser, a step's place is looked for in the browser's window by name (the AI's position belonged to the earlier screenshot).
+- **Done stays as the safe fallback** for any step Pip can't check.
+- Live check ("how do I use ChatGPT"): open Safari or Chrome (ticks on the browser), go to chatgpt.com (ticks on the ChatGPT page), click Log in (ticks on the click), type your question (ticks on typing).
+- Mac: 117 Swift tests, render, soak (worst 0.7% CPU) and secret checks pass. Windows mirrored, not compiled.
+
+## 11 October 2026 — AI tools library, held keys and typing
+
+- **AI tools library:** 68 AI tools and work apps in one shared file (`Assets/Knowledge/ai-tools.json`, embedded on Windows, copied into the Mac app): summary, official site, platforms, access, how to get started, key features and which kinds of work each suits. A question that names a tool now carries that tool's notes, so Pip teaches from checked facts (live check: "how do I use n8n to save Gmail attachments into Google Drive" gave a 12-step n8n walkthrough starting at n8n.io); "which AI tool should I use…" carries the tools that fit the learner. The starter plan picks from the whole library, and the welcome offers its 19 most common tools as "Tools you already use". Everyday-word names (Make, Gamma, Bolt, Motion, Runway, Consensus, Elicit) only match by their fuller names (make.com, Gamma app). Details checked 11 October 2026 (e.g. NotebookLM is now Gemini Notebook; WorkBuddy is Tencent's desktop AI agent).
+- **Held keys:** a step that says to hold Shift, Command/Ctrl or Option/Alt while clicking ticks only when those keys are held, and otherwise says which key to hold.
+- **Typing steps:** a step that says to type, enter or paste ticks once the focused box has new text and the learner pauses for 1.5 s. Only the text's length and a hash are compared, never kept or sent (Accessibility on Mac, UI Automation on Windows).
+- The render and soak checks now put their windows below the desktop picture instead of fading them, so their numbers stay real (worst 1.0% CPU).
+- Mac: 114 Swift tests, render, soak and secret checks pass. Windows mirrored, not compiled.
+
+## 11 October 2026 — Click to continue, sharper pointing and warmer steps
+
+- **Clicking the circled place moves the lesson on, in any app.** While a place is circled, F2L checks the mouse button 20 times a second (nothing is recorded). A press inside the circle ticks a click step ("That's it!", Pip cheers) and goes to the next one; for steps that also need typing or dragging it says what is left; a plain answer is marked done. Presses on Pip's own windows don't count. New `ClickWatch` on both apps.
+- **Better pointing without a new AI:** each question now carries the names F2L can read in the shared window (Accessibility or UI Automation control names, then on-device OCR), up to 80, so the AI labels places with names that really exist and F2L can find them exactly (`ScreenNames`).
+- **Warmer, more detailed steps:** the teaching style now asks for a patient colleague's tone and, per step, what to do, where it is on screen and what you should see next, one click per step where possible.
+- The render and soak checks now keep their windows invisible and click-through, so running a check never shows the sample "Click A1, then hold Shift and click A4" lesson on the learner's screen.
+- Mac: 108 Swift tests, render, soak (worst 0.8% CPU with the click watch running) and secret checks pass; live DeepSeek check gave a 7-step Notion setup. Windows mirrored, not compiled.
+
+## 11 October 2026 — Teaching any AI tool, not just Excel
+
+- **Pip teaches the tool you ask about even when it isn't open.** Asking "teach me Tencent WorkBuddy" with Terminal in front used to get "I can't teach this from this screen". The teaching prompt now describes F2L as a coach for AI tools and work apps (ChatGPT, Gemini, Claude, Grok, DeepSeek, Copilot, Tencent WorkBuddy, Notion, Google Workspace, Microsoft 365, Canva, Zoom, Excel), starts from where the learner is (browser, official site, sign-in, first feature), never refuses because another app is in front, and says so plainly instead of inventing menus when it doesn't know a tool.
+- Each question now tells the AI which app the screenshot shows ("The screenshot shows Terminal.").
+- Learning ideas in the welcome lean towards AI tools (setting up ChatGPT, Gemini or Grok; Notion; Google Workspace; custom GPTs) instead of mostly Excel.
+- Mac: 102 Swift tests pass. Windows mirrored, not compiled.
+
 ## 9 October 2026 — Circling without being asked
 
 - **Pip circles the place even when the AI leaves its position out.** A step without its own place borrows the reply's place when it names it (or is the only step); otherwise F2L takes the name the instruction points at ("Click the Japan tile" → Japan, "Open the Insert tab" → Insert, "click A4" → A4) and finds it on screen itself through screen text, Accessibility or Excel. Keys ("Command+C") and descriptions with nothing to click are left alone. New `NamedPlace` on both apps, with matching tests.

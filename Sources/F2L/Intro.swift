@@ -2,7 +2,7 @@ import AppKit
 import CoachCore
 
 /// A native animated wordmark: Pip conducts the letters, then walks to the resting companion.
-/// Artwork stays vector-sharp; motion is sampled from one clock so previews use the real launch sequence.
+/// Native type stays sharp; original painted branding sits behind it. Previews use the real launch clock.
 @MainActor
 final class IntroWindow: NSPanel {
     static let title = "F2L AI"
@@ -20,6 +20,12 @@ final class IntroWindow: NSPanel {
     }
 
     private let stage = Stage()
+    /// Behind the painted letters: the dark wash with the dusk landscape, as layers, so the screen-sized picture is
+    /// composited by the graphics card instead of being redrawn 60 times a second.
+    private let backdrop = FlippedView()
+    private let landscape = CALayer()
+    /// Warm light from Pip, rather than a flat full-screen wash; also a layer, for the same reason.
+    private let glow = CAGradientLayer()
     private let pip = PipView(frame: .zero)
     private let screenRect: CGRect
     private let home: CGRect
@@ -42,7 +48,29 @@ final class IntroWindow: NSPanel {
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
         isReleasedWhenClosed = false
         title = Self.title
-        contentView = stage
+        let container = NSView()
+        container.wantsLayer = true
+        contentView = container
+        for view in [backdrop, stage] {
+            view.frame = container.bounds
+            view.autoresizingMask = [.width, .height]
+            container.addSubview(view)
+        }
+        backdrop.wantsLayer = true
+        backdrop.layer?.backgroundColor = Palette.hex(0x191923, alpha: 0.94).cgColor
+        backdrop.layer?.opacity = 0
+        landscape.contents = BrandArtwork.cgImage(BrandArtwork.landscape)
+        landscape.contentsGravity = .resizeAspectFill
+        landscape.opacity = 0.7
+        landscape.actions = ["bounds": NSNull(), "position": NSNull(), "opacity": NSNull()]
+        backdrop.layer?.addSublayer(landscape)
+        glow.type = .radial
+        glow.colors = [Palette.hex(0x827088, alpha: 0.32).cgColor, Palette.hex(0x827088, alpha: 0.1).cgColor, Palette.hex(0x827088, alpha: 0).cgColor]
+        glow.locations = [0, 0.5, 1]
+        glow.startPoint = CGPoint(x: 0.5, y: 0.5)
+        glow.endPoint = CGPoint(x: 1, y: 1)
+        glow.actions = ["bounds": NSNull(), "position": NSNull()]
+        backdrop.layer?.addSublayer(glow)
         stage.wantsLayer = true
         stage.addSubview(pip)
         stage.onClick = { [weak self] in self?.finish() }
@@ -131,25 +159,18 @@ final class IntroWindow: NSPanel {
     private func paint(_ size: CGSize) {
         let (unit, origin, start) = layout(size)
         let alpha = backdropAlpha
-        Palette.hex(0x191923, alpha: 0.94 * alpha).setFill()
-        NSBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
-        // Warm light from Pip, rather than a flat full-screen wash.
-        if alpha > 0 {
-            if let context = NSGraphicsContext.current?.cgContext,
-               let gradient = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
-                                         colors: [Palette.hex(0x827088, alpha: 0.32 * alpha).cgColor,
-                                                  Palette.hex(0x827088, alpha: 0.1 * alpha).cgColor,
-                                                  Palette.hex(0x827088, alpha: 0).cgColor] as CFArray,
-                                         locations: [0, 0.5, 1]) {
-                context.saveGState()
-                context.translateBy(x: origin.x + 300 * unit, y: origin.y + 80 * unit)
-                context.scaleBy(x: 440 * unit, y: 300 * unit)
-                context.drawRadialGradient(gradient, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: 1, options: [])
-                context.restoreGState()
-            }
-        }
+        // The wash and the landscape are layers behind this view (see `backdrop`); only their fade is set here.
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        backdrop.layer?.opacity = Float(alpha)
+        landscape.frame = backdrop.bounds
+        glow.frame = CGRect(x: origin.x + (300 - 440) * unit, y: origin.y + (80 - 300) * unit, width: 880 * unit, height: 600 * unit)
+        CATransaction.commit()
 
         let exit = reducedMotion ? 0 : ease((seconds - 3.08) / 0.5)
+        BrandArtwork.image("Brand/learning-doorway.png")?.draw(
+            in: CGRect(x: origin.x + 126 * unit, y: origin.y - 100 * unit, width: 84 * unit, height: 84 * unit),
+            from: .zero, operation: .sourceOver, fraction: alpha * (1 - exit), respectFlipped: true, hints: nil)
         let letters = ["F", "2", "L", "A", "I"]
         var x = origin.x
         for (i, letter) in letters.enumerated() {
@@ -249,6 +270,9 @@ final class IntroWindow: NSPanel {
         timer?.invalidate(); timer = nil
         pip.setTravelling(.none); pip.setWaving(false)
         orderOut(nil)
+        // The backdrop is shown once per launch: let its screen-sized picture go.
+        landscape.contents = nil
+        BrandArtwork.forget(BrandArtwork.landscape)
         let completion = self.completion
         self.completion = nil
         completion?()

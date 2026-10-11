@@ -11,6 +11,8 @@ internal sealed record ControlCandidate(Rect Frame, string Name);
 internal static class TargetSnap
 {
     internal static readonly HashSet<string> Generic = ["", "next step", "here", "this", "button", "target", "cell"];
+    /// <summary>Whether a label names nothing in particular ("Next step", "here").</summary>
+    internal static bool IsGeneric(string label) => Generic.Contains(Normalise(label));
     private static readonly HashSet<string> Trailing = ["tab", "button", "menu", "icon", "option", "command", "control"];
 
     /// <summary>"Insert tab" → "insert"; "Pie Chart button…" → "pie chart".</summary>
@@ -75,8 +77,9 @@ internal static class TargetSnap
     }
 
     /// <summary>The named controls of <paramref name="window"/> (UI Automation, read-only). Runs on its own thread
-    /// with a time limit, so a slow app never stalls Pip.</summary>
-    internal static async Task<IReadOnlyList<ControlCandidate>> ControlsAsync(IntPtr window, CancellationToken token)
+    /// with a time limit, so a slow app never stalls Pip. Name, place and visibility come back with the search itself
+    /// (a cache request), instead of three more calls into the app per control.</summary>
+    internal static async Task<IReadOnlyList<ControlCandidate>> ControlsAsync(IntPtr window, CancellationToken token, double seconds = 2)
     {
         var completion = new TaskCompletionSource<IReadOnlyList<ControlCandidate>>(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
@@ -88,16 +91,22 @@ internal static class TargetSnap
                 var types = new[] { ControlType.Button, ControlType.TabItem, ControlType.MenuItem, ControlType.SplitButton, ControlType.CheckBox,
                     ControlType.RadioButton, ControlType.ComboBox, ControlType.Hyperlink, ControlType.ListItem, ControlType.Edit, ControlType.Text };
                 var condition = new OrCondition(types.Select(type => (System.Windows.Automation.Condition)new PropertyCondition(AutomationElement.ControlTypeProperty, type)).ToArray());
-                foreach (AutomationElement element in root.FindAll(TreeScope.Descendants, condition))
+                var cache = new CacheRequest { AutomationElementMode = AutomationElementMode.None, TreeScope = TreeScope.Element };
+                cache.Add(AutomationElement.NameProperty);
+                cache.Add(AutomationElement.BoundingRectangleProperty);
+                cache.Add(AutomationElement.IsOffscreenProperty);
+                AutomationElementCollection elements;
+                using (cache.Activate()) elements = root.FindAll(TreeScope.Descendants, condition);
+                foreach (AutomationElement element in elements)
                 {
                     if (found.Count >= 4000) break;
                     try
                     {
-                        var name = element.Current.Name;
-                        var frame = element.Current.BoundingRectangle;
-                        if (!string.IsNullOrWhiteSpace(name) && !frame.IsEmpty && !element.Current.IsOffscreen) found.Add(new(frame, name));
+                        var name = element.Cached.Name;
+                        var frame = element.Cached.BoundingRectangle;
+                        if (!string.IsNullOrWhiteSpace(name) && !frame.IsEmpty && !element.Cached.IsOffscreen) found.Add(new(frame, name));
                     }
-                    catch (ElementNotAvailableException) { }
+                    catch (Exception error) when (error is ElementNotAvailableException or InvalidOperationException) { }
                 }
             }
             catch (Exception) { }
@@ -105,7 +114,7 @@ internal static class TargetSnap
         }) { IsBackground = true, Name = "F2L control lookup" };
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
-        try { return await completion.Task.WaitAsync(TimeSpan.FromSeconds(2), token); }
+        try { return await completion.Task.WaitAsync(TimeSpan.FromSeconds(seconds), token); }
         catch (TimeoutException) { return []; }
     }
 }

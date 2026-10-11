@@ -23,14 +23,14 @@ class CompanionPanel: NSPanel {
 }
 
 /// Resting Pip: click to open the conversation, drag to move.
-private final class PipHost: FlippedView {
+final class PipHost: FlippedView {
     let pip = PipView(frame: .zero)
     var onClick: (() -> Void)?
     var onDrag: (() -> Void)?
     var onDragEnded: (() -> Void)?
-    private var dragStart: NSPoint?
-    private var windowStart: NSPoint = .zero
-    private var dragging = false
+    var dragStart: NSPoint?
+    var windowStart: NSPoint = .zero
+    var dragging = false
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -74,7 +74,7 @@ private final class PipHost: FlippedView {
 
 /// The input bar's background: dragging it moves the bar anywhere on screen; clicks on the text box and buttons
 /// still go to them.
-private final class DragArea: FlippedView {
+final class DragArea: FlippedView {
     var onMoved: (() -> Void)?
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     override func mouseDown(with event: NSEvent) {
@@ -86,79 +86,91 @@ private final class DragArea: FlippedView {
 /// Everything the Windows MainWindow does, on the Mac: resting Pip, the input bar at the bottom centre, Pip's reply
 /// card, screen sharing, Excel selection, highlights and the teaching companion. Behaviour and wording follow
 /// MainWindow.xaml.cs. Pip is silent: replies are shown, not spoken.
+///
+/// This file holds the state, layout, the input bar, a question's round trip, dictation and saving. The rest is split
+/// by job: CompanionPointing.swift (circling places), CompanionLesson.swift (steps that finish by themselves) and
+/// CompanionMenu.swift (the ··· menu, Settings and the profile window).
 @MainActor
 final class CompanionController: NSObject {
     static let greeting = "How can I help you?"
     static let askPlaceholder = "Ask Pip anything…"
 
     let window = CompanionPanel()
-    private let stage = FlippedView()
-    private let inputWindow = CompanionPanel()
-    private let bubble = ReplyBubble()
-    private let selectionReader = ExcelSelectionReader()
-    private var selectionBusy = false
-    private var selectionEnabled = false
-    private var lastSelectionRead = Date.distantPast
-    private let inputBar = RoundedBox(fill: Palette.panel, radius: 24, border: Palette.panelBorder)
-    private let inputArea = DragArea()
+    let stage = FlippedView()
+    let inputWindow = CompanionPanel()
+    let bubble = ReplyBubble()
+    let selectionReader = ExcelSelectionReader()
+    var selectionBusy = false
+    var selectionEnabled = false
+    var lastSelectionRead = Date.distantPast
+    let inputBar = RoundedBox(fill: Palette.panel, radius: 24, border: Palette.panelBorder)
+    let inputArea = DragArea()
     /// The learner dragged the input bar: it stays where they put it (growing upwards) until "Put input back".
-    private var inputMoved = false
+    var inputMoved = false
     /// The bar moved to the top by itself because it covered the place Pip is pointing at.
-    private var inputDodging = false
+    var inputDodging = false
     /// Dictation adds to what was already typed instead of replacing it.
-    private var dictationPrefix = "", lastTranscript = "", consumedTranscript = 0, applyingTranscript = false
-    private let composerScroll: NSScrollView
-    private let composer: ComposerTextView
-    private let micButton = FlatButton("◉", size: 15, fill: nil)
-    private let sendButton = FlatButton("↑", size: 19, ink: .white, fill: Palette.send)
-    private let companionPanel = FlippedView()
-    private let pipHost = PipHost(frame: .zero)
-    private let moreButton = FlatButton("···", size: 12, fill: Palette.hex(0xF5F5F8))
-    private let menu = NSMenu()
+    var dictationPrefix = "", lastTranscript = "", consumedTranscript = 0, applyingTranscript = false
+    let composerScroll: NSScrollView
+    let composer: ComposerTextView
+    let micButton = FlatButton("◉", size: 15, fill: nil)
+    let sendButton = FlatButton("↑", size: 19, ink: .white, fill: Palette.send)
+    let companionPanel = FlippedView()
+    let pipHost = PipHost(frame: .zero)
+    let moreButton = FlatButton("···", size: 12, fill: Palette.hex(0xF5F5F8))
+    let menu = NSMenu()
 
-    private let coach: CoachClient
-    private var session = ConversationSession()
-    private var store: ConversationStore
-    private let capture = ScreenCaptureService()
-    private let excel = ExcelTargetResolver()
-    private let dictation = DictationInput()
-    private let testing: Bool
-    private var settingsWindow: SettingsWindow?
-    private let profileStore = ProfileStore()
+    let coach: CoachClient
+    var session = ConversationSession()
+    var store: ConversationStore
+    let capture = ScreenCaptureService()
+    let excel = ExcelTargetResolver()
+    let dictation = DictationInput()
+    let testing: Bool
+    var settingsWindow: SettingsWindow?
+    let profileStore = ProfileStore()
     /// Read once at launch and again when the setup window closes, not on every question.
-    private lazy var profileDocument: ProfileDocument = testing ? ProfileDocument() : profileStore.load()
-    private var personalizeWindow: PersonalizeWindow?
-    private var intro: IntroWindow?
+    lazy var profileDocument: ProfileDocument = testing ? ProfileDocument() : profileStore.load()
+    var personalizeWindow: PersonalizeWindow?
+    var intro: IntroWindow?
 
-    private var turn = 0, dictationSession = 0, highlightVersion = 0
-    private var turnTask: Task<Void, Never>?
-    private var pendingReply: ConversationEntry?
-    private var isListening = false, finishingDictation = false, screenSharingEnabled = true
-    private var panelOpen = false, leftAnchor = false, userPositioned = false, closed = false
+    var turn = 0, dictationSession = 0, highlightVersion = 0
+    var turnTask: Task<Void, Never>?
+    var pendingReply: ConversationEntry?
+    var isListening = false, finishingDictation = false, screenSharingEnabled = true
+    var panelOpen = false, leftAnchor = false, userPositioned = false, closed = false
     /// Pip stays in its corner and only the circle shows the place; "Pip walks to what it’s teaching" in Settings turns walking on.
-    private var followTargets = false
-    private var reducedMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-    private var questionIntent = QuestionIntent.quickFact
-    private var pipSize = CGSize(width: 144, height: 164)
-    private var saveDraftTimer: Timer?
-    private var watchTimer: Timer?
-    private var waveTimer: Timer?
-    private var guide: GuideOverlayWindow?
-    private var teachingPip: TeachingCompanionWindow?
-    private var targetCapture: CapturedScreen?
-    private var targetCell: CellReference?
-    private var targetSheet: String?
-    private var checkingHighlight = false
-    private var targetShown = Date.distantPast
-    private var lastTargetBounds: CGRect?
+    var followTargets = false
+    var reducedMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+    var questionIntent = QuestionIntent.quickFact
+    var pipSize = CGSize(width: 144, height: 164)
+    var saveDraftTimer: Timer?
+    var watchTimer: Timer?
+    var waveTimer: Timer?
+    var guide: GuideOverlayWindow?
+    var teachingPip: TeachingCompanionWindow?
+    var targetCapture: CapturedScreen?
+    var targetCell: CellReference?
+    var targetSheet: String?
+    var checkingHighlight = false
+    var targetShown = Date.distantPast
+    var lastTargetBounds: CGRect?
+    /// While a place is circled, the mouse button is checked 20 times a second so clicking the place moves the lesson on.
+    var clickTimer: Timer?
+    var clickWatch = ClickWatch()
+    /// During a typing step, the focused box is checked twice a second (only its length and a hash, never the text).
+    var typingWatch = TypingWatch()
+    var lessonTicks = 0, readingTyping = false
+    /// Whether the step's goal (an app or site in front) was already reached when the step appeared.
+    var goalAtStart: Bool?
     /// Where the current reply and each lesson step happen, read from the screenshot taken with the question.
     /// Only the window's geometry is kept, never the picture.
-    private var replyCapture: CapturedScreen?
-    private var replyTarget: ScreenTarget?
-    private var stepTargets: [ScreenTarget?] = []
-    private var requestedCells: [CellReference] = []
-    private var targetPersistent = false
-    private var shownAccessibilityTip = false
+    var replyCapture: CapturedScreen?
+    var replyTarget: ScreenTarget?
+    var stepTargets: [ScreenTarget?] = []
+    var requestedCells: [CellReference] = []
+    var targetPersistent = false
+    var shownAccessibilityTip = false
 
     var isRequestPending: Bool { pendingReply?.status == "pending" }
 
@@ -179,10 +191,14 @@ final class CompanionController: NSObject {
             case .step(let number): point(at: stepTargets.indices.contains(number) ? stepTargets[number] : nil, checkRequest: false)
             case .nothing: break
             }
+            // Each page starts fresh: clicks on its circle and typing in its box are watched while it is shown.
+            if focus != .nothing { typingWatch = TypingWatch(); goalAtStart = nil; watchClicks() }
         }
         bubble.onAsk = { [weak self] question in self?.submit(question) }
         bubble.onCelebrate = { [weak self] in self?.wave() }
         bubble.onAskSomethingElse = { [weak self] in self?.openConversation() }
+        // Back at rest, Pip's resting face returns, with its playful moves (wink, dance, stretch, peekaboo).
+        bubble.onDismiss = { [weak self] in self?.pipHost.pip.setIntent(.quickFact) }
         composer.placeholder = Self.askPlaceholder
         composer.onSend = { [unowned self] in composerSend() }
         composer.onTextChange = { [unowned self] in draftChanged() }
@@ -222,7 +238,7 @@ final class CompanionController: NSObject {
         }
     }
 
-    private func appear() {
+    func appear() {
         window.orderFrontRegardless()
         pipHost.pip.windowDidShow()
         openConversation()
@@ -230,7 +246,7 @@ final class CompanionController: NSObject {
 
     // MARK: - Views
 
-    private func buildViews() {
+    func buildViews() {
         window.contentView = stage
         stage.wantsLayer = true
         inputWindow.contentView = inputArea
@@ -271,82 +287,26 @@ final class CompanionController: NSObject {
         stage.addSubview(companionPanel)
     }
 
-    /// Pip's ··· menu, built each time it opens so it shows what is true now (which AI has a key, whether a
-    /// highlight or a moved input bar can be put back). Preferences, permissions and keys live in Settings.
-    private func buildMenu() {
-        menu.removeAllItems()
-        menu.autoenablesItems = false
-        menu.addItem(MenuAction.item("New chat") { [unowned self] _ in newChat() })
-        menu.addItem(MenuAction.item("My learning & profile…") { [unowned self] _ in showProfile() })
-        menu.addItem(.separator())
-        let current = LocalSettings.provider()
-        let providers = NSMenu()
-        for provider in Provider.allCases {
-            let ready = !LocalSettings.read(provider.key).isEmpty
-            let item = MenuAction.item(provider.name, checked: provider == current) { [unowned self] _ in
-                LocalSettings.setProvider(provider)
-                if !ready { showSettings() }
-            }
-            item.subtitle = ready ? "Key added" : "No key yet · add it in Settings"
-            providers.addItem(item)
-        }
-        providers.addItem(.separator())
-        providers.addItem(MenuAction.item("Add or change keys…") { [unowned self] _ in showSettings() })
-        let providerItem = NSMenuItem(title: "AI: \(current.name)", action: nil, keyEquivalent: "")
-        providerItem.submenu = providers
-        menu.addItem(providerItem)
-        menu.addItem(MenuAction.item("Share my screen with Pip", checked: screenSharingEnabled) { [unowned self] _ in
-            screenSharingEnabled.toggle()
-            if !screenSharingEnabled { clearHighlight(); selectionEnabled = false; bubble.updateSelection(nil, line: "") }
-        })
-        let sizes = NSMenu()
-        for (title, size) in Self.pipSizes {
-            sizes.addItem(MenuAction.item(title, checked: size == pipSize) { [unowned self] _ in
-                if userPositioned { moveWindow(dy: -(size.height - pipSize.height) / 2) }
-                pipSize = size
-                layoutCompanion()
-            })
-        }
-        let sizeMenu = NSMenuItem(title: "Pip size", action: nil, keyEquivalent: "")
-        sizeMenu.submenu = sizes
-        menu.addItem(sizeMenu)
-        menu.addItem(MenuAction.item("Move Pip to the other side") { [unowned self] _ in leftAnchor.toggle(); userPositioned = false; layoutCompanion() })
-        if guide != nil { menu.addItem(MenuAction.item("Clear the highlight") { [unowned self] _ in clearHighlight() }) }
-        if inputMoved { menu.addItem(MenuAction.item("Put the input bar back") { [unowned self] _ in inputMoved = false; layoutInputBar(); positionBubble() }) }
-        menu.addItem(MenuAction.item("Hide the input bar") { [unowned self] _ in minimiseConversation() })
-        menu.addItem(.separator())
-        menu.addItem(MenuAction.item("Settings…") { [unowned self] _ in showSettings() })
-        menu.addItem(MenuAction.item("Quit F2L") { _ in NSApp.terminate(nil) })
-    }
-
-    private static let pipSizes = [("Small", CGSize(width: 112, height: 128)), ("Medium", CGSize(width: 144, height: 164)),
-                                   ("Large", CGSize(width: 180, height: 205))]
-
-    private func popUpMenu(from button: NSView) {
-        buildMenu()
-        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 2), in: button)
-    }
-
     // MARK: - Layout (mirrors MainWindow.LayoutCompanion)
 
     /// The window frame in global top-left coordinates.
-    private var frameTL: CGRect {
+    var frameTL: CGRect {
         get { ScreenSpace.toTopLeft(window.frame) }
         set { window.setFrame(ScreenSpace.toAppKit(newValue), display: true) }
     }
 
-    private var workArea: CGRect {
+    var workArea: CGRect {
         let center = CGPoint(x: frameTL.minX + companionPanel.frame.midX, y: frameTL.minY + companionPanel.frame.minY + pipSize.height / 2)
         return ScreenSpace.workArea(at: center)
     }
 
     /// Resting Pip on screen, global top-left.
-    private var homeRect: CGRect {
+    var homeRect: CGRect {
         CGRect(x: frameTL.minX + companionPanel.frame.minX + pipHost.frame.minX, y: frameTL.minY + companionPanel.frame.minY,
                width: pipSize.width, height: pipSize.height)
     }
 
-    private func layoutCompanion() {
+    func layoutCompanion() {
         let oldCenter = CGPoint(x: frameTL.minX + companionPanel.frame.midX, y: frameTL.minY + companionPanel.frame.minY + pipSize.height / 2)
         let work = workArea
         let companionWidth = pipSize.width + 14
@@ -367,18 +327,18 @@ final class CompanionController: NSObject {
         positionBubble()
     }
 
-    private func clamped(_ frame: CGRect, in area: CGRect) -> CGRect {
+    func clamped(_ frame: CGRect, in area: CGRect) -> CGRect {
         var f = frame
         f.origin.x = min(max(f.minX, area.minX), max(area.minX, area.maxX - f.width))
         f.origin.y = min(max(f.minY, area.minY), max(area.minY, area.maxY - f.height))
         return f
     }
 
-    private func clampPosition() { frameTL = clamped(frameTL, in: workArea) }
-    private func moveWindow(dy: CGFloat) { var f = frameTL; f.origin.y += dy; frameTL = f }
+    func clampPosition() { frameTL = clamped(frameTL, in: workArea) }
+    func moveWindow(dy: CGFloat) { var f = frameTL; f.origin.y += dy; frameTL = f }
 
     /// One rounded bar at the bottom centre: the text, the microphone and Send. Nothing else.
-    private func layoutInputBar() {
+    func layoutInputBar() {
         let work = workArea
         let w = min(620, work.width - 32)
         let textHeight = min(92, max(22, ceil(composer.contentHeight)))
@@ -400,12 +360,12 @@ final class CompanionController: NSObject {
         sendButton.frame = NSRect(x: w - 50, y: (h - 34) / 2, width: 34, height: 34)
     }
 
-    private func positionBubble() {
+    func positionBubble() {
         bubble.follow(teachingPip?.screenBounds ?? homeRect, avoiding: lastTargetBounds.map { TargetSnap.circle(around: $0).insetBy(dx: -12, dy: -12) },
                       input: panelRect)
     }
 
-    private func pipDragEnded() {
+    func pipDragEnded() {
         userPositioned = true
         clampPosition()
         positionBubble()
@@ -438,7 +398,7 @@ final class CompanionController: NSObject {
 
     // MARK: - Composer
 
-    private func draftChanged() {
+    func draftChanged() {
         // Typing while dictating keeps what was typed; later speech is added after it.
         if isListening, !applyingTranscript {
             dictationPrefix = composer.string
@@ -451,12 +411,12 @@ final class CompanionController: NSObject {
         saveDraftTimer = timer
     }
 
-    private func composerSend() {
+    func composerSend() {
         if isRequestPending { return } // Send turns into Stop while Pip is thinking
         submit(composer.string)
     }
 
-    private func sendClicked() {
+    func sendClicked() {
         if isRequestPending {
             cancelCurrentTurn()
             say("Stopped. Ask me again when you’re ready.")
@@ -465,25 +425,25 @@ final class CompanionController: NSObject {
         }
     }
 
-    private func setComposer(_ text: String) {
+    func setComposer(_ text: String) {
         composer.string = text
         composer.didChangeText()
     }
 
-    private func setPlaceholder(_ text: String) {
+    func setPlaceholder(_ text: String) {
         composer.placeholder = text
         composer.needsDisplay = true
     }
 
     /// Pip says a short line in its card: a greeting, a problem, or what it is doing.
     /// Notices and problems come with Pip's curious emote; pass another for greetings and progress.
-    private func say(_ line: String, emote: PipEmote = .curious, choices: [ReplyBubble.Choice] = []) {
+    func say(_ line: String, emote: PipEmote = .curious, choices: [ReplyBubble.Choice] = []) {
         bubble.say(line, emote: emote, choices: choices)
         positionBubble()
     }
 
     /// "How can I help you, Alex?" with what they chose to learn, to pick from. Nothing starts until they choose.
-    private func greet(_ saved: ProfileDocument? = nil) {
+    func greet(_ saved: ProfileDocument? = nil) {
         let document = saved ?? profileDocument
         guard let profile = document.profile, profile.personalizationEnabled else { say(Self.greeting, emote: .hello); return }
         let name = profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -498,7 +458,7 @@ final class CompanionController: NSObject {
         }
     }
 
-    private func wave(for seconds: TimeInterval = 1.6) {
+    func wave(for seconds: TimeInterval = 1.6) {
         waveTimer?.invalidate()
         pipHost.pip.setWaving(true)
         teachingPip?.pip.setWaving(true)
@@ -542,7 +502,22 @@ final class CompanionController: NSObject {
         }
     }
 
-    private func runTurn(_ entry: ConversationEntry, question: String, app: ForegroundApp?, turn myTurn: Int) async {
+    /// The names of buttons, tabs and text in the shared window (Accessibility, then the screen read on this Mac), so
+    /// the AI names places that really exist there and F2L can find them exactly. Empty without a picture.
+    func screenNames(_ captured: CapturedScreen?) async -> [String] {
+        guard let captured, !captured.jpeg.isEmpty else { return [] }
+        let jpeg = captured.jpeg, frame = captured.frame, pid = captured.app.pid, trusted = DesktopAccessibility.isTrusted
+        // Both at once, and the control walk kept short: this runs before the question is sent.
+        async let controls = Task.detached(priority: .userInitiated) {
+            trusted ? DesktopAccessibility.controls(pid: pid, in: frame, limit: 2500, budget: 0.6).map(\.name) : []
+        }.value
+        async let read = Task.detached(priority: .userInitiated) {
+            ScreenReading.lines(jpeg: jpeg, frame: frame).map { $0.map(\.text).joined(separator: " ") }
+        }.value
+        return await controls + read
+    }
+
+    func runTurn(_ entry: ConversationEntry, question: String, app: ForegroundApp?, turn myTurn: Int) async {
         var captured: CapturedScreen?
         var screenUnavailable: String?
         defer {
@@ -592,8 +567,10 @@ final class CompanionController: NSObject {
                 answer = CoachAnswer(reply: result.verified || findOnScreen ? "Select \(cell.address): column \(cell.columnLetters), row \(cell.row)." : result.message,
                                      target: findOnScreen ? ScreenTarget(left: 0, top: 0, right: 0, bottom: 0, label: cell.address, cell: cell.address) : nil)
             } else {
+                let names = await screenNames(captured)
+                guard myTurn == turn else { return }
                 answer = try await coach.answer(question: CoachClient.compose(question: question, platform: "macOS", excel: context,
-                    profile: profileDocument.profile), history: session.providerHistory(excluding: entry.turnID), jpeg: captured?.jpeg)
+                    profile: profileDocument.profile, app: captured?.app.name, screenNames: names, library: .shared), history: session.providerHistory(excluding: entry.turnID), jpeg: captured?.jpeg)
             }
             try Task.checkCancellation()
             guard myTurn == turn else { return }
@@ -635,7 +612,7 @@ final class CompanionController: NSObject {
         saveConversation()
     }
 
-    private func setBusy(_ busy: Bool) {
+    func setBusy(_ busy: Bool) {
         pipHost.pip.setThinking(busy)
         sendButton.title = busy ? "■" : "↑"
         sendButton.textSize = busy ? 14 : 19
@@ -644,228 +621,7 @@ final class CompanionController: NSObject {
         micButton.isEnabled = !finishingDictation
     }
 
-    // MARK: - Highlights and the teaching companion
-
-    private var panelRect: CGRect? {
-        guard panelOpen, inputWindow.isVisible else { return nil }
-        return ScreenSpace.toTopLeft(inputWindow.frame)
-    }
-
-    /// Sends Pip to where the reply or step happens and circles it, found on the screen as it is now:
-    /// - the window is pictured again and its words are read on this Mac (Apple Vision), so a button or tab is circled
-    ///   where its name appears, and an Excel cell where its column letter and row number meet;
-    /// - Accessibility's named controls are used too, and Excel's own confirmation where it gives one (Windows).
-    /// The model's rough position is shown dashed at once, and replaced by a checked place when one is found.
-    /// Every decision is written to pointing.log for debugging.
-    private func point(at target: ScreenTarget?, checkRequest: Bool) {
-        guard let target, let captured = replyCapture, screenSharingEnabled else { return }
-        let cell = target.cell.flatMap(CellReference.parse)
-        // A direct "circle A1" can't be quietly answered with B1.
-        if checkRequest, let cell, requestedCells.count == 1, !CellReference.matchesRequest(cell, requestedCells) { return }
-        let version = highlightVersion
-        let estimate = target.hasBox ? CompanionPlacement.fromScreenshot(window: captured.frame, target: target) : nil
-        var log: [String: Any] = ["label": target.label, "cell": target.cell ?? "", "window": PointingDiagnostics.rect(captured.frame) ?? [:],
-                                  "modelBox": PointingDiagnostics.rect(estimate) ?? [:], "app": captured.app.name]
-        Task {
-            defer { PointingDiagnostics.record(log) }
-            if let cell {
-                let result = await excel.resolve(captured, cell)
-                guard version == highlightVersion, !closed else { log["source"] = "superseded"; return }
-                if result.verified, let bounds = result.bounds {
-                    log["source"] = "excel-verified"; log["drawn"] = PointingDiagnostics.rect(bounds)
-                    showTarget(captured, bounds, verified: true, cell: cell, sheet: result.sheet, persistent: true)
-                    return
-                }
-            }
-            // Go straight to where the model saw it (dashed) while the screen is read; a checked place replaces it.
-            if let estimate { showTarget(captured, estimate, verified: false, cell: nil, sheet: nil, persistent: true) }
-            // Picture the window as it is now and read it; the picture is dropped straight after.
-            var now = captured
-            var lines: [[ScreenWord]] = []
-            if let fresh = try? await capture.capture(captured.app), fresh.windowID == captured.windowID {
-                let jpeg = fresh.jpeg, frame = fresh.frame
-                lines = await Task.detached(operation: { ScreenReading.lines(jpeg: jpeg, frame: frame) }).value
-                fresh.jpeg.resetBytes(in: 0..<fresh.jpeg.count)
-                now = CapturedScreen(jpeg: Data(), windowID: fresh.windowID, frame: fresh.frame, app: fresh.app)
-            }
-            guard version == highlightVersion, !closed else { log["source"] = "superseded"; return }
-            let words = lines.flatMap { $0 }
-            log["wordsRead"] = words.count
-            let trusted = DesktopAccessibility.isTrusted
-            log["accessibility"] = trusted
-            let pid = now.app.pid, window = now.frame
-            var place: CGRect?
-            var source = "none"
-            if let cell {
-                let range = target.label.contains(":") && StepCheck.references(in: "select \(target.label)").count == 1 ? target.label : cell.address
-                if let found = ScreenText.excelCell(range, words: words) {
-                    place = found; source = "screen-headings"
-                } else if trusted, now.app.isExcel, let metrics = await selectionReader.cellMetrics(range),
-                          let grid = await Task.detached(operation: { DesktopAccessibility.largest(role: "AXLayoutArea", pid: pid, in: window) }).value,
-                          let measured = ExcelGeometry.choose(ExcelGeometry.candidates(metrics, grid: grid), near: estimate) {
-                    place = measured; source = "excel-measured"
-                }
-            } else {
-                let controls = trusted ? await Task.detached(operation: { DesktopAccessibility.controls(pid: pid, in: window) }).value : []
-                let read = ScreenText.candidates(lines: lines)
-                log["controls"] = controls.count
-                if let snapped = TargetSnap.snap(box: estimate, label: target.label, candidates: controls) {
-                    place = snapped; source = "accessibility"
-                    log["matched"] = controls.first { $0.frame == snapped }?.name ?? ""
-                } else if let snapped = TargetSnap.snap(box: estimate, label: target.label, candidates: read, byPosition: false) {
-                    place = snapped; source = "screen-text"
-                    log["matched"] = read.first { $0.frame == snapped }?.name ?? ""
-                }
-            }
-            // Nothing on screen could confirm it (an icon with no visible name, and no Accessibility): still go to where
-            // the model saw it, dashed so it reads as approximate, and say how to make it exact.
-            if place == nil, let estimate {
-                place = estimate
-                source = "model-estimate"
-                if !trusted, cell == nil, !shownAccessibilityTip {
-                    shownAccessibilityTip = true
-                    bubble.tip("Approximate. Turn on F2L under Accessibility so I can find icons exactly. Already on? Use Reset permissions in Settings.",
-                               action: "Settings") { self.showSettings() }
-                }
-            }
-            log["source"] = source
-            log["drawn"] = PointingDiagnostics.rect(place)
-            guard version == highlightVersion, !closed, let place else { if version != highlightVersion { log["source"] = "superseded" }; return }
-            replyCapture = now
-            showTarget(now, place, verified: !source.hasPrefix("model"), cell: nil, sheet: nil, persistent: true)
-        }
-    }
-
-    /// macOS keeps asking (or keeps saying no) when its Accessibility or Automation entry for F2L belongs to an older
-    /// build. This clears F2L's own two entries, then asks once, fresh, for the current app.
-    private func fixPermissions() {
-        for service in ["Accessibility", "AppleEvents"] {
-            let reset = Process()
-            reset.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
-            reset.arguments = ["reset", service, Bundle.main.bundleIdentifier ?? "ai.f2l.companion"]
-            try? reset.run()
-            reset.waitUntilExit()
-        }
-        shownAccessibilityTip = false
-        DesktopAccessibility.requestTrust()
-        say("Permissions cleared. Turn F2L on under Accessibility, then quit and reopen F2L. I'll ask about Excel the next time you ask a question in it.")
-    }
-
-    private func saveDiagnostics() {
-        let app = capture.target()
-        Task {
-            let message = await PointingDiagnostics.save(app: app, capture: capture, excel: selectionReader)
-            say(message)
-        }
-    }
-
-    private func forgetPlaces() {
-        replyCapture = nil
-        replyTarget = nil
-        stepTargets = []
-        requestedCells = []
-    }
-
-    private func showTarget(_ captured: CapturedScreen, _ bounds: CGRect, verified: Bool, cell: CellReference?, sheet: String?, persistent: Bool = false) {
-        guard CompanionPlacement.isUsable(bounds), ScreenCaptureService.isCurrent(captured),
-              ScreenCaptureService.pointBelongsToWindow(captured.windowID, CGPoint(x: bounds.midX, y: bounds.midY)) else { return }
-        targetPersistent = persistent
-        targetCapture = captured
-        targetCell = cell
-        targetSheet = sheet
-        targetShown = Date()
-        if guide == nil { guide = GuideOverlayWindow() }
-        guide?.show(bounds, verified: verified)
-        // The input bar never sits on the place Pip is pointing at (unless the learner put it there).
-        if !inputMoved, let input = panelRect, input.touches(TargetSnap.circle(around: bounds).insetBy(dx: -16, dy: -16)) {
-            inputDodging = true
-            layoutInputBar()
-        }
-        updateTeachingCompanion(bounds)
-        positionBubble()
-    }
-
-    /// Every 0.4 s: approximate hints expire after 20 seconds or when the source window moves or loses focus;
-    /// verified cells are looked up again, so the outline follows window moves and scrolling (MainWindow.WatchTarget).
-    private func watchTarget() {
-        guard let captured = targetCapture, !checkingHighlight else { return }
-        guard let cell = targetCell else {
-            // A lesson step keeps its hint while it is shown; other approximate hints expire after 20 seconds.
-            if !ScreenCaptureService.isCurrent(captured) || (!targetPersistent && Date().timeIntervalSince(targetShown) > 20) { clearHighlight() }
-            return
-        }
-        guard let current = ScreenCaptureService.refreshed(captured) else { clearHighlight(); return }
-        checkingHighlight = true
-        let version = highlightVersion
-        Task {
-            let result = await excel.resolve(current, cell)
-            checkingHighlight = false
-            guard version == highlightVersion, !closed else { return }
-            if ScreenCaptureService.isCurrent(current), result.verified, result.sheet == targetSheet, let bounds = result.bounds {
-                targetCapture = current
-                guide?.show(bounds, verified: true)
-                updateTeachingCompanion(bounds)
-            } else {
-                clearHighlight()
-            }
-        }
-    }
-
-    private func clearHighlight() {
-        highlightVersion += 1
-        guide?.close()
-        guide = nil
-        stopTeachingCompanion()
-        lastTargetBounds = nil
-        targetCapture = nil
-        targetCell = nil
-        targetSheet = nil
-        if inputDodging { inputDodging = false; layoutInputBar() }
-    }
-
-    private func updateTeachingCompanion(_ target: CGRect) {
-        lastTargetBounds = target
-        if let captured = targetCapture, !ScreenCaptureService.isCurrent(captured) { stopTeachingCompanion(); return }
-        guard followTargets, panelOpen, !isListening, !finishingDictation, !isRequestPending else { stopTeachingCompanion(); return }
-        let width = min(max(pipSize.width * 0.8, 90), 144)
-        let work = ScreenSpace.workArea(at: CGPoint(x: target.midX, y: target.midY))
-        // Stand clear of the whole circle, not just the target inside it.
-        guard let spot = CompanionPlacement.choose(target: TargetSnap.circle(around: target), work: work, size: CGSize(width: width, height: width * 340 / 320),
-                                                   panel: panelRect, cursor: ScreenSpace.cursor, scale: 1, previous: teachingPip?.screenBounds)
-        else { stopTeachingCompanion(); return }
-        let follower = teachingPip ?? TeachingCompanionWindow()
-        teachingPip = follower
-        follower.onMove = { [weak self] in self?.positionBubble() }
-        follower.reducedMotion = reducedMotion
-        follower.pip.setIntent(questionIntent)
-        follower.follow(spot, target: target, origin: homeRect, panel: panelRect)
-        companionPanel.isHidden = true
-    }
-
-    private func stopTeachingCompanion() {
-        teachingPip?.close()
-        teachingPip = nil
-        companionPanel.isHidden = false
-        positionBubble()
-    }
-
-    /// Every 1.5 s while a reply about Excel is open: the card shows what is really selected and ticks steps.
-    private func watchSelection() {
-        guard selectionEnabled, screenSharingEnabled, panelOpen, bubble.isShowing, !selectionBusy, !closed,
-              Date().timeIntervalSince(lastSelectionRead) > 1.5 else { return }
-        guard capture.target()?.isExcel == true else { return }
-        selectionBusy = true
-        lastSelectionRead = Date()
-        let version = turn
-        Task {
-            let result = await selectionReader.read()
-            selectionBusy = false
-            guard version == turn, !closed, screenSharingEnabled, selectionEnabled, capture.target()?.isExcel == true else { return }
-            bubble.updateSelection(result.context, line: result.message)
-        }
-    }
-
-    private func newChat() {
+    func newChat() {
         cancelCurrentTurn()
         saveDraftTimer?.invalidate()
         clearHighlight()
@@ -882,7 +638,7 @@ final class CompanionController: NSObject {
 
     // MARK: - Dictation (mirrors Talk_Click)
 
-    private func talk() {
+    func talk() {
         guard !finishingDictation else { return }
         if !isListening {
             cancelCurrentTurn()
@@ -928,7 +684,7 @@ final class CompanionController: NSObject {
     }
 
     /// What was typed before (or during) dictation, then the words spoken since.
-    private func applyTranscript(_ transcript: String) {
+    func applyTranscript(_ transcript: String) {
         let spoken = String(transcript.dropFirst(consumedTranscript)).trimmingCharacters(in: .whitespacesAndNewlines)
         let prefix = dictationPrefix
         let joined = prefix.isEmpty || spoken.isEmpty ? prefix + spoken
@@ -939,7 +695,7 @@ final class CompanionController: NSObject {
         applyingTranscript = false
     }
 
-    private func stopDictation() {
+    func stopDictation() {
         dictationSession += 1
         if isListening || finishingDictation { dictation.cancel() }
         isListening = false
@@ -949,54 +705,9 @@ final class CompanionController: NSObject {
         setPlaceholder(Self.askPlaceholder)
     }
 
-    // MARK: - Settings, saving, quitting
+    // MARK: - Saving and quitting
 
-    private func showSettings() {
-        if settingsWindow == nil {
-            settingsWindow = SettingsWindow(hooks: .init(
-                reducedMotion: { [unowned self] in reducedMotion },
-                setReducedMotion: { [unowned self] on in setReducedMotion(on) },
-                followTargets: { [unowned self] in followTargets },
-                setFollowTargets: { [unowned self] on in
-                    followTargets = on
-                    if on, let target = lastTargetBounds { updateTeachingCompanion(target) } else { stopTeachingCompanion() }
-                },
-                resetPermissions: { [unowned self] in fixPermissions() },
-                saveDiagnostics: { [unowned self] in saveDiagnostics() }))
-        }
-        NSApp.activate()
-        settingsWindow?.center()
-        settingsWindow?.makeKeyAndOrderFront(nil)
-    }
-
-    private func setReducedMotion(_ on: Bool) {
-        reducedMotion = on
-        bubble.reducedMotion = on
-        pipHost.pip.setReducedMotion(on)
-        teachingPip?.reducedMotion = on
-        teachingPip?.pip.setReducedMotion(on)
-    }
-
-    private func showProfile() {
-        if let personalizeWindow, personalizeWindow.isVisible { personalizeWindow.makeKeyAndOrderFront(nil); return }
-        minimiseConversation()
-        let setup = PersonalizeWindow(store: profileStore, coach: coach)
-        personalizeWindow = setup
-        setup.onDone = { [weak self] in
-            guard let self else { return }
-            profileDocument = testing ? ProfileDocument() : profileStore.load()
-            openConversation(); greet()
-        }
-        setup.onChange = { [weak self] in
-            guard let self, !testing else { return }
-            profileDocument = profileStore.load()
-        }
-        setup.onSettings = { [weak self] in self?.showSettings() }
-        NSApp.activate()
-        setup.makeKeyAndOrderFront(nil)
-    }
-
-    private func saveConversation() {
+    func saveConversation() {
         if !store.save(session, draft: composer.string) { Log.app.error("Couldn't save the conversation") }
     }
 
@@ -1033,6 +744,7 @@ final class CompanionController: NSObject {
         lastTargetBounds = target
         if guide == nil { guide = GuideOverlayWindow() }
         guide?.show(target, verified: false)
+        watchClicks() // so the soak check measures the click watch too
         updateTeachingCompanion(target)
     }
 

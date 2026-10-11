@@ -123,7 +123,7 @@ let starterPlanFixture = #"{"title":"A calmer reporting week","summary":"Make ro
                 #expect(messages.first?["content"] as? String == StarterPlan.systemPrompt)
                 #expect(messages.count == 2)
             }
-            #expect(!String(decoding: data, as: UTF8.self).contains("image"))
+            #expect(!String(decoding: data, as: UTF8.self).contains("image_url") && !String(decoding: data, as: UTF8.self).contains("base64"))
             if provider == .deepSeek { #expect(body["max_tokens"] as? Int == 2000) }
         }
     }

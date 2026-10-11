@@ -58,14 +58,6 @@ final class FlatButton: NSButton {
         attributedTitle.draw(in: NSRect(x: x, y: (bounds.height - text.height) / 2, width: min(text.width, bounds.width - x), height: text.height))
     }
 
-    func alignLeft() {
-        let title = NSMutableAttributedString(attributedString: attributedTitle)
-        let paragraph = NSMutableParagraphStyle()
-        paragraph.alignment = .left
-        title.addAttribute(.paragraphStyle, value: paragraph, range: NSRange(location: 0, length: title.length))
-        attributedTitle = title
-    }
-
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
         trackingAreas.forEach(removeTrackingArea)

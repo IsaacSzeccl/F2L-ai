@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerates Assets/Pip/frames.json from the two Pip atlases.
+"""Regenerates Assets/Pip/frames.json from the three Pip atlases.
 
 The atlases hold 16 transparent poses each. Finding them means flood-filling ~1.5M pixels per atlas,
 so both apps read the precomputed rectangles instead of repeating the scan on every launch.
@@ -51,7 +51,7 @@ def find_frames(path: Path) -> list[list[int]]:
 
 def main() -> None:
     manifest = {"version": 1, "displayWidth": 288, "canvas": [320, 340], "baseline": 325}
-    for name in ("expressions", "directions"):
+    for name in ("expressions", "directions", "playful"):
         image = Image.open(PIP / f"{name}.png")
         manifest[name] = {"atlas": list(image.size), "frames": find_frames(PIP / f"{name}.png")}
     out = PIP / "frames.json"

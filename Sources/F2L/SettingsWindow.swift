@@ -41,6 +41,8 @@ final class SettingsWindow: NSWindow, NSWindowDelegate, NSTextFieldDelegate {
         titlebarAppearsTransparent = true
         isReleasedWhenClosed = false
         delegate = self
+        root.wantsLayer = true
+        root.layer?.backgroundColor = Self.cream.cgColor
         contentView = root
         rebuild()
         center()
@@ -102,7 +104,8 @@ final class SettingsWindow: NSWindow, NSWindowDelegate, NSTextFieldDelegate {
         root.subviews.forEach { $0.removeFromSuperview() }
         body.subviews.forEach { $0.removeFromSuperview() }
         let h = root.bounds.height, w = Self.width - 64
-        _ = label("Settings", x: 32, y: 34, width: w, size: 26, weight: .semibold, in: root)
+        _ = label("Settings", x: 32, y: 34, width: w - 70, size: 26, weight: .semibold, in: root)
+        root.addSubview(BrandArtwork.view("Illustrations/settings-compass.png", frame: NSRect(x: Self.width - 92, y: 16, width: 60, height: 60)))
         scroll.frame = NSRect(x: 32, y: 82, width: w + 16, height: h - 82 - 74)
         scroll.drawsBackground = false; scroll.hasVerticalScroller = true; scroll.autohidesScrollers = true
         scroll.documentView = body

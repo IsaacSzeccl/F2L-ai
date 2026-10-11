@@ -101,17 +101,18 @@ final class PersonalizeWindow: NSWindow, NSWindowDelegate, NSTextFieldDelegate {
         nameField = nil; roleField = nil; goalField = nil; learnField = nil; primary = nil
         let w = root.bounds.width, h = root.bounds.height, side: CGFloat = 300, contentWidth = w - side - 80
 
-        // Left: a soft round panel with Pip in a big circle.
+        // Left: original artwork changes with each stage of the learner's setup.
         let panel = RoundedBox(fill: Self.sage, radius: 36)
         panel.frame = NSRect(x: 20, y: 20, width: side - 20, height: h - 40)
         root.addSubview(panel)
-        _ = label("F2L  ·  PIP", x: 30, y: 30, width: 220, size: 10, color: Self.green, weight: .semibold, in: panel)
+        panel.addSubview(BrandArtwork.view("Brand/learning-doorway.png", frame: NSRect(x: 27, y: 22, width: 30, height: 30)))
+        _ = label("F2L  ·  PIP", x: 65, y: 30, width: 185, size: 10, color: Self.green, weight: .semibold, in: panel)
         _ = label(["Your work,\nyour way.", "Your pace.\nNo pressure.", "Small steps.\nReal progress."][step],
                   x: 30, y: 62, width: 220, size: 27, color: Self.green, weight: .semibold, in: panel)
         let disc = side - 20 - 48
         let discY = max(190, min(h - 40 - disc - 110, 200))
         let halo = circle(disc, fill: Self.cream.withAlphaComponent(0.9), at: NSPoint(x: 24, y: discY), in: panel)
-        if let url = Assets.url("Pip/welcome-journey.png"), let image = NSImage(contentsOf: url) {
+        if let image = BrandArtwork.image("Illustrations/\(["your-work", "your-pace", "your-plan"][step]).png") {
             let art = NSImageView(frame: halo.bounds.insetBy(dx: 6, dy: 6))
             art.image = image; art.imageScaling = .scaleProportionallyUpOrDown
             art.setAccessibilityElement(false)
@@ -202,7 +203,7 @@ final class PersonalizeWindow: NSWindow, NSWindowDelegate, NSTextFieldDelegate {
     private func pace(width: CGFloat) -> CGFloat {
         var y = label("How do you use AI today?", x: 0, y: 0, width: width, size: 26, weight: .semibold) + 10
         y += label("Pip changes how much it explains. Every starting point is fine.", x: 0, y: y, width: width, color: Self.muted) + 24
-        // Three round cards, each with Pip's emote in a circle.
+        // Three original object illustrations, with the experience labels kept as native text.
         let gap: CGFloat = 12, cardWidth = (width - gap * 2) / 3, cardHeight: CGFloat = 196
         for (index, option) in LearnerProfile.experiences.enumerated() {
             let selected = profile.experience == option.0
@@ -212,7 +213,7 @@ final class PersonalizeWindow: NSWindow, NSWindowDelegate, NSTextFieldDelegate {
             body.addSubview(card)
             let halo = circle(72, fill: selected ? Self.sage : Self.cream, at: NSPoint(x: (cardWidth - 72) / 2, y: 18), in: card)
             let emote = NSImageView(frame: halo.bounds.insetBy(dx: 6, dy: 6))
-            emote.image = (option.0 == "new" ? PipEmote.curious : option.0 == "some" ? .happy : .hello).image(side: 60)
+            emote.image = BrandArtwork.image("Illustrations/\(["first-spark", "exploring", "daily-practice"][index]).png")
             emote.setAccessibilityElement(false)
             halo.addSubview(emote)
             let title = makeLabel(option.1, size: 14, weight: .semibold, color: selected ? Self.green : Palette.ink, wraps: true)
@@ -232,15 +233,15 @@ final class PersonalizeWindow: NSWindow, NSWindowDelegate, NSTextFieldDelegate {
         y += cardHeight + 30
         y += label("Tools you already use at work · optional", x: 6, y: y, width: width, size: 13, weight: .semibold) + 12
         let chip: CGFloat = (width - 16) / 3
-        for (index, tool) in ToolCatalog.all.enumerated() {
-            button(tool.name, x: CGFloat(index % 3) * (chip + 8), y: y + CGFloat(index / 3) * 46, width: chip, height: 38,
+        for (index, tool) in ToolCatalog.common.enumerated() {
+            button(tool.name.components(separatedBy: " (")[0].components(separatedBy: " with ")[0], x: CGFloat(index % 3) * (chip + 8), y: y + CGFloat(index / 3) * 46, width: chip, height: 38,
                    selected: profile.existingTools.contains(tool.id)) { [weak self] in
                 guard let self else { return }
                 if profile.existingTools.contains(tool.id) { profile.existingTools.removeAll { $0 == tool.id } } else { profile.existingTools.append(tool.id) }
                 rebuild()
             }
         }
-        y += 100
+        y += CGFloat((ToolCatalog.common.count + 2) / 3) * 46 + 8
         let toggle = NSButton(checkboxWithTitle: "Use this to personalise Pip’s help", target: self, action: #selector(togglePersonalization))
         toggle.state = profile.personalizationEnabled ? .on : .off; toggle.font = Fonts.inter(13)
         toggle.frame = NSRect(x: 2, y: y, width: width, height: 24); body.addSubview(toggle); y += 32

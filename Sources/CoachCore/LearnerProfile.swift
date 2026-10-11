@@ -18,11 +18,11 @@ public struct LearnerProfile: Codable, Equatable, Sendable {
     /// getting started with the tools in their plan.
     public static func learningIdeas(for profile: LearnerProfile, plan: StarterPlan? = nil) -> [String] {
         let byFocus: [String] = switch profile.focus {
-        case "analyze": ["Formulas like SUM and XLOOKUP", "Sorting and filtering data", "Pivot tables", "Charts for reports", "Cleaning messy data"]
-        case "create": ["Writing clear emails with AI", "Slides that look good", "Summarising long documents", "Checking my writing with AI"]
-        case "build": ["Automating repetitive steps", "Shortcuts that save time", "Writing good AI prompts", "Connecting apps together"]
-        case "learn": ["Writing good AI prompts", "Learning a new tool quickly", "Summarising articles to learn faster", "Preparing for a review"]
-        default: ["Planning my week", "Meeting notes and action items", "Keeping my inbox under control", "Keeping notes in one place"]
+        case "analyze": ["Analysing data with an AI assistant", "Charts for reports", "Formulas like SUM and XLOOKUP", "Pivot tables"]
+        case "create": ["Writing clear emails with AI", "Making slides with AI", "Designing with Canva", "Summarising long documents"]
+        case "build": ["Writing good AI prompts", "Automating repetitive steps", "Making a custom GPT or Gem", "Connecting apps with Zapier"]
+        case "learn": ["Setting up ChatGPT, Gemini or Grok", "Writing good AI prompts", "Learning a new AI tool quickly", "Summarising articles to learn faster"]
+        default: ["Setting up Notion for my work", "Getting started with Google Workspace", "Meeting notes and action items with AI", "Planning my week with AI"]
         }
         let tools = (plan?.tools.map(\.id) ?? []).compactMap(ToolCatalog.find).map { "Getting started with \($0.name)" }
         var ideas: [String] = []
@@ -176,7 +176,7 @@ public struct StarterPlan: Codable, Equatable, Sendable {
     static func inSentence(_ text: String) -> String {
         let first = text.split(separator: " ").first.map(String.init) ?? ""
         let keep = first == "I" || first.hasPrefix("I'") || first.count > 1 && first.dropFirst().first?.isUppercase == true
-            || ToolCatalog.all.contains { first.lowercased().hasPrefix($0.name.lowercased()) } || ["Excel", "Word", "PowerPoint", "Outlook", "Teams"].contains(first)
+            || ToolCatalog.common.contains { first.lowercased().hasPrefix($0.name.lowercased()) } || ["Excel", "Word", "PowerPoint", "Outlook", "Teams"].contains(first)
         return keep ? text : text.prefix(1).lowercased() + text.dropFirst()
     }
 
@@ -209,17 +209,14 @@ public struct StarterPlan: Codable, Equatable, Sendable {
     }
 }
 
+/// The tools a starter plan may recommend: every tool in F2L's AI tools library (AIToolLibrary), by id.
 public struct ToolCatalog: Sendable {
     public let id, name, purpose, url: String
-    public static let all: [Self] = [
-        Self(id: "excel", name: "Excel", purpose: "Turn a small table into a checked calculation or a clear summary.", url: "https://www.microsoft.com/en-us/microsoft-365/excel"),
-        Self(id: "notion", name: "Notion", purpose: "Keep project notes, decisions and next actions in one place.", url: "https://www.notion.com/product/ai"),
-        Self(id: "canva", name: "Canva", purpose: "Turn an outline into a visual presentation or a simple design.", url: "https://www.canva.com/canva-ai/"),
-        Self(id: "notebooklm", name: "Gemini Notebook", purpose: "Explore and summarize source material you choose to provide.", url: "https://notebook.google/"),
-        Self(id: "zapier", name: "Zapier", purpose: "Connect a repeatable task across apps with a workflow you review.", url: "https://zapier.com/"),
-        Self(id: "copilot", name: "GitHub Copilot", purpose: "Explore code ideas and review a small implementation with AI assistance.", url: "https://github.com/features/copilot")
-    ]
-    public static func find(_ id: String) -> Self? { all.first { $0.id == id } }
+    init(_ tool: AITool) { (id, name, purpose, url) = (tool.id, tool.name, tool.summary, tool.url) }
+    public static var all: [Self] { AIToolLibrary.shared.tools.map(Self.init) }
+    /// The tools offered as "Tools you already use" in the welcome.
+    public static var common: [Self] { AIToolLibrary.shared.tools.filter(\.common).map(Self.init) }
+    public static func find(_ id: String) -> Self? { AIToolLibrary.shared.find(id).map(Self.init) }
 }
 
 public struct ProfileDocument: Codable, Equatable, Sendable {

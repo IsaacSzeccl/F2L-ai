@@ -50,6 +50,19 @@ enum SoakCheck {
                 for i in 0..<50 { companion.seedSample(question: "Question \(i)", reply: "Answer \(i). Click the cell, then type.") }
                 companion.revealSample()
             }
+            // The opening plays on every launch: about six seconds of full-screen painting at 60 frames a second.
+            do {
+                var intro: IntroWindow? = companion.makeIntro()
+                let before = usage(), began = Date()
+                intro?.play {}
+                try? await Task.sleep(for: .seconds(6.2))
+                let after = usage(), elapsed = Date().timeIntervalSince(began)
+                intro?.finish()
+                intro = nil
+                try? await Task.sleep(for: .seconds(1))
+                lines.append(String(format: "opening animation: %.1f%% CPU over %.1f s, %.0f MB during, %.0f MB a second after", (after.cpu - before.cpu) / elapsed * 100,
+                                    elapsed, after.memoryMB, usage().memoryMB))
+            }
             // The heaviest per-step work: reading a window picture (Apple Vision), as each lesson step does.
             for attempt in ["first", "second"] {
                 let before = usage(), began = Date()

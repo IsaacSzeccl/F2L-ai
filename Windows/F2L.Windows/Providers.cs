@@ -22,7 +22,7 @@ internal static class Providers
     internal static string DefaultModel(this Provider provider) => provider switch
     {
         Provider.DeepSeek => "deepseek-flash", Provider.OpenAI => "gpt-5-mini", Provider.Gemini => "gemini-2.5-flash",
-        Provider.Claude => "claude-opus-5-5", _ => "glm-4.5v",
+        Provider.Claude => "claude-opus-5-5", _ => "glm-4.6v",
     };
 
     internal static string Endpoint(this Provider provider) => provider switch

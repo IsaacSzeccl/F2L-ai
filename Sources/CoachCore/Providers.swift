@@ -26,7 +26,7 @@ public enum Provider: String, CaseIterable, Sendable {
         case .openAI: "gpt-5-mini"
         case .gemini: "gemini-2.5-flash"
         case .claude: "claude-opus-5-5"
-        case .glm: "glm-4.5v"
+        case .glm: "glm-4.6v"
         }
     }
 

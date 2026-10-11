@@ -6,12 +6,24 @@ See [CHANGELOG.md](../CHANGELOG.md) for implementation changes and validation, a
 
 ## Production assets
 
+### Original F2L brand collection — 11 October 2026
+
+Ten new original PNGs now give the application its own identity beyond Pip: an open-book doorway emblem, a desktop icon, a dusk landscape for the entry screen, three distinct setup illustrations, three learning-experience badges, and a Settings compass. They are integrated in both desktop hosts. The original generated PNG bytes are preserved, with native `.icns` and `.ico` files packaged from the icon master.
+
+See the [visual catalog](previews/f2l-brand-board.png), [brand assets](../Windows/F2L.Windows/Assets/Brand/), [setup illustrations](../Windows/F2L.Windows/Assets/Illustrations/), and [exact prompts and usage map](../Windows/F2L.Windows/Assets/Brand/ARTWORK.md). Reproduce the catalog with `swift scripts/tools/preview_brand.swift` and the platform icons with `python3 scripts/tools/package_brand_icons.py`.
+
+### Pip and supporting resources
+
+Added on 11 October 2026: `playful.png`, a third 16-pose atlas for wink, dance, stretch and peekaboo idle animations. Both apps now consume 48 poses. Its exact built-in image-generation prompt is recorded in `ARTWORK.md`; `scripts/tools/preview_pip.swift` renders four looping GIF previews into `build/pip-previews/`.
+
 | Asset | Purpose and source |
 |---|---|
 | [expressions.png](../Windows/F2L.Windows/Assets/Pip/expressions.png) | 1254 × 1254 transparent atlas; 16 painted expression/speech poses. Generated on 8 October from the original Pip concept. |
 | [directions.png](../Windows/F2L.Windows/Assets/Pip/directions.png) | 1254 × 1254 transparent atlas; 16 pointing, profile, walking and rear-view poses. Generated on 8 October using the expression atlas as the character reference. |
+| [playful.png](../Windows/F2L.Windows/Assets/Pip/playful.png) | 1254 × 1254 transparent atlas; 16 wink, dance, yawn/stretch and peekaboo frames. Generated on 11 October using expressions.png as the character reference. |
 | [welcome-journey.png](../Windows/F2L.Windows/Assets/Pip/welcome-journey.png) | 1254 × 1254 transparent illustration for the first-time setup window (Pip reading on a stack of books beside a path). Generated on 8 October with the production Pip as reference. |
 | [Emotes/](../Windows/F2L.Windows/Assets/Pip/Emotes) | Six 256 × 256 Pip emotes (hello, happy, cheer, thinking, curious, focused) used instead of system emoji. Generated from expressions.png poses with drawn accents by `F2L --export-emotes`; see ARTWORK.md. |
+| [ai-tools.json](../Windows/F2L.Windows/Assets/Knowledge/ai-tools.json) | Pip's AI tools library: 68 tools with summary, official site, platforms, access, getting-started steps, features and suited kinds of work. Written for F2L on 11 October 2026; read by both apps. Update its `checked` date and this manifest's hash when it changes. |
 | [ARTWORK.md](../Windows/F2L.Windows/Assets/Pip/ARTWORK.md) | Exact production generation prompts, reference link and reviewed frame-selection exceptions. |
 | [Inter-Regular.ttf](../Windows/F2L.Windows/Assets/Fonts/Inter-Regular.ttf) | Regular UI font from the official Inter 4.1 distribution. |
 | [Inter-Medium.ttf](../Windows/F2L.Windows/Assets/Fonts/Inter-Medium.ttf) | Medium UI font from the same distribution. |

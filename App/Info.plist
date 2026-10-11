@@ -10,6 +10,8 @@
 	<string>ai.f2l.companion</string>
 	<key>CFBundleExecutable</key>
 	<string>F2L</string>
+	<key>CFBundleIconFile</key>
+	<string>F2L.icns</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

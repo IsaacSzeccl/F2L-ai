@@ -145,10 +145,15 @@ internal sealed partial class ReplyBubbleWindow : Window
     internal void Dismiss()
     {
         _reveal.Stop(); _advance.Stop();
+        var wasShowing = _pages.Count > 0;
         _pages = []; _steps = []; _index = 0;
         _text.Inlines.Clear();
         Hide();
+        if (wasShowing) Dismissed?.Invoke();
     }
+
+    /// <summary>The card was closed (answered, finished or hidden): Pip goes back to resting.</summary>
+    internal Action? Dismissed;
 
     /// <summary>Excel's live selection: shown on the card, and used to tick selection steps the learner has really done.</summary>
     internal void UpdateSelection(ExcelContext? context, string line)
@@ -175,6 +180,58 @@ internal sealed partial class ReplyBubbleWindow : Window
         }
         else if (state == StepState.Missing)
             SetStatus($"Not yet: {string.Join(", ", missing)} still {(missing.Count == 1 ? "needs" : "need")} selecting.", false);
+    }
+
+    /// <summary>The learner clicked the circled place. A click step is done and the lesson moves on; a step that also
+    /// needs typing or dragging says what is left; a plain answer is marked done. Same as ReplyBubble.clickedTarget on Mac.</summary>
+    internal void ClickedTarget(IReadOnlySet<string>? held = null)
+    {
+        if (_index >= _pages.Count || _ticked) return;
+        var page = _pages[_index];
+        if (page.Kind == PageKind.Finished) return;
+        if (page.Kind == PageKind.Step)
+        {
+            var missing = ClickWatch.RequiredKeys(_steps[page.Step]).Except(held ?? new HashSet<string>()).Order().ToArray();
+            if (missing.Length > 0)
+            {
+                SetStatus($"Almost: hold {string.Join(" and ", missing.Select(key => KeyNames[key]).Distinct())} while you click.", false);
+                return;
+            }
+            if (!ClickWatch.FinishesOnClick(_steps[page.Step]))
+            {
+                SetStatus(ClickWatch.IsTypingStep(_steps[page.Step]) ? "Good, that’s the place. Now type it; I’ll move on when you stop."
+                    : "Good, that’s the place. Finish this step there, then press Done.", true);
+                return;
+            }
+        }
+        _ticked = true;
+        SetStatus("That’s it!", true);
+        SetEmote(PipEmote.Cheer);
+        Celebrate?.Invoke();
+        if (page.Kind != PageKind.Step) return;
+        _advance.Interval = TimeSpan.FromMilliseconds(_reducedMotion ? 600 : 1400);
+        _advance.Start();
+    }
+
+    /// <summary>On Windows a step's "Command" is Ctrl.</summary>
+    private static readonly Dictionary<string, string> KeyNames = new() { ["shift"] = "Shift", ["command"] = "Ctrl", ["control"] = "Ctrl", ["option"] = "Alt" };
+
+    /// <summary>The step on screen, while it isn't ticked yet.</summary>
+    internal string? CurrentStep => _index < _pages.Count && _pages[_index] is { Kind: PageKind.Step } page && !_ticked ? _steps[page.Step] : null;
+
+    /// <summary>A short note under the current step, such as "You're already there".</summary>
+    internal void Note(string line) { if (CurrentStep is not null) SetStatus(line, true); }
+
+    /// <summary>F2L saw the step happen (the box got text, the app or page came to the front): tick it and move on.</summary>
+    internal void StepDone()
+    {
+        if (CurrentStep is null) return;
+        _ticked = true;
+        SetStatus("That’s it!", true);
+        SetEmote(PipEmote.Cheer);
+        Celebrate?.Invoke();
+        _advance.Interval = TimeSpan.FromMilliseconds(_reducedMotion ? 600 : 1400);
+        _advance.Start();
     }
 
     // ---- Pages ----

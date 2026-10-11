@@ -26,8 +26,8 @@
       "path": "Windows/F2L.Windows/Assets/Pip/ARTWORK.md",
       "role": "generation-prompts",
       "provenance": "Production artwork prompts and frame review notes",
-      "bytes": 6567,
-      "sha256": "7adc7bd4396bd1e2697ccd9af155e97d6377564f6666ab780e242d56b1f9cdfd"
+      "bytes": 9638,
+      "sha256": "154166767b3fd1a1e22b7d27cd903a2d58ea03233dc59cfa4d1e4fd1b9879250"
     },
     {
       "path": "Windows/F2L.Windows/Assets/Fonts/Inter-Regular.ttf",
@@ -174,8 +174,144 @@
       "path": "Windows/F2L.Windows/Assets/Pip/frames.json",
       "role": "runtime-data",
       "provenance": "Sprite rectangles cut from expressions.png and directions.png (scripts/tools/pip_frames.py)",
-      "bytes": 1692,
-      "sha256": "6ff151af18ed9373324c56a327ed4dee61b90a3b1eb829b7cd1a3c6e3a1aa121"
+      "bytes": 2491,
+      "sha256": "1d994fc7b244df36202b1c51623f6b880e0fe6d8911b383bd9333f12313dfbcb"
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Knowledge/ai-tools.json",
+      "role": "runtime-data",
+      "provenance": "Written for F2L, 2026-10-11; facts checked against public product pages where noted",
+      "bytes": 55282,
+      "sha256": "7e935dc92da01b0e67f1ee6a66e070e24b872dfb9346fc3cd33b4994246cb424"
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Pip/playful.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; reference: expressions.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1482723,
+      "sha256": "03b558679c73de35a41c39f92f9979396485267ab39d52e195bc3cef4f8b1c2b"
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Brand/ARTWORK.md",
+      "role": "generation-prompts",
+      "provenance": "Exact built-in image generation prompts and usage map, 2026-10-11",
+      "bytes": 13335,
+      "sha256": "1b18aebf81a887284edd5e01cff82f7a8c52b8b710e0ebf34ef83b7a354ff6d7"
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Brand/F2L.icns",
+      "role": "runtime-icon",
+      "provenance": "Packaged from original app-icon.png with scripts/tools/package_brand_icons.py, 2026-10-11",
+      "bytes": 1543241,
+      "sha256": "ad3a7213c764870ff970d7bb9d6342b08235ff0a3fbafe439fc6412d61cc9cab"
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Brand/F2L.ico",
+      "role": "runtime-icon",
+      "provenance": "Packaged from original app-icon.png with scripts/tools/package_brand_icons.py, 2026-10-11",
+      "bytes": 95346,
+      "sha256": "9e66266e48bf418e5b7beec7ef8d51d085b3252440fcf441461ec394e2dfb8a9"
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Brand/app-icon.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; original F2L brand collection, see Brand/ARTWORK.md",
+      "bytes": 1532925,
+      "sha256": "5e1313e104cc371cda587158d3756a9ffc0682396510682ffe24cc0e0b373010",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Brand/launch-landscape.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; original F2L brand collection, see Brand/ARTWORK.md",
+      "bytes": 2127282,
+      "sha256": "a0025953aa2a29bc7de69a1b47283e88a9a6c70fe5537fb7445db0d5f7bf0fd8",
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Brand/learning-doorway.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; original F2L brand collection, see Brand/ARTWORK.md",
+      "bytes": 1218339,
+      "sha256": "277a23371a16833522146fccc287bac2e1ded6a91d11a6bf2d899b5aa4db3daf",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Illustrations/daily-practice.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; original F2L brand collection, see Brand/ARTWORK.md",
+      "bytes": 1548609,
+      "sha256": "294478373e2b7a4c2db2b325c1a8dec3721f9515f49182dcae9a6503be9e6542",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Illustrations/exploring.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; original F2L brand collection, see Brand/ARTWORK.md",
+      "bytes": 1014254,
+      "sha256": "65c0c75286c4570cdf0eed83cddd585e5986cf27898012e22ed4fed526519f22",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Illustrations/first-spark.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; original F2L brand collection, see Brand/ARTWORK.md",
+      "bytes": 1072012,
+      "sha256": "5093e6e7b890dfefebd73d1059bd8f5b2f89702c8948190ff3cfed3e2975a7de",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Illustrations/settings-compass.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; original F2L brand collection, see Brand/ARTWORK.md",
+      "bytes": 1317598,
+      "sha256": "90f3bd4b9c3cb82cbcf89cb26ab1086f9e45df8e705aeb2be7951a944abb1668",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Illustrations/your-pace.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; original F2L brand collection, see Brand/ARTWORK.md",
+      "bytes": 892446,
+      "sha256": "95fbdbefd1821033c55187a32a53e199d74ff7584ca750c299aea786318bed20",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Illustrations/your-plan.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; original F2L brand collection, see Brand/ARTWORK.md",
+      "bytes": 1429465,
+      "sha256": "a58ca5ead979259f69c7b93334de48bb6eb8cf7d8739a3d0ba7cad6abf17a58e",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "Windows/F2L.Windows/Assets/Illustrations/your-work.png",
+      "role": "runtime-artwork",
+      "provenance": "Built-in image generation, 2026-10-11; original F2L brand collection, see Brand/ARTWORK.md",
+      "bytes": 1418849,
+      "sha256": "d954c2d46613d512a598061bfd4cbac34f79872b6bbc3236c18f63709e8a2595",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "docs/previews/f2l-brand-board.png",
+      "role": "artwork-catalog",
+      "provenance": "Native contact sheet of original assets; scripts/tools/preview_brand.swift, 2026-10-11",
+      "bytes": 668206,
+      "sha256": "0efe6d7aadaaf52fd3c174eb49e3ddc9bd61b0a9fce1957d933cb96872ddf654",
+      "width": 1440,
+      "height": 1540
     }
   ]
 }

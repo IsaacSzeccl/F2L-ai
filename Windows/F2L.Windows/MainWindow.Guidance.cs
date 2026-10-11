@@ -6,7 +6,7 @@ public partial class MainWindow
 {
     private TeachingCompanionWindow? _teachingPip;
     private Rect? _lastTargetBounds;
-    // Pip stays in its corner and only the circle shows the place; the menu item turns walking on.
+    // Pip stays in its corner and only the circle shows the place; "Pip walks to what it’s teaching" in Settings turns walking on.
     private bool _followTargets;
     private bool _reducedMotion = !SystemParameters.ClientAreaAnimation;
     private QuestionIntent _questionIntent;

@@ -112,12 +112,14 @@ internal sealed class PersonalizeWindow : Window
         var sidebar = new Grid { Margin = new Thickness(24) };
         sidebar.RowDefinitions.Add(new() { Height = GridLength.Auto }); sidebar.RowDefinitions.Add(new() { Height = GridLength.Auto });
         sidebar.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) }); sidebar.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        var brand = Text("F2L  ·  PIP", 10, Green, true, 32); sidebar.Children.Add(brand);
+        var brand = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 24) };
+        brand.Children.Add(new Image { Source = BrandArtwork.Image("Brand/learning-doorway.png"), Width = 30, Height = 30, Margin = new Thickness(0, 0, 8, 0), IsHitTestVisible = false });
+        brand.Children.Add(Text("F2L  ·  PIP", 10, Green, true, 0)); sidebar.Children.Add(brand);
         var headline = Text(new[] { "Your work,\nyour way.", "Your pace.\nNo pressure.", "Small steps.\nReal progress." }[_step], 27, Green, true);
         Grid.SetRow(headline, 1); sidebar.Children.Add(headline);
-        // Pip's illustration inside a big soft circle.
-        var art = new Image { Source = new BitmapImage(new Uri("pack://application:,,,/F2L.Windows;component/Assets/Pip/welcome-journey.png")), Stretch = Stretch.Uniform, Margin = new Thickness(6) };
-        AutomationProperties.SetName(art, "Pip, your learning companion");
+        // Each setup step has its own original illustration.
+        var scene = new[] { "your-work", "your-pace", "your-plan" }[_step];
+        var art = new Image { Source = BrandArtwork.Image($"Illustrations/{scene}.png"), Stretch = Stretch.Uniform, Margin = new Thickness(6), IsHitTestVisible = false };
         var halo = new Border { Width = 216, Height = 216, CornerRadius = new CornerRadius(108), Background = Brush("#F4F2EC"), Child = art,
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetRow(halo, 2); sidebar.Children.Add(halo);
@@ -191,14 +193,14 @@ internal sealed class PersonalizeWindow : Window
     {
         body.Children.Add(Text("How do you use AI today?", 26, strong: true, bottom: 10));
         body.Children.Add(Text("Pip changes how much it explains. Every starting point is fine.", color: Muted, bottom: 24));
-        // Three round cards, each with Pip's emote in a circle.
+        // Three original object illustrations for the learner's experience level.
         var cards = new System.Windows.Controls.Primitives.UniformGrid { Columns = 3, Margin = new Thickness(0, 0, 0, 26) };
         foreach (var option in LearnerProfile.Experiences)
         {
             var selected = _profile.Experience == option.Id;
             var inside = new StackPanel { Margin = new Thickness(12, 18, 12, 16) };
             inside.Children.Add(new Border { Width = 72, Height = 72, CornerRadius = new CornerRadius(36), Background = selected ? Sage : Cream, Margin = new Thickness(0, 0, 0, 12),
-                Child = new Image { Margin = new Thickness(6), Source = PipEmotes.Image(option.Id == "new" ? PipEmote.Curious : option.Id == "some" ? PipEmote.Happy : PipEmote.Hello) } });
+                Child = new Image { Margin = new Thickness(6), Source = BrandArtwork.Image($"Illustrations/{(option.Id == "new" ? "first-spark" : option.Id == "some" ? "exploring" : "daily-practice")}.png"), IsHitTestVisible = false } });
             inside.Children.Add(new TextBlock { Text = option.Title, FontSize = 14, FontWeight = FontWeights.SemiBold, Foreground = selected ? Green : Ink,
                 TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 6) });
             inside.Children.Add(new TextBlock { Text = option.Detail, FontSize = 12, Foreground = Muted, TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap });
@@ -212,7 +214,7 @@ internal sealed class PersonalizeWindow : Window
         body.Children.Add(cards);
         body.Children.Add(Text("Tools you already use at work · optional", 13, Ink, true, 10));
         var tools = new System.Windows.Controls.Primitives.UniformGrid { Columns = 3 };
-        foreach (var tool in ToolCatalog.All) tools.Children.Add(ActionButton(tool.Name, () =>
+        foreach (var tool in ToolCatalog.Common) tools.Children.Add(ActionButton(tool.Name.Split(" (")[0].Split(" with ")[0], () =>
         {
             _profile.ExistingTools = _profile.ExistingTools.Contains(tool.Id) ? _profile.ExistingTools.Where(x => x != tool.Id).ToArray() : [.. _profile.ExistingTools, tool.Id]; Render();
         }, _profile.ExistingTools.Contains(tool.Id)));

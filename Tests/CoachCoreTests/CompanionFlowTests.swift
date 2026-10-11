@@ -11,6 +11,18 @@ import Testing
         #expect(ExcelContext(sheet: "Sheet1", selection: " , ", activeCell: "") == nil)
     }
 
+    @Test func anyToolIsTaughtFromWhereTheLearnerIs() throws {
+        // Asking about a tool that isn't open (Terminal in front) is taught from there, not refused.
+        let text = CoachClient.compose(question: "Teach me Tencent WorkBuddy", platform: "macOS", excel: nil, app: "Terminal", library: .shared)
+        #expect(text.hasPrefix("Teach me Tencent WorkBuddy\n\n(Learner's computer: macOS. The screenshot shows Terminal.)"))
+        #expect(!CoachClient.compose(question: "Hi", platform: "macOS", excel: nil).contains("screenshot shows"))
+        let prompt = CoachClient.teachingPrompt.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        #expect(prompt.contains("Teach the tool the learner asks about even when it is not on screen yet"))
+        #expect(prompt.contains("Never refuse or stop because a different app is in front"))
+        #expect(try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("../../Windows/F2L.Windows/ExcelContext.cs"), encoding: .utf8).contains("$\" The screenshot shows {app}.\""))
+    }
+
     @Test func stepsSurviveParsingAndHistory() throws {
         let answer = try #require(try CoachClient.readReply(#"{"reply":"Select both groups.","steps":["Click A1.","Hold Command and drag D1:D4.","",7],"target":null}"#))
         #expect(answer.steps == ["Click A1.", "Hold Command and drag D1:D4."])
@@ -72,5 +84,17 @@ import Testing
         // A cell with no box is still named, but there is nowhere to draw until Excel confirms it.
         let named = try #require(try CoachClient.readReply(#"{"reply":"Select A1.","steps":[],"check":null,"target":{"cell":"A1","label":"A1"}}"#))
         #expect(named.target?.cell == "A1" && named.target?.hasBox == false)
+    }
+}
+
+@Suite(.enabled(if: ProcessInfo.processInfo.environment["F2L_LIVE_TEACH"] == "1"))
+struct LiveTeaching {
+    @Test func aToolThatIsNotOpenIsStillTaught() async throws {
+        let client = CoachClient()
+        try #require(client.isConfigured, "No selected provider key is configured")
+        let question = CoachClient.compose(question: ProcessInfo.processInfo.environment["F2L_LIVE_QUESTION"] ?? "I want to learn how to use Grok", platform: "macOS", excel: nil, app: "Terminal", library: .shared)
+        let answer = try await client.answer(question: question, history: [], jpeg: nil)
+        print("LIVE:", answer.text)
+        #expect(!answer.text.lowercased().contains("can't teach") && !answer.text.lowercased().contains("cannot teach"))
     }
 }

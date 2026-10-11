@@ -62,7 +62,10 @@ internal sealed class SettingsWindow : Window
         root.RowDefinitions.Add(new() { Height = GridLength.Auto });
         root.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         root.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        root.Children.Add(Text("Settings", 26, strong: true, bottom: 16));
+        var header = new DockPanel { Margin = new Thickness(0, 0, 0, 16) };
+        var art = new Image { Source = BrandArtwork.Image("Illustrations/settings-compass.png"), Width = 60, Height = 60, IsHitTestVisible = false };
+        DockPanel.SetDock(art, Dock.Right); header.Children.Add(art);
+        header.Children.Add(Text("Settings", 26, strong: true, bottom: 0)); root.Children.Add(header);
         var body = new StackPanel { Margin = new Thickness(0, 0, 12, 0) };
         _scroll = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         _scroll.Loaded += (_, _) => _scroll.ScrollToVerticalOffset(offset);

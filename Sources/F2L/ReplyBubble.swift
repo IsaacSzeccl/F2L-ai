@@ -53,6 +53,8 @@ final class ReplyBubble: CompanionPanel {
     typealias Choice = (title: String, primary: Bool, action: () -> Void)
     private var sayChoices: [Choice] = []
     var onAskSomethingElse: (() -> Void)?
+    /// The card was closed (answered, finished or hidden): Pip goes back to resting.
+    var onDismiss: (() -> Void)?
     var reducedMotion = false { didSet { if reducedMotion { finishReveal() } } }
     var isShowing: Bool { !pages.isEmpty }
     var isLesson: Bool { !steps.isEmpty }
@@ -117,7 +119,9 @@ final class ReplyBubble: CompanionPanel {
         timer?.invalidate(); timer = nil
         advanceTimer?.invalidate(); advanceTimer = nil
         orderOut(nil)
+        let wasShowing = !pages.isEmpty
         pages = []; steps = []
+        if wasShowing { onDismiss?() }
     }
 
     /// Excel's live selection: shown on the card, and used to tick selection steps the learner has really done.
@@ -140,16 +144,75 @@ final class ReplyBubble: CompanionPanel {
             setStatus("That’s it! Excel shows \(areas.joined(separator: ", ")).", good: true)
             setEmote(.cheer)
             onCelebrate?()
-            let timer = Timer(timeInterval: reducedMotion ? 0.6 : 1.4, repeats: false) { [weak self] _ in
-                MainActor.assumeIsolated { self?.go(to: (self?.index ?? 0) + 1) }
-            }
-            RunLoop.main.add(timer, forMode: .common)
-            advanceTimer = timer
+            advanceSoon()
         case .missing(let needed):
             setStatus("Not yet: \(needed.joined(separator: ", ")) still \(needed.count == 1 ? "needs" : "need") selecting.", good: false)
         case .notCheckable:
             break
         }
+    }
+
+    /// After a ticked step, a moment to see the tick, then the next step.
+    private func advanceSoon() {
+        let timer = Timer(timeInterval: reducedMotion ? 0.6 : 1.4, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.go(to: (self?.index ?? 0) + 1) }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        advanceTimer = timer
+    }
+
+    /// The step on screen, while it isn't ticked yet.
+    var currentStep: String? {
+        guard pages.indices.contains(index), case .step(let number) = pages[index], !ticked else { return nil }
+        return steps[number]
+    }
+
+    static let keyNames = ["shift": "Shift", "command": "Command", "control": "Control", "option": "Option"]
+
+    /// The learner clicked the circled place, holding `held` keys. A click step is done and the lesson moves on (if
+    /// the keys it says to hold were held); a step that also needs typing or dragging says what is left; a plain
+    /// answer is marked done.
+    func clickedTarget(held: Set<String> = []) {
+        guard pages.indices.contains(index), !ticked else { return }
+        switch pages[index] {
+        case .step(let number):
+            let missing = ClickWatch.requiredKeys(steps[number]).subtracting(held)
+            guard missing.isEmpty else {
+                let keys = missing.sorted().compactMap { Self.keyNames[$0] }.joined(separator: " and ")
+                setStatus("Almost: hold \(keys) while you click.", good: false)
+                return
+            }
+            guard ClickWatch.finishesOnClick(steps[number]) else {
+                setStatus(ClickWatch.isTypingStep(steps[number]) ? "Good, that’s the place. Now type it; I’ll move on when you stop."
+                                                               : "Good, that’s the place. Finish this step there, then press Done.", good: true)
+                return
+            }
+            ticked = true
+            setStatus("That’s it!", good: true)
+            setEmote(.cheer)
+            onCelebrate?()
+            advanceSoon()
+        case .text:
+            ticked = true
+            setStatus("That’s it!", good: true)
+            setEmote(.cheer)
+            onCelebrate?()
+        case .finished:
+            break
+        }
+    }
+
+    /// A short note under the current step, such as "You're already there".
+    func note(_ line: String) { if currentStep != nil { setStatus(line, good: true) } }
+
+    /// F2L saw the step happen (the box got text, the app or page came to the front): tick it and move on.
+    func stepDone() {
+        guard currentStep != nil else { return }
+        ticked = true
+        setStatus("That’s it!", good: true)
+        setEmote(.cheer)
+        onCelebrate?()
+        advanceSoon()
     }
 
     // MARK: - Pages

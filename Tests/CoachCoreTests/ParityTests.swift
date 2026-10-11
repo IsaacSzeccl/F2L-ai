@@ -82,9 +82,12 @@ import Testing
     @Test func profilePromptAndCatalogMatch() throws {
         let profile = try source("LearnerProfile.cs")
         #expect(try rawString(after: "internal const string SystemPrompt", in: profile) == StarterPlan.systemPrompt)
-        for tool in ToolCatalog.all {
-            for value in [tool.id, tool.name, tool.purpose, tool.url] { expectQuoted(value, in: profile) }
-        }
+        // Both apps read the same AI tools library file; Windows embeds it.
+        let project = try source("F2L.Windows.csproj")
+        #expect(project.contains("Assets/Knowledge/ai-tools.json"))
+        let library = try source("AIToolLibrary.cs")
+        for word in AIToolLibrary.ambiguous { expectQuoted(word, in: library) }
+        #expect(library.contains("@\"" + AIToolLibrary.recommendation.pattern + "\""))
         for option in LearnerProfile.experiences { for value in [option.0, option.1, option.2] { expectQuoted(value, in: profile) } }
         for focus in LearnerProfile.focuses.map(\.0) {
             var learner = LearnerProfile(); learner.focus = focus
@@ -92,6 +95,50 @@ import Testing
         }
         #expect(profile.contains("\"" + LearnerProfile.lessonQuestion("{topic}") + "\""))
         #expect(profile.contains("Adapt examples to this background, and to what they chose to learn, when relevant."))
+    }
+
+    @Test func clickRulesAndScreenNamesMatch() throws {
+        let click = try source("ClickWatch.cs")
+        for regex in [ClickWatch.notJustAClick, ClickWatch.heldKey, ClickWatch.typing] { #expect(click.contains("@\"" + regex.pattern + "\"")) }
+        #expect(click.contains("TimeSpan.FromSeconds(\(TypingWatch.pause))"))
+        #expect(click.contains(String(ScreenNames.line(["OK"]).dropLast(2)).replacingOccurrences(of: "\n", with: "\\n")))
+        #expect(click.contains("internal const int Limit = \(ScreenNames.limit);"))
+    }
+
+    @Test func brandArtworkIsLoadedTheSameWay() throws {
+        // Both apps decode squares at most 512 px wide, keep the screen-sized backdrop and let it go after the opening.
+        let mac = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("../../Sources/F2L/BrandArtwork.swift"), encoding: .utf8)
+        let windows = try source("BrandArtwork.cs")
+        #expect(mac.contains("squareLimit = 512") && windows.contains("SquareLimit = 512"))
+        #expect(mac.contains("static let landscape = \"Brand/launch-landscape.png\"") && windows.contains("Landscape = \"Brand/launch-landscape.png\""))
+        #expect(try source("IntroWindow.cs").contains("BrandArtwork.Forget(BrandArtwork.Landscape)"))
+        // The app-icon master is packaged as .icns / .ico, not shipped inside the apps.
+        #expect(try source("F2L.Windows.csproj").contains("Exclude=\"Assets/Brand/app-icon.png\""))
+    }
+
+    @Test func playfulIdleTimingMatches() throws {
+        let view = try source("PipView.xaml.cs")
+        // The same 12-second cycle, 6–9 second quiet lead-in, activity order and frame timings as PipPose.playfulFrame.
+        for piece in ["var cycle = time / 12_000;", "var delay = 6_000 + (seed * 73 + cycle % 3_000 * 997) % 3_000;",
+                      "if (elapsed < 0 || elapsed >= 2_200) return null;", "var activity = (seed % 4 + cycle % 4 * (1 + seed / 4 % 2 * 2)) % 4;",
+                      "Sequence((int)elapsed, [0, 1, 2, 3], [350, 650, 650, 550])", "Random.Shared.Next(65_536)"] {
+            #expect(view.contains(piece), "PipView.xaml.cs differs: \(piece)")
+        }
+        #expect(try source("PipSprites.cs").contains("Load(\"playful\")"))
+    }
+
+    @Test func zoomedLookMatches() throws {
+        let zoom = try source("ZoomLocate.cs")
+        #expect(try rawString(after: "internal const string SystemPrompt", in: zoom) == ZoomLocate.systemPrompt)
+        #expect(zoom.contains("$\"Find the \\\"{label}\\\" control") && zoom.contains(" control (a button, tab, icon, menu item or field) in this part of the {app} window. Return JSON.\""))
+        #expect(zoom.contains("new(\(Int(ZoomLocate.minimum.width)), \(Int(ZoomLocate.minimum.height)))"))
+    }
+
+    @Test func stepGoalRulesMatch() throws {
+        let goal = try source("StepGoal.cs")
+        for regex in [StepGoal.domain, StepGoal.opening, StepGoal.browserWords] { #expect(goal.contains("@\"" + regex.pattern + "\"")) }
+        for browser in StepGoal.browsers { expectQuoted(browser, in: goal) }
     }
 
     @Test func namedPlaceRulesMatch() throws {

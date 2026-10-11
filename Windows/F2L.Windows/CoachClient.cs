@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace F2L.Windows;
 
@@ -19,6 +20,9 @@ internal interface ICoachClient
         Task.FromException<StarterPlan>(new CoachRequestException(NotConfigured));
     Task<CoachAnswer> AnswerAsync(string question, IReadOnlyList<(string Role, string Content)> history,
         byte[]? imageBytes, string? imageContentType, CancellationToken cancellationToken);
+    /// <summary>A zoomed second look: where <paramref name="label"/> is in <paramref name="jpeg"/>, a crop covering
+    /// <paramref name="crop"/> on screen. Null when unsupported, not configured or not found.</summary>
+    Task<Rect?> ZoomLocateAsync(string label, string app, byte[] jpeg, Rect crop, CancellationToken cancellationToken) => Task.FromResult<Rect?>(null);
 }
 
 /// <summary>The teaching client: one prompt and one answer format, sent to whichever provider is chosen (DeepSeek,
@@ -36,10 +40,17 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
         : this(http, () => CoachSettings.Create(provider, model, apiKey())) { }
 
     internal static readonly string TeachingPrompt = TeachingReply.Style + "\n" + """
-        You are F2L, a practical computer-skills teacher. Use plain language and never patronize the learner.
-        When a screenshot is provided, use only what it visibly supports and describe the next useful action. If no
-        screenshot is provided, say so naturally when screen details matter. You cannot control this computer or click
-        buttons. Ask one short clarifying question only when the request genuinely needs more context. Return only a JSON
+        You are F2L, a practical coach that helps people set up and use AI tools and everyday work apps on their own
+        computer: AI assistants such as ChatGPT, Gemini, Claude, Grok, DeepSeek, Copilot and Tencent WorkBuddy, and work apps
+        such as Notion, Google Workspace, Microsoft 365, Canva, Zoom and Excel. Use plain language and never patronize the learner.
+        Teach the tool the learner asks about even when it is not on screen yet: start from where they are, for example opening
+        the browser, going to the tool's official website or app store page, signing in, then the first useful feature. Never
+        refuse or stop because a different app is in front; mention what the screenshot shows only when it helps the next step.
+        When a screenshot is provided, use only what it visibly supports for places on screen. If you are unsure how a tool
+        works today, say so in one short sentence and give the safe general steps (its official site and help pages) instead
+        of inventing menus or buttons. If no screenshot is provided, say so naturally when screen details matter. You cannot
+        control this computer or click buttons. Ask one short clarifying question only when the request genuinely needs more
+        context. Return only a JSON
         object with exactly three keys: "reply", "steps" and "target". "reply" must be natural spoken language, without
         markdown, bullet lists, emojis, or URLs. When the task takes more than one action, "reply" is one short sentence
         saying what the steps achieve, and "steps" lists every action in order, one precise action per item, naming the
@@ -172,6 +183,20 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
         var body = await ResponseAsync(current, payload, cancellationToken);
         var text = ResponseText(body, current.Provider) ?? throw new CoachRequestException(current.Provider.NoReply());
         return StarterPlan.Parse(text, current.Provider.Name());
+    }
+
+    /// <summary>One short request (about 80 output tokens) asking where a control is in a crop of the window.</summary>
+    public async Task<Rect?> ZoomLocateAsync(string label, string app, byte[] jpeg, Rect crop, CancellationToken cancellationToken)
+    {
+        var current = _settings();
+        if (string.IsNullOrWhiteSpace(current.ApiKey) || jpeg.Length == 0) return null;
+        try
+        {
+            var payload = RequestBody(ZoomLocate.Question(label, app), [], jpeg, "image/jpeg", true, current.Provider, current.Model, ZoomLocate.SystemPrompt, 80);
+            var body = await ResponseAsync(current, payload, cancellationToken);
+            return ResponseText(body, current.Provider) is { } text ? ZoomLocate.Parse(text, crop) : null;
+        }
+        catch (CoachRequestException) { return null; }
     }
 
     private async Task<string> ResponseAsync(CoachSettings current, string payload, CancellationToken cancellationToken)
@@ -353,7 +378,6 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
             _ => $"{name} returned an error ({statusCode}). Check the local F2L status and try again.",
         };
     }
-
 
 }
 

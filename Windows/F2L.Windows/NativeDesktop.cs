@@ -22,6 +22,38 @@ internal static class NativeDesktop
     [DllImport("user32.dll")] internal static extern IntPtr GetAncestor(IntPtr window, uint flags);
     [DllImport("user32.dll")] private static extern IntPtr WindowFromPoint(NativePoint point);
     [DllImport("user32.dll")] private static extern bool GetCursorPos(out NativePoint point);
+    [DllImport("user32.dll")] private static extern short GetAsyncKeyState(int key);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(IntPtr window, System.Text.StringBuilder text, int count);
+
+    /// <summary>The app in front (its process name, such as "chrome") and its window title ("ChatGPT - Google Chrome"),
+    /// for steps that are done once an app or page is open. Null when F2L itself or nothing is in front.</summary>
+    internal static (string App, string Title)? FrontApp() => AppAndTitle(GetForegroundWindow());
+
+    /// <summary>A window's process name and title, or null for F2L's own windows.</summary>
+    internal static (string App, string Title)? AppAndTitle(IntPtr window)
+    {
+        if (!IsExternal(window)) return null;
+        GetWindowThreadProcessId(window, out var process);
+        var title = new System.Text.StringBuilder(512);
+        GetWindowText(window, title, title.Capacity);
+        try { using var app = System.Diagnostics.Process.GetProcessById((int)process); return (app.ProcessName, title.ToString()); }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException) { return null; }
+    }
+    /// <summary>Whether the left mouse button is held right now, anywhere on screen.</summary>
+    internal static bool LeftButtonDown => (GetAsyncKeyState(0x01) & 0x8000) != 0;
+    /// <summary>The modifier keys held right now: "shift", "control" (also counts as a step's "command") and "option" (Alt).</summary>
+    internal static IReadOnlySet<string> HeldKeys
+    {
+        get
+        {
+            bool Down(int key) => (GetAsyncKeyState(key) & 0x8000) != 0;
+            var held = new HashSet<string>();
+            if (Down(0x10)) held.Add("shift");
+            if (Down(0x11)) { held.Add("control"); held.Add("command"); }
+            if (Down(0x12)) held.Add("option");
+            return held;
+        }
+    }
     [DllImport("user32.dll")] private static extern IntPtr MonitorFromPoint(NativePoint point, uint flags);
     [DllImport("user32.dll", CharSet = CharSet.Auto)] private static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
     [DllImport("user32.dll")] private static extern bool GetGUIThreadInfo(uint thread, ref GuiThreadInfo info);

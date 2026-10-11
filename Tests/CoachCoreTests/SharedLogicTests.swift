@@ -187,7 +187,33 @@ func withScratch(_ body: (URL) throws -> Void) rethrows {
         #expect(pose(3_950) { $0.reducedMotion = true }.frame == 0)
     }
 
-    @Test(arguments: ["expressions", "directions"])
+    @Test func playfulIdleIsVariedAndNeverInterruptsWork() {
+        for seed in 0..<16 {
+            var activities = Set<Int>()
+            for cycle in 0..<4 {
+                let start = cycle * 12_000 + 6_000 + (seed * 73 + cycle * 997) % 3_000
+                let idle = pose(start) { $0.personalitySeed = seed }
+                #expect(idle.playful)
+                activities.insert(idle.frame / 4)
+                #expect(!pose(start) { $0.personalitySeed = seed; $0.speaking = true }.playful)
+                #expect(!pose(start) { $0.personalitySeed = seed; $0.listening = true }.playful)
+                #expect(!pose(start) { $0.personalitySeed = seed; $0.thinking = true }.playful)
+                #expect(!pose(start) { $0.personalitySeed = seed; $0.waving = true }.playful)
+                #expect(!pose(start) { $0.personalitySeed = seed; $0.pointing = .up }.playful)
+                #expect(!pose(start) { $0.personalitySeed = seed; $0.travelling = .left }.playful)
+                #expect(!pose(start) { $0.personalitySeed = seed; $0.intent = .procedural }.playful)
+                #expect(!pose(start) { $0.personalitySeed = seed; $0.reducedMotion = true }.playful)
+                #expect(!pose(start - 1) { $0.personalitySeed = seed }.playful)
+                #expect(!pose(start + 2_200) { $0.personalitySeed = seed }.playful)
+                for (offset, frame) in [(0, 0), (350, 1), (1000, 2), (1650, 3)] {
+                    #expect(pose(start + offset) { $0.personalitySeed = seed }.frame == idle.frame + frame)
+                }
+            }
+            #expect(activities.count == 4)
+        }
+    }
+
+    @Test(arguments: ["expressions", "directions", "playful"])
     func framesManifestMatchesTheArtwork(sheet: String) throws {
         let pip = repository.appendingPathComponent("Windows/F2L.Windows/Assets/Pip")
         let manifest = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: pip.appendingPathComponent("frames.json"))) as? [String: Any])

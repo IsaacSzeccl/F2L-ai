@@ -51,3 +51,27 @@ These are animated desktop teaching poses. Point with a clear mitten gesture and
 ```bash
 swift build --product F2L && "$(swift build --show-bin-path)/F2L" --export-emotes Windows/F2L.Windows/Assets/Pip/Emotes
 ```
+
+
+## Playful idle animations — 11 October 2026
+
+`playful.png` adds 16 painted poses (1254 × 1254, original transparent PNG), generated with the built-in image-generation tool using `expressions.png` as the identity reference. Rows are wink, dance, yawn/stretch, and peekaboo. The atlas now brings Pip to 48 poses total. Both apps read its precomputed rectangles from `frames.json`; no generated image cache is needed at runtime.
+
+While resting in the neutral/quick-fact state, Pip plays a 2.2-second four-frame vignette in each 12-second interval, after a varied 6–9 second quiet lead-in. A per-view random seed chooses the starting activity, order, and timing. All four activities appear before repeating, with no adjacent repeats. Listening, thinking, speaking, waving, pointing, travel, and task-specific expressions take priority. Reduced Motion holds existing still poses. No image generation or network request happens during playback.
+
+Rebuild atlas coordinates with `python3 scripts/tools/pip_frames.py`. Generate four looping review GIFs with `swift scripts/tools/preview_pip.swift` (output: `build/pip-previews/`; previews add a longer rest at the end). The source atlas preserves generated alpha; GIF previews use a warm paper background.
+
+### Playful atlas prompt
+
+```text
+Use case: stylized-concept / identity-preserve.
+Asset type: production transparent sprite atlas for Pip, an existing desktop companion.
+Input image: character identity and painted rendering reference. Create an ADDITIONAL atlas, preserve Pip's exact amber lantern cloak, folded floppy flame cap, cream face, dark navy bead eyes, brown mitten hands and feet, teal round clasp, proportions and warm gouache texture.
+ONE transparent PNG, FOUR columns by FOUR rows equal cells. Exactly 16 full-body figures, no text, labels, borders, scenery, checkerboard, floating decorations or cast shadows. True transparent background. Generous transparent gutters, every full figure contained in its own cell, consistent actor scale and baseline. Closely match the attached existing production sprites, including their fairly large face and squat triangular body.
+Each row is a four-frame mini animation. Left-to-right:
+Row 1: playful wink and little mitten thumbs-up: both eyes open with one mitten raised; wink with raised mitten; wink easing into smile; both eyes open with relaxed happy mitten.
+Row 2: delighted little dance: mittens raised leaning slightly left; mittens raised centered smiling; mittens raised leaning slightly right; mittens lowered returning centered.
+Row 3: sleepy cozy yawn and stretch: drowsy half closed eyes hands near cheeks; gentle open-mouth yawn hands beside cheeks; eyes closed both arms stretching outward; rested soft smile arms lowering.
+Row 4: peekaboo: both mittens covering eyes; one mitten lowered revealing one eye; both mittens spread revealing delighted face; relaxed smiling pose hands lowered.
+No extra characters, props or decorative marks. All hands remain attached to body. Clean transparent margins. 2D hand-painted sprite animation, not 3D.
+```

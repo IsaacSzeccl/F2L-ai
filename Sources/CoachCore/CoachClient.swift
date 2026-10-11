@@ -47,10 +47,17 @@ public struct CoachRequestError: LocalizedError, Sendable {
 /// Windows/F2L.Windows/CoachClient.cs.
 public struct CoachClient: Sendable {
     public static let teachingPrompt = TeachingReply.style + "\n" + """
-        You are F2L, a practical computer-skills teacher. Use plain language and never patronize the learner.
-        When a screenshot is provided, use only what it visibly supports and describe the next useful action. If no
-        screenshot is provided, say so naturally when screen details matter. You cannot control this computer or click
-        buttons. Ask one short clarifying question only when the request genuinely needs more context. Return only a JSON
+        You are F2L, a practical coach that helps people set up and use AI tools and everyday work apps on their own
+        computer: AI assistants such as ChatGPT, Gemini, Claude, Grok, DeepSeek, Copilot and Tencent WorkBuddy, and work apps
+        such as Notion, Google Workspace, Microsoft 365, Canva, Zoom and Excel. Use plain language and never patronize the learner.
+        Teach the tool the learner asks about even when it is not on screen yet: start from where they are, for example opening
+        the browser, going to the tool's official website or app store page, signing in, then the first useful feature. Never
+        refuse or stop because a different app is in front; mention what the screenshot shows only when it helps the next step.
+        When a screenshot is provided, use only what it visibly supports for places on screen. If you are unsure how a tool
+        works today, say so in one short sentence and give the safe general steps (its official site and help pages) instead
+        of inventing menus or buttons. If no screenshot is provided, say so naturally when screen details matter. You cannot
+        control this computer or click buttons. Ask one short clarifying question only when the request genuinely needs more
+        context. Return only a JSON
         object with exactly three keys: "reply", "steps" and "target". "reply" must be natural spoken language, without
         markdown, bullet lists, emojis, or URLs. When the task takes more than one action, "reply" is one short sentence
         saying what the steps achieve, and "steps" lists every action in order, one precise action per item, naming the
@@ -188,7 +195,7 @@ public struct CoachClient: Sendable {
         return try StarterPlan.parse(text, provider: current.provider.name)
     }
 
-    private func response(_ current: CoachSettings, question: String, history: [(role: String, content: String)], jpeg: Data?,
+    func response(_ current: CoachSettings, question: String, history: [(role: String, content: String)], jpeg: Data?,
                           jsonMode: Bool, systemPrompt: String = teachingPrompt, maxTokens: Int? = nil) async throws -> Data {
         let provider = current.provider
         var request = URLRequest(url: provider.endpoint)
@@ -288,10 +295,14 @@ public struct CoachClient: Sendable {
 
     /// The question as sent to the model: the learner's words, then which computer they use and, for desktop Excel,
     /// what Excel reports about the selection. Only the learner's words are saved in the conversation.
-    public static func compose(question: String, platform: String, excel: ExcelContext?, profile: LearnerProfile? = nil) -> String {
+    public static func compose(question: String, platform: String, excel: ExcelContext?, profile: LearnerProfile? = nil,
+                               app: String? = nil, screenNames: [String] = [], library: AIToolLibrary? = nil) -> String {
         var context = "Learner's computer: \(platform)."
+        // Which app the screenshot shows, so a question about another tool is taught from there, not refused.
+        if let app, !app.isEmpty { context += " The screenshot shows \(app)." }
         if let excel { context += " " + excel.promptLine }
-        return question + "\n\n(" + context + ")" + (profile?.coachingContext ?? "")
+        return question + "\n\n(" + context + ")" + ScreenNames.line(screenNames)
+            + (library?.referenceNotes(question: question, profile: profile) ?? "") + (profile?.coachingContext ?? "")
     }
 
     static func parseTarget(_ value: Any?) -> ScreenTarget? {

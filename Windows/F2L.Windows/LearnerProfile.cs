@@ -22,11 +22,11 @@ internal sealed record LearnerProfile
     {
         string[] byFocus = profile.Focus switch
         {
-            "analyze" => ["Formulas like SUM and XLOOKUP", "Sorting and filtering data", "Pivot tables", "Charts for reports", "Cleaning messy data"],
-            "create" => ["Writing clear emails with AI", "Slides that look good", "Summarising long documents", "Checking my writing with AI"],
-            "build" => ["Automating repetitive steps", "Shortcuts that save time", "Writing good AI prompts", "Connecting apps together"],
-            "learn" => ["Writing good AI prompts", "Learning a new tool quickly", "Summarising articles to learn faster", "Preparing for a review"],
-            _ => ["Planning my week", "Meeting notes and action items", "Keeping my inbox under control", "Keeping notes in one place"],
+            "analyze" => ["Analysing data with an AI assistant", "Charts for reports", "Formulas like SUM and XLOOKUP", "Pivot tables"],
+            "create" => ["Writing clear emails with AI", "Making slides with AI", "Designing with Canva", "Summarising long documents"],
+            "build" => ["Writing good AI prompts", "Automating repetitive steps", "Making a custom GPT or Gem", "Connecting apps with Zapier"],
+            "learn" => ["Setting up ChatGPT, Gemini or Grok", "Writing good AI prompts", "Learning a new AI tool quickly", "Summarising articles to learn faster"],
+            _ => ["Setting up Notion for my work", "Getting started with Google Workspace", "Meeting notes and action items with AI", "Planning my week with AI"],
         };
         var tools = (plan?.Tools ?? []).Select(x => ToolCatalog.Find(x.Id)).OfType<ToolEntry>().Select(x => $"Getting started with {x.Name}");
         return (profile.Learning ?? []).Concat(byFocus).Concat(tools).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
@@ -115,7 +115,7 @@ internal sealed record StarterPlan(string Title, string Summary, SuggestedTool[]
     {
         var first = text.Split(' ')[0];
         var keep = first == "I" || first.StartsWith("I'") || first.Length > 1 && char.IsUpper(first[1])
-            || ToolCatalog.All.Any(tool => first.StartsWith(tool.Name, StringComparison.OrdinalIgnoreCase))
+            || ToolCatalog.Common.Any(tool => first.StartsWith(tool.Name, StringComparison.OrdinalIgnoreCase))
             || new[] { "Excel", "Word", "PowerPoint", "Outlook", "Teams" }.Contains(first);
         return keep || text.Length == 0 ? text : char.ToLowerInvariant(text[0]) + text[1..];
     }
@@ -141,16 +141,14 @@ internal sealed record StarterPlan(string Title, string Summary, SuggestedTool[]
 }
 
 internal sealed record ToolEntry(string Id, string Name, string Purpose, string Url);
+/// <summary>The tools a starter plan may recommend: every tool in the AI tools library, by id. Same as ToolCatalog on Mac.</summary>
 internal static class ToolCatalog
 {
-    internal static readonly ToolEntry[] All = [
-        new("excel", "Excel", "Turn a small table into a checked calculation or a clear summary.", "https://www.microsoft.com/en-us/microsoft-365/excel"),
-        new("notion", "Notion", "Keep project notes, decisions and next actions in one place.", "https://www.notion.com/product/ai"),
-        new("canva", "Canva", "Turn an outline into a visual presentation or a simple design.", "https://www.canva.com/canva-ai/"),
-        new("notebooklm", "Gemini Notebook", "Explore and summarize source material you choose to provide.", "https://notebook.google/"),
-        new("zapier", "Zapier", "Connect a repeatable task across apps with a workflow you review.", "https://zapier.com/"),
-        new("copilot", "GitHub Copilot", "Explore code ideas and review a small implementation with AI assistance.", "https://github.com/features/copilot")];
-    internal static ToolEntry? Find(string id) => All.FirstOrDefault(x => x.Id == id);
+    internal static IReadOnlyList<ToolEntry> All => AIToolLibrary.Shared.Tools.Select(Entry).ToList();
+    /// <summary>The tools offered as "Tools you already use" in the welcome.</summary>
+    internal static IReadOnlyList<ToolEntry> Common => AIToolLibrary.Shared.Tools.Where(tool => tool.Common).Select(Entry).ToList();
+    internal static ToolEntry? Find(string id) => AIToolLibrary.Shared.Find(id) is { } tool ? Entry(tool) : null;
+    private static ToolEntry Entry(AITool tool) => new(tool.Id, tool.Name, tool.Summary, tool.Url);
 }
 internal sealed record ProfileDocument
 {

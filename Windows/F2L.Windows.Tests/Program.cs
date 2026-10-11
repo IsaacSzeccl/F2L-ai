@@ -29,7 +29,7 @@ internal static class Program
             try
             {
                 TestCellIdentity(); TestGeometry(); TestPersistence(); TestForegroundMemory();
-                TestDirectTeaching(); TestNamedPlaces(); TestCompanionPlacement(); TestSpriteTextures(); TestProviderParsing();
+                TestDirectTeaching(); TestNamedPlaces(); TestClickWatch(); TestAIToolLibrary(); TestStepGoals(); TestZoomLocate(); TestCompanionPlacement(); TestSpriteTextures(); TestProviderParsing();
                 await TestProfilesAsync();
                 await TestCoachRetriesAsync();
                 await TestOverlayAsync();
@@ -103,7 +103,7 @@ internal static class Program
         {
             var body = CoachClient.RequestBody(StarterPlan.Question(profile), [], null, null, true, provider, systemPrompt: StarterPlan.SystemPrompt);
             using var json = JsonDocument.Parse(body);
-            Check(!body.Contains("image") && json.RootElement.GetProperty("messages").GetArrayLength() == (provider == Provider.Claude ? 1 : 2), "starter plan is text-only with no conversation history");
+            Check(!body.Contains("image_url") && !body.Contains("base64") && json.RootElement.GetProperty("messages").GetArrayLength() == (provider == Provider.Claude ? 1 : 2), "starter plan is text-only with no conversation history");
         }
         var stub = new StubHandler(Completion(text));
         var result = await new CoachClient(new HttpClient(stub), () => "sk-test").StarterPlanAsync(profile, CancellationToken.None);
@@ -351,6 +351,79 @@ internal static class Program
         Check(!ComposerKeys.ShouldSend(Key.ImeProcessed, ModifierKeys.None, false), "IME processed keys pass through to typing");
     }
 
+    // Same cases as ZoomedLook on Mac.
+    private static void TestZoomLocate()
+    {
+        var window = new Rect(100, 50, 1400, 900);
+        var small = ZoomLocate.Crop(new Rect(600, 400, 30, 20), window);
+        Check(small.Width == 420 && small.Height == 280 && small.X + small.Width / 2 == 615 && small.Y + small.Height / 2 == 410, "the crop surrounds the guess");
+        var corner = ZoomLocate.Crop(new Rect(105, 55, 20, 20), window);
+        Check(corner.X == window.X && corner.Y == window.Y && ZoomLocate.Crop(null, window) == window, "the crop stays in the window");
+        Check(ZoomLocate.PixelRect(new Rect(200, 150, 420, 280), window, new Size(2800, 1800)) == new Int32Rect(200, 200, 840, 560), "crops map to the picture's pixels");
+        var crop = new Rect(200, 150, 400, 200);
+        Check(ZoomLocate.Parse("{\"found\":true,\"left\":100,\"top\":200,\"right\":200,\"bottom\":400}", crop) == new Rect(240, 190, 40, 40), "a found control maps back to the screen");
+        Check(ZoomLocate.Parse("{\"found\":false}", crop) is null && ZoomLocate.Parse("{\"found\":true,\"left\":0,\"top\":0,\"right\":1000,\"bottom\":1000}", crop) is null
+            && ZoomLocate.Parse("not json", crop) is null, "not found, too big or unreadable gives nothing");
+    }
+
+    // Same cases as StepGoals on Mac.
+    private static void TestStepGoals()
+    {
+        Check(StepGoal.Of("Open your browser, such as Safari or Chrome.")?.Type == StepGoal.Kind.Browser && StepGoal.Of("Open Safari.")?.Type == StepGoal.Kind.Browser, "browser steps");
+        Check(StepGoal.Of("Open Excel.") is { Type: StepGoal.Kind.App } excel && excel.Names.SequenceEqual(["excel"]), "app steps");
+        Check(StepGoal.Of("Go to chatgpt.com and click Sign up.") is { Type: StepGoal.Kind.Site } chat && chat.Names.SequenceEqual(["chatgpt.com", "chatgpt"]), "site steps");
+        Check(StepGoal.Of("Open the Insert tab.") is null && StepGoal.Of("Click New page in the left sidebar.") is null, "places inside an app are not goals");
+        var site = StepGoal.Of("Go to chatgpt.com")!;
+        Check(site.IsMet("chrome", "ChatGPT - Google Chrome") && !site.IsMet("chrome", "Google") && !site.IsMet("notepad", "chatgpt ideas"), "a site counts only open in a browser");
+        Check(StepGoal.Of("Open Excel.")!.IsMet("EXCEL", "Book1") && new StepGoal(StepGoal.Kind.Browser, []).IsMet("msedge", "New tab"), "apps in front are recognised");
+    }
+
+    // Same cases as AIToolLibraries on Mac.
+    private static void TestAIToolLibrary()
+    {
+        var library = AIToolLibrary.Shared;
+        Check(library.Tools.Count >= 60 && library.Checked.Length > 0 && library.Tools.Select(t => t.Id).Distinct().Count() == library.Tools.Count,
+            "the embedded AI tools library loads");
+        Check(new[] { "excel", "notion", "canva", "notebooklm", "zapier", "copilot" }.All(id => library.Find(id) is not null), "starter-plan tools are in the library");
+        foreach (var (question, ids) in new[] { ("How do I set up n8n with Notion?", new[] { "notion", "n8n" }), ("i would like to learn how to use tencent workbuddy", new[] { "workbuddy" }),
+            ("Teach me Grok", new[] { "grok" }), ("怎么用豆包", new[] { "doubao" }), ("How do I use make.com?", new[] { "make" }), ("Make a chart from this", Array.Empty<string>()),
+            ("Find the gamma value", Array.Empty<string>()), ("Open Gamma app", new[] { "gamma" }) })
+            Check(library.Mentioned(question).Select(t => t.Id).SequenceEqual(ids), $"finds the tools named in: {question}");
+        var notes = library.ReferenceNotes("How do I start with n8n?");
+        Check(notes.Contains("n8n (Automation)") && notes.Contains("Official site: https://n8n.io.") && !notes.Contains("may fit this learner"), "tool notes come from the library");
+        var learner = new LearnerProfile { Focus = "create" };
+        Check(AIToolLibrary.AsksForRecommendation("Which AI tool should I use for slides?") && library.Fitting(learner).All(t => t.GoodFor.Contains("create"))
+            && library.ReferenceNotes("Which AI tool should I use for slides?", learner).Contains("may fit this learner"), "recommendations fit the learner");
+        Check(AIToolLibrary.Load(null).Tools.Select(t => t.Id).SequenceEqual(["excel", "notion", "canva", "notebooklm", "zapier", "copilot"]), "a missing library falls back");
+    }
+
+    // Same cases as ClickWatching on Mac.
+    private static void TestClickWatch()
+    {
+        var place = new Rect(100, 100, 80, 24);
+        var watch = new ClickWatch();
+        Check(!watch.Pressed(false, new Point(140, 112), place) && watch.Pressed(true, new Point(140, 112), place)
+            && !watch.Pressed(true, new Point(140, 112), place), "a press on the circle counts once");
+        watch.Pressed(false, new Point(0, 0), place);
+        Check(watch.Pressed(true, new Point(92, 112), place), "a press just outside the drawn circle still counts");
+        watch.Pressed(false, new Point(0, 0), place);
+        Check(!watch.Pressed(true, new Point(400, 400), place) , "a press far away does not count");
+        watch.Pressed(false, new Point(0, 0), place);
+        Check(!watch.Pressed(true, new Point(140, 112), place, onOwnWindow: true) , "a press on Pip's own windows does not count");
+        foreach (var (step, finishes) in new[] { ("Click New page.", true), ("Open the Insert tab.", true), ("Type your email in the box.", false),
+            ("Drag from A1 to A4.", false), ("Hold Command and click D1.", true), ("Hold Command and drag from D1 to D4.", false), ("Paste the text.", false) })
+            Check(ClickWatch.FinishesOnClick(step) == finishes, $"click finishing: {step}");
+        Check(ClickWatch.RequiredKeys("Click A1, then hold Shift and click A4.").SetEquals(["shift"]) && ClickWatch.RequiredKeys("Hold Ctrl and click D1.").SetEquals(["control"])
+            && ClickWatch.RequiredKeys("Click New page.").Count == 0, "keys to hold are read from the step");
+        Check(ClickWatch.IsTypingStep("Enter 100 in B2.") && !ClickWatch.IsTypingStep("Click Share."), "typing steps are recognised");
+        var typing = new TypingWatch(); var start = DateTime.UtcNow;
+        Check(!typing.Observe(new(0, 1), start) && !typing.Observe(new(3, 2), start.AddSeconds(0.5)) && !typing.Observe(new(5, 3), start.AddSeconds(1))
+            && !typing.Observe(new(5, 3), start.AddSeconds(2)) && typing.Observe(new(5, 3), start.AddSeconds(2.6)) && !typing.Observe(new(5, 3), start.AddSeconds(4)),
+            "typing ticks once the box has new text and the learner pauses");
+        var names = ScreenNames.Pick(new[] { "Share", "share", " New page ", "x", "12", new string('a', 50), "Insert" }.Concat(Enumerable.Range(0, 200).Select(i => $"Item {i}")));
+        Check(names.Take(3).SequenceEqual(["Share", "New page", "Insert"]) && names.Count == ScreenNames.Limit && ScreenNames.Line([]) == "", "screen names are tidy and bounded");
+    }
+
     // Same cases as NamedPlaces on Mac.
     private static void TestNamedPlaces()
     {
@@ -420,13 +493,29 @@ internal static class Program
 
     private static void TestSpriteTextures()
     {
-        foreach (var name in new[] { "expressions", "directions" })
+        for (var seed = 0; seed < 16; seed++)
+        {
+            var activities = new HashSet<int>();
+            for (var cycle = 0; cycle < 4; cycle++)
+            {
+                var start = cycle * 12_000 + 6_000 + (seed * 73 + cycle * 997) % 3_000;
+                var first = PipView.PlayfulFrame(start, seed);
+                Check(first.HasValue, "idle vignette starts after its quiet lead-in");
+                activities.Add(first!.Value / 4);
+                Check(PipView.PlayfulFrame(start - 1, seed) is null && PipView.PlayfulFrame(start + 2200, seed) is null,
+                    "playful gestures return to rest");
+                foreach (var (offset, frame) in new[] { (0, 0), (350, 1), (1000, 2), (1650, 3) })
+                    Check(PipView.PlayfulFrame(start + offset, seed) == first + frame, "all four animation frames play in order");
+            }
+            Check(activities.Count == 4, "all idle activities play without adjacent repeats");
+        }
+        foreach (var name in new[] { "expressions", "directions", "playful" })
         {
             var atlas = new BitmapImage(new Uri($"pack://application:,,,/F2L.Windows;component/Assets/Pip/{name}.png"));
             var stored = PipSprites.ManifestFrames(name, atlas);
             Check(stored is not null && stored.SequenceEqual(PipSprites.FindFrames(atlas)), "precomputed frames.json matches the scanned atlas");
         }
-        foreach (var frames in new[] { PipSprites.Expressions, PipSprites.Directions })
+        foreach (var frames in new[] { PipSprites.Expressions, PipSprites.Directions, PipSprites.Playful })
         {
             Check(frames.Length == 16, "all sixteen generated poses load");
             foreach (var frame in frames)
@@ -497,7 +586,7 @@ internal static class Program
             var selected = screen.Selected!;
             screen.Selected = new(new IntPtr(999), 999); // App changed during the capture delay.
             await WaitFor(() => !window.IsRequestPending);
-            Check(coach.Requests.Count == 1 && coach.Requests[0].Question == ExcelContext.Compose("Help me with the app I'm using", null),
+            Check(coach.Requests.Count == 1 && coach.Requests[0].Question.StartsWith("Help me with the app I'm using\n\n(Learner's computer: Windows."),
                 "Enter dispatches the typed question to the provider");
             Check(screen.Prepared == selected && screen.Captured == selected,
                 "capture uses the same app selected before Pip focuses");

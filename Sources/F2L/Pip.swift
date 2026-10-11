@@ -8,10 +8,11 @@ struct PipSprite {
     let height: CGFloat
 }
 
-/// The 32 painted poses, cut from the two shared atlases using the precomputed frames.json.
+/// The 48 painted poses, cut from the three shared atlases using the precomputed frames.json.
 enum PipSprites {
     static let expressions = load("expressions")
     static let directions = load("directions")
+    static let playful = load("playful")
 
     private static func load(_ name: String) -> [PipSprite] {
         guard let pip = Assets.url("Pip"),
@@ -43,6 +44,7 @@ final class PipView: NSView {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
+        state.personalitySeed = Int.random(in: 0..<65_536)
         wantsLayer = true
         layer?.addSublayer(sprite)
         sprite.contentsGravity = .resize
@@ -56,14 +58,14 @@ final class PipView: NSView {
     // Not flipped: layer contents draw upright in AppKit's bottom-left space.
     override func hitTest(_ point: NSPoint) -> NSView? { nil } // the host handles clicks and drags
 
-    func setIntent(_ intent: QuestionIntent) { state.intent = intent; draw() }
+    func setIntent(_ intent: QuestionIntent) { guard state.intent != intent else { return }; state.intent = intent; restart() }
     func setSpeaking(_ on: Bool) { guard state.speaking != on else { return }; state.speaking = on; restart() }
     func setListening(_ on: Bool) { guard state.listening != on else { return }; state.listening = on; restart() }
     func setThinking(_ on: Bool) { guard state.thinking != on else { return }; state.thinking = on; restart() }
     func setWaving(_ on: Bool) { guard state.waving != on else { return }; state.waving = on; restart() }
-    func setPointing(_ direction: PointingDirection) { state.pointing = direction; draw() }
-    func setTravelling(_ direction: PointingDirection) { state.travelling = direction; draw() }
-    func setReducedMotion(_ on: Bool) { state.reducedMotion = on; draw() }
+    func setPointing(_ direction: PointingDirection) { guard state.pointing != direction else { return }; state.pointing = direction; restart() }
+    func setTravelling(_ direction: PointingDirection) { guard state.travelling != direction else { return }; state.travelling = direction; restart() }
+    func setReducedMotion(_ on: Bool) { guard state.reducedMotion != on else { return }; state.reducedMotion = on; restart() }
 
     private func restart() { started = Date(); draw() }
 
@@ -106,7 +108,7 @@ final class PipView: NSView {
     private func draw(force: Bool = false) {
         let pose = PipPose.at(milliseconds: Int(Date().timeIntervalSince(started) * 1000), state)
         guard force || pose != currentPose else { return }
-        let frames = pose.directions ? PipSprites.directions : PipSprites.expressions
+        let frames = pose.directions ? PipSprites.directions : pose.playful ? PipSprites.playful : PipSprites.expressions
         guard frames.indices.contains(pose.frame) else { return }
         let image = frames[pose.frame]
         currentPose = pose

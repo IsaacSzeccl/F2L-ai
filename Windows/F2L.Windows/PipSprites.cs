@@ -12,8 +12,10 @@ internal static class PipSprites
 {
     private static readonly Lazy<PipSprite[]> ExpressionFrames = new(() => Load("expressions"));
     private static readonly Lazy<PipSprite[]> DirectionFrames = new(() => Load("directions"));
+    private static readonly Lazy<PipSprite[]> PlayfulFrames = new(() => Load("playful"));
     internal static PipSprite[] Expressions => ExpressionFrames.Value;
     internal static PipSprite[] Directions => DirectionFrames.Value;
+    internal static PipSprite[] Playful => PlayfulFrames.Value;
 
     private static PipSprite[] Load(string name)
     {

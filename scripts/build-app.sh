@@ -18,12 +18,20 @@ swift build -c "$CONFIG" --product F2L
 BIN="$(swift build -c "$CONFIG" --show-bin-path)/F2L"
 
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/Assets/Pip" "$APP/Contents/Resources/Assets/Fonts"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/Assets/Pip" "$APP/Contents/Resources/Assets/Fonts" "$APP/Contents/Resources/Assets/Knowledge"
 cp "$BIN" "$APP/Contents/MacOS/F2L"
 cp "$ROOT/App/Info.plist" "$APP/Contents/Info.plist"
 # Pip's artwork and fonts are shared with the Windows app; there is one copy in the repository.
 cp "$ASSETS/Pip/"*.png "$ASSETS/Pip/frames.json" "$APP/Contents/Resources/Assets/Pip/"
 cp "$ASSETS/Fonts/"*.ttf "$ASSETS/Fonts/LICENSE.txt" "$APP/Contents/Resources/Assets/Fonts/"
+# The AI tools library Pip teaches and recommends from (shared with Windows).
+cp "$ASSETS/Knowledge/ai-tools.json" "$APP/Contents/Resources/Assets/Knowledge/"
+# Original brand masters and illustrations are shared by both desktop hosts.
+mkdir -p "$APP/Contents/Resources/Assets/Brand" "$APP/Contents/Resources/Assets/Illustrations"
+# app-icon.png is only the master for F2L.icns, so it stays out of the app.
+cp "$ASSETS/Brand/learning-doorway.png" "$ASSETS/Brand/launch-landscape.png" "$APP/Contents/Resources/Assets/Brand/"
+cp "$ASSETS/Illustrations/"*.png "$APP/Contents/Resources/Assets/Illustrations/"
+cp "$ASSETS/Brand/F2L.icns" "$APP/Contents/Resources/F2L.icns"
 
 # Every build (the launcher, run.sh or a check) uses F2L's private certificate once scripts/setup-signing.sh has made
 # one. An ad-hoc build looks like a new app to macOS, which then asks for Screen Recording and Accessibility again

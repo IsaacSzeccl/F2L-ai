@@ -8,7 +8,10 @@ namespace F2L.Windows;
 
 /// <summary>Resting Pip, the input bar at the bottom centre, Pip's reply card, screen sharing, Excel selection,
 /// highlights and the teaching companion. Mirrors CompanionController in Sources/F2L/Companion.swift.
-/// Pip is silent: replies are shown, not spoken.</summary>
+/// Pip is silent: replies are shown, not spoken. This file holds the state, layout, the input bar, a question's round
+/// trip, dictation and saving; the rest is split by job: MainWindow.Pointing.cs (circling places),
+/// MainWindow.Lesson.cs (steps that finish by themselves), MainWindow.Menu.cs (the ··· menu, Settings, profile) and
+/// MainWindow.Guidance.cs (the walking Pip).</summary>
 public partial class MainWindow : Window
 {
     internal const string Greeting = "How can I help you?";
@@ -24,6 +27,15 @@ public partial class MainWindow : Window
     private readonly PushToTalkInput _speechInput = new();
     private readonly DispatcherTimer _saveDraft = new() { Interval = TimeSpan.FromMilliseconds(600) };
     private readonly DispatcherTimer _watchTarget = new() { Interval = TimeSpan.FromMilliseconds(400) };
+    /// <summary>While a place is circled, the mouse button is checked 20 times a second so clicking it moves the lesson on.</summary>
+    private readonly DispatcherTimer _clickTimer = new() { Interval = TimeSpan.FromMilliseconds(50) };
+    private ClickWatch _clickWatch = new();
+    /// <summary>During a typing step, the focused box is checked twice a second (only its length and a hash, never the text).</summary>
+    private TypingWatch _typingWatch = new();
+    private int _lessonTicks;
+    private bool _readingTyping;
+    /// <summary>Whether the step's goal (an app or site in front) was already reached when the step appeared.</summary>
+    private bool? _goalAtStart;
     private readonly DispatcherTimer _wave = new();
     private readonly CancellationTokenSource _lifetime = new();
     private readonly bool _testing;
@@ -82,10 +94,12 @@ public partial class MainWindow : Window
         _input.SizeChanged += (_, _) => _input.Place();
         _bubble.ReducedMotion = _reducedMotion;
         _bubble.PageChanged = ClearHighlight;
-        _bubble.Focus = step => PointAt(step < 0 ? _replyTarget : step < _stepTargets.Count ? _stepTargets[step] : null, step < 0);
+        _bubble.Focus = step => { PointAt(step < 0 ? _replyTarget : step < _stepTargets.Count ? _stepTargets[step] : null, step < 0); WatchLesson(); };
         _bubble.Ask = question => _ = SubmitAsync(question);
         _bubble.Celebrate = () => Wave(TimeSpan.FromSeconds(1.6));
         _bubble.AskSomethingElse = OpenConversation;
+        // Back at rest, Pip's resting face returns, with its playful moves (wink, dance, stretch, peekaboo).
+        _bubble.Dismissed = () => PipArtView.SetExpression(QuestionIntent.QuickFact);
         _bubble.SizeChanged += (_, _) => PositionBubble();
         LocationChanged += (_, _) => PositionBubble();
         _speechInput.TranscriptChanged += OnTranscriptChanged;
@@ -93,6 +107,7 @@ public partial class MainWindow : Window
         _saveDraft.Tick += (_, _) => { _saveDraft.Stop(); SaveConversation(); };
         _watchTarget.Tick += WatchTarget;
         _watchTarget.Tick += WatchSelection;
+        _clickTimer.Tick += (_, _) => PollLesson();
         _wave.Tick += (_, _) => { _wave.Stop(); PipArtView.SetWaving(false); _teachingPip?.Pip.SetWaving(false); };
         LayoutCompanion();
         Loaded += (_, _) =>
@@ -215,76 +230,28 @@ public partial class MainWindow : Window
 
     private void Character_Click(object sender, RoutedEventArgs e) => OpenConversation();
 
-    /// <summary>Pip's ··· menu, built each time it opens so it shows what is true now (which AI has a key, whether a
-    /// highlight or a moved input bar can be put back). Preferences and keys live in Settings. Same as the Mac.</summary>
-    private void More_Click(object sender, RoutedEventArgs e)
+    /// <summary>The names of buttons, tabs and text in the shared window (UI Automation, then Windows OCR of the picture
+    /// already taken), so the AI names places that really exist there and F2L can find them exactly.</summary>
+    private static async Task<IReadOnlyList<string>> ScreenNamesAsync(CapturedScreen? captured, CancellationToken token)
     {
-        if (MoreButton.ContextMenu is not { } menu) return;
-        menu.Items.Clear();
-        MenuItem Item(string header, Action action, bool? check = null)
+        if (captured is not { JpegBytes.Length: > 0 }) return [];
+        try
         {
-            var item = new MenuItem { Header = header, IsCheckable = check is not null, IsChecked = check == true };
-            item.Click += (_, _) => action();
-            return item;
+            // Both at once, and the control search kept short: this runs before the question is sent.
+            var controls = TargetSnap.ControlsAsync(captured.SourceWindow, token, seconds: 0.8);
+            var lines = ScreenText.ReadAsync(captured);
+            await Task.WhenAll(controls, lines);
+            return [.. controls.Result.Select(control => control.Name), .. lines.Result.Select(line => string.Join(" ", line.Select(word => word.Text)))];
         }
-        menu.Items.Add(Item("New chat", NewChat));
-        menu.Items.Add(Item("My learning & profile…", ShowProfile));
-        menu.Items.Add(new Separator());
-        var current = CoachSettings.Current().Provider;
-        var providers = new MenuItem { Header = $"AI: {current.Name()}" };
-        foreach (var provider in Providers.All)
-        {
-            var ready = !string.IsNullOrWhiteSpace(CredentialStore.Read(provider.KeyVariable()));
-            providers.Items.Add(Item($"{provider.Name()} · {(ready ? "Key added" : "No key yet · add it in Settings")}", () =>
-            {
-                CredentialStore.SetProvider(provider);
-                if (!ready) ShowSettings();
-            }, provider == current));
-        }
-        providers.Items.Add(new Separator());
-        providers.Items.Add(Item("Add or change keys…", ShowSettings));
-        menu.Items.Add(providers);
-        menu.Items.Add(Item("Share my screen with Pip", () => SetScreenSharing(!_screenSharingEnabled), _screenSharingEnabled));
-        var sizes = new MenuItem { Header = "Pip size" };
-        foreach (var (title, width, height) in PipSizes)
-            sizes.Items.Add(Item(title, () =>
-            {
-                if (_userPositioned) Top -= (height - PipArtView.Height) / 2;
-                PipArtView.Width = width; PipArtView.Height = height;
-                LayoutCompanion();
-            }, PipArtView.Height == height));
-        menu.Items.Add(sizes);
-        menu.Items.Add(Item("Move Pip to the other side", () => { _leftAnchor = !_leftAnchor; _userPositioned = false; LayoutCompanion(); }));
-        if (_guide is not null) menu.Items.Add(Item("Clear the highlight", ClearHighlight));
-        if (_input.IsMoved) menu.Items.Add(Item("Put the input bar back", () => { _input.ResetPosition(); PositionBubble(); }));
-        menu.Items.Add(Item("Hide the input bar", MinimiseConversation));
-        menu.Items.Add(new Separator());
-        menu.Items.Add(Item("Settings…", ShowSettings));
-        menu.Items.Add(Item("Quit F2L", Close));
-        menu.PlacementTarget = MoreButton; menu.IsOpen = true;
+        catch (Exception error) when (error is not OperationCanceledException) { return []; }
     }
 
-    internal void SetScreenSharing(bool on)
+    /// <summary>The app the screenshot shows, such as "chrome", so a question about another tool is taught from there.</summary>
+    private static string? AppName(CapturedScreen? captured)
     {
-        _screenSharingEnabled = on;
-        if (!on) { ClearHighlight(); _selectionEnabled = false; _bubble.UpdateSelection(null, ""); }
-    }
-
-    private static readonly (string Title, double Width, double Height)[] PipSizes = [("Small", 112, 128), ("Medium", 144, 164), ("Large", 180, 205)];
-
-    private void ShowSettings() => new SettingsWindow(new SettingsWindow.Hooks(
-        () => _reducedMotion, SetReducedMotion, () => _followTargets, SetFollowTargets)) { Owner = _personalize is { IsVisible: true } ? _personalize : this }.ShowDialog();
-
-    private void ShowProfile()
-    {
-        if (_personalize is { IsVisible: true }) { _personalize.Activate(); return; }
-        _panelOpen = false; _input.Hide(); _bubble.Hide();
-        _personalize = new PersonalizeWindow(_profileStore, _coach) { Owner = this };
-        _personalize.Done = () => { if (!_closed) { _profileDocument = null; OpenConversation(); Greet(); } };
-        // What they want to learn is saved as they change it, so the next answer already knows.
-        _personalize.Changed = () => { if (!_closed) _profileDocument = null; };
-        _personalize.OpenSettings = ShowSettings;
-        _personalize.Show();
+        if (captured is null) return null;
+        try { using var process = System.Diagnostics.Process.GetProcessById((int)captured.SourceProcess); return process.ProcessName; }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException) { return null; }
     }
 
     private async void Send_Click(object sender, RoutedEventArgs e)
@@ -293,8 +260,8 @@ public partial class MainWindow : Window
         else await SubmitAsync(_input.QuestionBox.Text);
     }
 
-    /// <summary>Pip says a short line in its card: a greeting, a problem, or what it is doing.</summary>
-    /// <summary>Notices and problems come with Pip's curious emote; pass another for greetings and progress.</summary>
+    /// <summary>Pip says a short line in its card: a greeting, a problem, or what it is doing. Notices and problems come
+    /// with Pip's curious emote; pass another for greetings and progress.</summary>
     private void Say(string line, PipEmote emote = PipEmote.Curious, params ReplyBubbleWindow.Choice[] choices)
     {
         _bubble.Say(line, emote, choices); PositionBubble();
@@ -388,7 +355,8 @@ public partial class MainWindow : Window
             }
             else
             {
-                answer = await _coach.AnswerAsync(ExcelContext.Compose(clean, context, Profile.Profile), _session.ProviderHistory(entry.TurnId), captured?.JpegBytes,
+                var names = await ScreenNamesAsync(captured, token);
+                answer = await _coach.AnswerAsync(ExcelContext.Compose(clean, context, Profile.Profile, AppName(captured), names, AIToolLibrary.Shared), _session.ProviderHistory(entry.TurnId), captured?.JpegBytes,
                     captured is null ? null : "image/jpeg", token);
             }
             token.ThrowIfCancellationRequested();
@@ -480,146 +448,6 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Sends Pip to where the reply or step happens and circles it, found on the screen as it is now: the
-    /// window is pictured again and its words are read on this PC (Windows OCR), so a button or tab is circled where its
-    /// name appears and an Excel cell where its column letter and row number meet. Excel's own confirmation and UI
-    /// Automation's named controls are used too. The model's rough position is shown dashed at once and replaced by a
-    /// checked place when one is found. Every decision goes to pointing.log. Mirrors point(at:) in Sources/F2L/Companion.swift.</summary>
-    private async void PointAt(ScreenTarget? target, bool checkRequest)
-    {
-        if (target is null || _replyCapture is not { } capture || !_screenSharingEnabled) return;
-        var cell = target.Cell is { } address ? CellReference.Parse(address) : null;
-        // A direct "circle A1" can't be quietly answered with B1.
-        if (checkRequest && cell is not null && _requestedCells.Count == 1 && !CellReference.MatchesRequest(cell, _requestedCells)) return;
-        var version = _highlightVersion;
-        Rect? estimate = target.HasBox ? TargetGeometry.FromScreenshot(capture, target) : null;
-        try
-        {
-            if (cell is not null)
-            {
-                var result = await _excel.ResolveAsync(capture, cell, _lifetime.Token);
-                if (version != _highlightVersion || _closed) return;
-                if (result is { Verified: true, Bounds: { } bounds })
-                {
-                    PointingLog.Record(target, "excel-verified", bounds);
-                    ShowTarget(capture, bounds, true, cell, result.Sheet, persistent: true);
-                    return;
-                }
-            }
-            // Go straight to where the model saw it (dashed) while the screen is read; a checked place replaces it.
-            if (estimate is { } quick) ShowTarget(capture, quick, false, null, null, persistent: true);
-            // Picture the window as it is now and read it; the picture is dropped straight after.
-            var lines = await ReadScreenNowAsync(capture);
-            if (version != _highlightVersion || _closed) return;
-            Rect? place = null;
-            string source;
-            if (cell is not null)
-            {
-                var range = target.Label.Contains(':') && StepCheck.References("select " + target.Label).Count == 1 ? target.Label : cell.Address;
-                place = ScreenText.ExcelCell(range, lines.SelectMany(line => line));
-                source = place is null ? "cell headings not visible" : "screen-headings";
-            }
-            else
-            {
-                var controls = await TargetSnap.ControlsAsync(capture.SourceWindow, _lifetime.Token);
-                if (version != _highlightVersion || _closed) return;
-                place = TargetSnap.Snap(estimate, target.Label, controls, capture.Dpi / 96d);
-                source = "ui-automation";
-                if (place is null)
-                {
-                    place = TargetSnap.Snap(estimate, target.Label, ScreenText.Candidates(lines), capture.Dpi / 96d, byPosition: false);
-                    source = place is null ? $"no matching control ({controls.Count} controls, {lines.Sum(line => line.Count)} words)" : "screen-text";
-                }
-            }
-            PointingLog.Record(target, place is null && estimate is not null ? "model-estimate" : source, place ?? estimate, estimate);
-            // Nothing on screen confirmed it (an icon without a visible name): the dashed estimate stays.
-            if (place is { } found) ShowTarget(capture, found, true, null, null, persistent: true);
-        }
-        catch (OperationCanceledException) { }
-    }
-
-    /// <summary>A fresh picture of the taught window with F2L's own windows made invisible for a moment, read with
-    /// Windows OCR. Only the words and their places are kept.</summary>
-    private async Task<IReadOnlyList<IReadOnlyList<ScreenWord>>> ReadScreenNowAsync(CapturedScreen capture)
-    {
-        var app = new ForegroundApp(capture.SourceWindow, capture.SourceProcess);
-        var ours = new List<Window> { this, _input, _bubble };
-        if (_guide is not null) ours.Add(_guide);
-        if (_teachingPip is not null) ours.Add(_teachingPip);
-        var opacity = ours.Select(window => window.Opacity).ToArray();
-        try
-        {
-            foreach (var window in ours) window.Opacity = 0;
-            await Task.Delay(80, _lifetime.Token);
-            var fresh = _capture.CaptureAppJpeg(app);
-            try { return await ScreenText.ReadAsync(fresh); }
-            finally { Array.Clear(fresh.JpegBytes); }
-        }
-        catch (ScreenCaptureException) { return []; }
-        finally
-        {
-            for (var i = 0; i < ours.Count; i++) ours[i].Opacity = opacity[i];
-        }
-    }
-
-    private void ForgetPlaces() { _replyCapture = null; _replyTarget = null; _stepTargets = []; _requestedCells = []; }
-
-    private void ShowTarget(CapturedScreen capture, Rect bounds, bool verified, CellReference? cell, string? sheet, bool persistent = false)
-    {
-        if (!TargetGeometry.IsUsable(bounds) || !NativeDesktop.IsSnapshotCurrent(capture) ||
-            !NativeDesktop.PointBelongsToWindow(capture.SourceWindow, new Point(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2)))
-            return;
-        _targetPersistent = persistent;
-        _targetCapture = capture;
-        _targetCell = cell; _targetSheet = sheet; _targetShown = DateTime.UtcNow;
-        _guide ??= new GuideOverlayWindow();
-        _guide.ShowTarget(bounds, verified);
-        // The input bar never sits on the place Pip is pointing at (unless the learner put it there).
-        var panel = PanelPixels();
-        if (!panel.IsEmpty && panel.IntersectsWith(Rect.Inflate(TargetSnap.Circle(bounds), 16, 16))) _input.Dodge(true);
-        UpdateTeachingCompanion(bounds);
-        PositionBubble();
-    }
-
-    private async void WatchTarget(object? sender, EventArgs e)
-    {
-        if (_targetCapture is not { } capture || _checkingHighlight) return;
-        if (_targetCell is null)
-        {
-            // A lesson step keeps its hint while it is shown; other approximate hints expire after 20 seconds.
-            if (!NativeDesktop.IsSnapshotCurrent(capture) || (!_targetPersistent && DateTime.UtcNow - _targetShown > TimeSpan.FromSeconds(20))) ClearHighlight();
-            return;
-        }
-        if (NativeDesktop.RefreshGeometry(capture) is not { } current) { ClearHighlight(); return; }
-        capture = current;
-        var cell = _targetCell;
-        _checkingHighlight = true;
-        var version = _highlightVersion;
-        try
-        {
-            var result = await _excel.ResolveAsync(capture, cell, _lifetime.Token);
-            if (version != _highlightVersion || _closed) return;
-            if (NativeDesktop.IsSnapshotCurrent(capture) && result.Verified && result.Sheet == _targetSheet && result.Bounds is { } bounds)
-            {
-                _targetCapture = capture;
-                _guide?.ShowTarget(bounds, true);
-                UpdateTeachingCompanion(bounds);
-            }
-            else ClearHighlight();
-        }
-        catch (OperationCanceledException) { }
-        finally { _checkingHighlight = false; }
-    }
-
-    private void ClearHighlight()
-    {
-        _highlightVersion++;
-        _guide?.Close(); _guide = null;
-        StopTeachingCompanion(); _lastTargetBounds = null;
-        _targetCapture = null; _targetCell = null; _targetSheet = null;
-        _input.Dodge(false);
-    }
-
     private async void Talk_Click(object sender, RoutedEventArgs e)
     {
         if (_finishingDictation) return;
@@ -691,7 +519,6 @@ public partial class MainWindow : Window
         StopDictation(); SetBusy(false); Say($"I couldn’t hear you ({error}). You can type instead.");
     });
 
-
     internal void NewChat()
     {
         CancelCurrentTurn(); _saveDraft.Stop(); ClearHighlight();
@@ -746,7 +573,7 @@ public partial class MainWindow : Window
         _intro?.Finish();
         // Owned windows may already be closed with their owner.
         try { _bubble.Close(); _input.Close(); } catch (InvalidOperationException) { }
-        _saveDraft.Stop(); _watchTarget.Stop(); _wave.Stop(); _lifetime.Cancel();
+        _saveDraft.Stop(); _watchTarget.Stop(); _clickTimer.Stop(); _wave.Stop(); _lifetime.Cancel();
         ClearHighlight();
         _speechInput.Dispose();
         _capture.Dispose();

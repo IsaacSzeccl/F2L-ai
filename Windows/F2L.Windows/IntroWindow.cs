@@ -134,10 +134,22 @@ internal sealed class IntroWindow : Window
         dc.DrawRectangle(Ink(0x191923, 0.94 * alpha), null, new Rect(0, 0, Width, Height));
         if (alpha > 0)
         {
+            var landscape = BrandArtwork.Image(BrandArtwork.Landscape);
+            var fit = Math.Max(Width / landscape.Width, Height / landscape.Height);
+            dc.PushOpacity(0.7 * alpha);
+            dc.DrawImage(landscape, new Rect((Width - landscape.Width * fit) / 2, (Height - landscape.Height * fit) / 2,
+                landscape.Width * fit, landscape.Height * fit));
+            dc.Pop();
+        }
+        if (alpha > 0)
+        {
             var glow = new RadialGradientBrush(Ink(0x827088, 0.27 * alpha).Color, Colors.Transparent);
             dc.DrawEllipse(glow, null, new Point(origin.X + 300 * unit, origin.Y + 80 * unit), 440 * unit, 300 * unit);
         }
         var exit = _reducedMotion ? 0 : Ease((_seconds - 3.08) / 0.5);
+        dc.PushOpacity(alpha * (1 - exit));
+        dc.DrawImage(BrandArtwork.Image("Brand/learning-doorway.png"), new Rect(origin.X + 126 * unit, origin.Y - 100 * unit, 84 * unit, 84 * unit));
+        dc.Pop();
         var letters = new[] { "F", "2", "L", "A", "I" };
         var x = origin.X;
         for (var i = 0; i < letters.Length; i++)
@@ -232,7 +244,10 @@ internal sealed class IntroWindow : Window
         if (_finished) return;
         _finished = true; _timer.Stop();
         var completion = _completion; _completion = null;
-        Close(); completion?.Invoke();
+        Close();
+        // The backdrop is shown once per launch: let its screen-sized picture go.
+        BrandArtwork.Forget(BrandArtwork.Landscape);
+        completion?.Invoke();
     }
 
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")] private static extern IntPtr GetWindowLongPtr(IntPtr window, int index);
