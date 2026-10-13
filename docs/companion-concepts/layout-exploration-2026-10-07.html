@@ -1,0 +1,213 @@
+<div id="beacon-companion-study" aria-label="Beacon companion layout exploration">
+  <div class="viz-carousel" aria-label="Companion placement designs">
+    <section data-variant="Lesson side area" aria-label="Lesson side area design"><div class="beacon-scene" data-layout="side"></div></section>
+    <section data-variant="Floating companion" aria-label="Floating companion design" hidden><div class="beacon-scene" data-layout="float"></div></section>
+    <section data-variant="Quiet focus" aria-label="Quiet focus design" hidden><div class="beacon-scene" data-layout="quiet"></div></section>
+  </div>
+</div>
+<style>
+#beacon-companion-study { color-scheme: light dark; }
+#beacon-companion-study .beacon-scene { --b-bg:light-dark(#eef0ee,#181d20); --b-paper:light-dark(#ffffff,#252b30); --b-text:light-dark(#243337,#e9eeed); --b-muted:light-dark(#62726f,#b2c2bd); --b-line:light-dark(#d9e1dc,#45504f); --b-soft:light-dark(#f3f6f3,#303b3a); --b-green:light-dark(#226c58,#9ed6bc); --b-ring:light-dark(#b57618,#ffd185); --b-bubble:light-dark(#fff8e9,#39362c); --b-ink:#293941; font:14px/1.5 system-ui,sans-serif; color:var(--b-text); background:var(--b-bg); border:1px solid var(--b-line); border-radius:16px; min-height:580px; overflow:clip; position:relative; }
+#beacon-companion-study .beacon-scene * { box-sizing:border-box; }
+#beacon-companion-study .beacon-scene button, #beacon-companion-study .beacon-scene input, #beacon-companion-study .beacon-scene textarea { font:inherit; color:inherit; }
+#beacon-companion-study .beacon-scene button { border:1px solid var(--b-line); border-radius:9px; background:var(--b-paper); padding:7px 11px; min-height:36px; }
+#beacon-companion-study .beacon-scene button:hover { background:var(--b-soft); }
+#beacon-companion-study .beacon-scene button:disabled { opacity:.55; }
+#beacon-companion-study .beacon-scene .b-primary { color:var(--b-paper); background:var(--b-text); border-color:var(--b-text); }
+#beacon-companion-study .beacon-scene .b-primary:hover { opacity:.85; }
+#beacon-companion-study .b-chrome { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid var(--b-line); background:var(--b-paper); padding-right:100px; min-height:54px; }
+#beacon-companion-study .b-chrome strong { font-weight:600; }
+#beacon-companion-study .b-chrome small { color:var(--b-muted); font-size:12px; }
+#beacon-companion-study .b-body { display:grid; grid-template-columns:minmax(0,1fr) 300px; min-height:524px; position:relative; }
+#beacon-companion-study .b-work { min-width:0; display:flex; flex-direction:column; padding:20px; gap:15px; }
+#beacon-companion-study .b-workbar { display:flex; justify-content:space-between; align-items:center; gap:10px; color:var(--b-muted); }
+#beacon-companion-study .b-goal { margin:auto 0 12px; max-width:450px; }
+#beacon-companion-study .b-goal h2 { font:600 25px/1.25 system-ui,sans-serif; margin:0 0 12px; letter-spacing:-.6px; }
+#beacon-companion-study .b-goal p { margin:0; color:var(--b-muted); }
+#beacon-companion-study .b-label { display:block; color:var(--b-muted); font-size:12px; margin-bottom:7px; }
+#beacon-companion-study .b-taskform { padding:12px; background:var(--b-paper); border-radius:12px; border:1px solid var(--b-line); position:relative; }
+#beacon-companion-study .b-target { outline:2px solid var(--b-ring); outline-offset:5px; }
+#beacon-companion-study .b-taskform textarea { display:block; resize:vertical; width:100%; min-height:70px; border:0; background:var(--b-paper); padding:6px; border-radius:5px; }
+#beacon-companion-study .b-taskfoot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:9px; }
+#beacon-companion-study .b-taskfoot span { font-size:12px; color:var(--b-muted); }
+#beacon-companion-study .b-worknote { margin:0; color:var(--b-muted); font-size:12px; min-height:18px; }
+#beacon-companion-study .b-rail { display:flex; flex-direction:column; min-width:0; padding:17px; gap:13px; border-left:1px solid var(--b-line); background:var(--b-paper); }
+#beacon-companion-study .b-railhead { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+#beacon-companion-study .b-railhead span { font-weight:600; }
+#beacon-companion-study .beacon-scene .b-minor { border:0; background:transparent; padding:3px 6px; font-size:12px; min-height:30px; color:var(--b-muted); }
+#beacon-companion-study .b-guide { display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
+#beacon-companion-study .b-characterline { display:flex; align-items:center; gap:12px; padding-left:4px; }
+#beacon-companion-study .b-name { display:flex; flex-direction:column; gap:2px; }
+#beacon-companion-study .b-name strong { font-weight:600; }
+#beacon-companion-study .b-state { font-size:12px; color:var(--b-muted); }
+#beacon-companion-study .b-pip { flex:none; position:relative; width:64px; height:78px; transform-origin:50% 90%; transition:transform .25s ease; }
+#beacon-companion-study .b-pip .b-bodyshape { position:absolute; left:5px; top:20px; width:54px; height:51px; background:#efb346; border-radius:20px 20px 15px 15px; transform:rotate(-3deg); box-shadow:inset -5px -4px 0 #d89830; }
+#beacon-companion-study .b-pip .b-tip { position:absolute; top:5px; left:24px; width:33px; height:30px; background:#efb346; border-radius:25px 9px 12px 3px; transform:rotate(20deg); }
+#beacon-companion-study .b-pip .b-face { position:absolute; left:12px; top:30px; width:40px; height:28px; background:#ffedb8; border-radius:16px 16px 12px 12px; }
+#beacon-companion-study .b-pip .b-eye { position:absolute; width:5px; height:8px; top:9px; border-radius:50%; background:var(--b-ink); transition:transform .2s ease; }
+#beacon-companion-study .b-eye.left { left:9px; } #beacon-companion-study .b-eye.right { right:9px; }
+#beacon-companion-study .b-pip .b-mouth { position:absolute; width:9px; height:5px; border-bottom:2px solid var(--b-ink); border-radius:50%; top:17px; left:16px; }
+#beacon-companion-study .b-pip .b-clasp { position:absolute; background:#408d82; border:2px solid #33766e; border-radius:50%; width:10px; height:10px; left:27px; top:59px; }
+#beacon-companion-study .b-pip .b-hand { position:absolute; width:10px; height:15px; background:#b5722f; border-radius:8px; top:51px; transition:transform .25s ease; }
+#beacon-companion-study .b-hand.left { left:1px; transform:rotate(-30deg); } #beacon-companion-study .b-hand.right { right:1px; transform:rotate(25deg); }
+#beacon-companion-study .b-pip:before, #beacon-companion-study .b-pip:after { content:''; position:absolute; width:15px; height:9px; bottom:0; background:#86572d; border-radius:5px; }
+#beacon-companion-study .b-pip:before { left:12px; } #beacon-companion-study .b-pip:after { right:12px; }
+#beacon-companion-study .b-pip[data-emote="clarify"] { transform:rotate(-9deg); }
+#beacon-companion-study .b-pip[data-emote="clarify"] .b-eye.right { transform:translateY(-3px); }
+#beacon-companion-study .b-pip[data-emote="focus"] .b-hand.right { transform:translate(-18px,-12px) rotate(30deg); }
+#beacon-companion-study .b-pip[data-emote="focus"] .b-eye { transform:scaleY(.8); }
+#beacon-companion-study .b-pip[data-emote="happy"] .b-hand.right { transform:translateY(-24px) rotate(-30deg); }
+#beacon-companion-study .b-pip[data-emote="happy"] .b-eye { height:5px; border-top:2px solid var(--b-ink); background:transparent; }
+#beacon-companion-study .b-pip[data-emote="paused"] { opacity:.5; }
+#beacon-companion-study .b-bubble { position:relative; width:100%; padding:15px; border:1px solid var(--b-line); background:var(--b-bubble); border-radius:4px 16px 16px 16px; }
+#beacon-companion-study .b-bubble p { margin:0; font-size:15px; }
+#beacon-companion-study .b-bubble .b-detail { margin-top:9px; font-size:13px; color:var(--b-muted); }
+#beacon-companion-study .b-options { display:flex; gap:7px; flex-wrap:wrap; margin-top:13px; }
+#beacon-companion-study .b-options button { font-size:12px; padding:6px 8px; }
+#beacon-companion-study .b-askzone { margin-top:auto; border-top:1px solid var(--b-line); padding-top:14px; }
+#beacon-companion-study .b-receipt { margin:0 0 9px; font-size:12px; color:var(--b-muted); overflow-wrap:anywhere; }
+#beacon-companion-study .b-askform { display:flex; flex-direction:column; gap:8px; }
+#beacon-companion-study .b-askform label { font-size:12px; font-weight:600; }
+#beacon-companion-study .b-askform textarea { padding:9px; border-radius:8px; width:100%; resize:vertical; min-height:68px; background:var(--b-paper); border:1px solid var(--b-line); }
+#beacon-companion-study .b-askactions { display:flex; flex-wrap:wrap; gap:8px; }
+#beacon-companion-study .b-launchers { display:flex; flex-wrap:wrap; gap:7px; }
+#beacon-companion-study .b-foot { font-size:11px; color:var(--b-muted); margin-top:2px; }
+#beacon-companion-study [data-layout="float"] .b-body, #beacon-companion-study [data-layout="quiet"] .b-body { display:block; }
+#beacon-companion-study [data-layout="float"] .b-work, #beacon-companion-study [data-layout="quiet"] .b-work { min-height:524px; }
+#beacon-companion-study [data-layout="float"] .b-goal { max-width:40%; margin:auto 0 24px; }
+#beacon-companion-study [data-layout="float"] .b-rail { position:absolute; right:18px; top:63px; width:300px; border:1px solid var(--b-line); border-radius:17px; gap:6px; box-shadow:0 5px 20px #00000012; }
+#beacon-companion-study [data-layout="float"] .b-characterline { position:absolute; left:-68px; top:40px; padding:0; }
+#beacon-companion-study [data-layout="float"] .b-name { display:none; }
+#beacon-companion-study [data-layout="float"] .b-askzone { padding-top:9px; margin-top:4px; }
+#beacon-companion-study [data-layout="float"] .b-askform textarea { min-height:44px; }
+#beacon-companion-study [data-layout="float"]:has(.b-askform:not([hidden])) .b-rail { top:15px; }
+#beacon-companion-study [data-layout="quiet"] .b-rail { border:1px solid var(--b-line); border-radius:12px; margin:0 20px 20px; display:block; }
+#beacon-companion-study [data-layout="quiet"] .b-work { min-height:343px; }
+#beacon-companion-study [data-layout="quiet"] .b-characterline { display:none; }
+#beacon-companion-study [data-layout="quiet"] .b-bubble { background:transparent; border:0; padding:9px 0; }
+#beacon-companion-study [data-layout="quiet"] .b-guide { margin-top:5px; }
+#beacon-companion-study [data-layout="quiet"] .b-askzone { padding-top:9px; margin-top:4px; }
+#beacon-companion-study [data-layout="quiet"] .b-goal { margin:auto 0 15px; }
+#beacon-companion-study .b-collapsed .b-guide, #beacon-companion-study .b-collapsed .b-foot { display:none; }
+#beacon-companion-study .b-collapsed .b-askzone { margin-top:0; }
+#beacon-companion-study .b-static .b-pip, #beacon-companion-study .b-static .b-pip * { transition:none; }
+#beacon-companion-study .beacon-scene { min-height:650px; }
+#beacon-companion-study .b-body { min-height:594px; }
+#beacon-companion-study [data-layout="float"] .b-work { min-height:594px; }
+#beacon-companion-study [data-layout="float"] .b-rail { top:14px; }
+#beacon-companion-study [data-layout="float"] .b-workbar { justify-content:flex-start; flex-wrap:wrap; max-width:45%; }
+#beacon-companion-study [data-layout="float"] .b-receipt { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+#beacon-companion-study .b-composing .b-guide, #beacon-companion-study .b-composing .b-foot { display:none; }
+#beacon-companion-study .beacon-scene [hidden] { display:none !important; }
+@media (max-width:720px) {
+ #beacon-companion-study .b-body { grid-template-columns:minmax(0,1fr) 265px; }
+ #beacon-companion-study .b-work { padding:16px; }
+ #beacon-companion-study .b-rail { padding:13px; }
+ #beacon-companion-study .b-goal h2 { font-size:21px; }
+ #beacon-companion-study [data-layout="float"] .b-rail { width:265px; }
+ #beacon-companion-study [data-layout="float"] .b-goal { max-width:35%; }
+}
+@media (max-width:570px) {
+ #beacon-companion-study .beacon-scene { min-height:780px; }
+ #beacon-companion-study .b-body { display:flex; flex-direction:column; min-height:725px; }
+ #beacon-companion-study .b-work, #beacon-companion-study [data-layout="float"] .b-work, #beacon-companion-study [data-layout="quiet"] .b-work { min-height:330px; }
+ #beacon-companion-study .b-work { flex:1; }
+ #beacon-companion-study .b-rail { border-left:0; border-top:1px solid var(--b-line); min-height:375px; }
+ #beacon-companion-study [data-layout="float"] .b-rail, #beacon-companion-study [data-layout="quiet"] .b-rail { position:relative; left:auto; right:auto; top:auto; width:auto; margin:0 12px 12px; min-height:355px; }
+ #beacon-companion-study [data-layout="float"]:has(.b-askform:not([hidden])) .b-rail { top:auto; }
+ #beacon-companion-study [data-layout="float"] .b-characterline { position:relative; left:auto; top:auto; }
+ #beacon-companion-study [data-layout="float"] .b-name { display:flex; }
+ #beacon-companion-study [data-layout="float"] .b-goal { max-width:100%; margin:22px 0; }
+ #beacon-companion-study .b-taskform textarea, #beacon-companion-study .b-askform textarea { font-size:16px; }
+ #beacon-companion-study .b-chrome { padding-right:16px; }
+}
+@media (prefers-reduced-motion:reduce) {
+ #beacon-companion-study .b-pip, #beacon-companion-study .b-pip * { transition:none; }
+}
+@media (pointer:coarse) {
+ #beacon-companion-study .beacon-scene button { min-height:44px; }
+}
+</style>
+<script>
+(() => {
+ const root=document.getElementById('beacon-companion-study');
+ const character='<div class="b-pip" data-emote="guide" role="img" aria-label="Pip, attentive lantern companion"><span class="b-tip"></span><span class="b-bodyshape"></span><span class="b-face"><span class="b-eye left"></span><span class="b-eye right"></span><span class="b-mouth"></span></span><span class="b-clasp"></span><span class="b-hand left"></span><span class="b-hand right"></span></div>';
+ const moments={
+  simple:{face:'guide',label:'One step at a time',text:'Click the question box and tell the AI what you want to achieve.'},
+  focus:{face:'focus',label:'Let’s break it down',text:'A useful prompt has a goal, context and an output format. Start with just your goal.'},
+  clarify:{face:'clarify',label:'One quick question',text:'Do you want help writing your question, or understanding the AI’s answer?'},
+  happy:{face:'happy',label:'A useful first step',text:'You sent a question. Next, check whether the answer actually meets your goal.'},
+  paused:{face:'paused',label:'Screen access paused',text:'Screen guidance is paused. Your work stays where you left it.'}
+ };
+ root.querySelectorAll('.beacon-scene').forEach((scene,index)=>{
+  const layout=scene.dataset.layout;
+  const state={moment:'simple',motion:true,collapsed:false,paused:false};
+  scene.innerHTML=`<div class="b-chrome"><strong>Beacon</strong><small>Design preview · scripted examples</small></div>
+   <div class="b-body">
+    <main class="b-work" aria-label="Example application you are learning">
+     <div class="b-workbar"><span>AI practice workspace</span><button type="button" class="b-new cursor-interaction">New chat</button></div>
+     <div class="b-goal"><span class="b-label">YOUR TASK</span><h2>Start with a useful question.</h2><p>Ask for help writing a short, polite email to arrange a meeting.</p></div>
+     <form class="b-taskform b-target" aria-label="Practice app question box"><label class="b-label" for="task-${index}">Message the practice AI</label><textarea id="task-${index}" placeholder="What would you like help with?" rows="2"></textarea><div class="b-taskfoot"><span>Your task input</span><button class="b-primary b-submittask cursor-interaction" type="button">Send</button></div></form>
+     <p class="b-worknote" aria-live="polite">The gold outline shows where to work.</p>
+    </main>
+    <aside class="b-rail" aria-label="Beacon guidance">
+     <div class="b-railhead"><span>${layout==='quiet'?'Beacon · quiet focus':'Your companion'}</span><button class="b-hide b-minor cursor-interaction" type="button" aria-expanded="true">Collapse</button></div>
+     <div class="b-guide"><div class="b-characterline">${character}<div class="b-name"><strong>Pip</strong><span class="b-state">One step at a time</span></div></div>
+      <div class="b-bubble"><p class="b-response" aria-live="polite">Click the question box and tell the AI what you want to achieve.</p><p class="b-detail" hidden></p><div class="b-options"><button type="button" class="b-simple cursor-interaction">Simpler</button><button type="button" class="b-why cursor-interaction">Why?</button><button type="button" class="b-more cursor-interaction">More detail</button></div></div>
+     </div>
+     <div class="b-askzone"><p class="b-receipt" hidden></p><form class="b-askform" hidden><label for="ask-${index}">Ask Beacon about this step</label><textarea id="ask-${index}" rows="2" placeholder="For example: What is a prompt?" maxlength="300"></textarea><div class="b-askactions"><button class="b-primary b-submitask cursor-interaction" type="button">Ask</button><button class="b-cancel cursor-interaction" type="button">Cancel</button></div></form><div class="b-launchers"><button type="button" class="b-open cursor-interaction">Ask Beacon</button><button type="button" class="b-pause b-minor cursor-interaction">Pause screen access</button></div></div>
+     <div class="b-foot">${layout==='side'?'Stable space beside the work.':layout==='float'?'Compact help; collapse whenever it is in the way.':'Same guidance, without character motion.'}</div>
+    </aside>
+   </div>`;
+  const $=s=>scene.querySelector(s);
+  const ask=$('.b-askform'), launch=$('.b-launchers'), detail=$('.b-detail');
+  function draw(){
+   const m=moments[state.paused?'paused':state.moment]||moments.simple;
+   $('.b-response').textContent=m.text;
+   $('.b-state').textContent=m.label;
+   $('.b-pip').dataset.emote=m.face;
+   $('.b-pip').setAttribute('aria-label',`Pip: ${m.label}`);
+   $('.b-rail').classList.toggle('b-collapsed',state.collapsed);
+   scene.classList.toggle('b-static',!state.motion);
+   $('.b-hide').textContent=state.collapsed?'Show guidance':'Collapse';
+   $('.b-hide').setAttribute('aria-expanded',String(!state.collapsed));
+   $('.b-pause').textContent=state.paused?'Resume screen access':'Pause screen access';
+   scene.querySelectorAll('.b-options button').forEach(button=>{button.disabled=state.paused;});
+   $('.b-taskform').classList.toggle('b-target',!state.paused&&state.moment!=='happy');
+   detail.hidden=true;
+  }
+  function setMoment(moment){state.moment=moment;state.collapsed=false;draw();}
+  function openAsk(){ask.hidden=false;launch.hidden=true;scene.classList.add('b-composing');$('.b-askform textarea').focus();}
+  function closeAsk(){ask.hidden=true;launch.hidden=false;scene.classList.remove('b-composing');$('.b-open').focus();}
+  $('.b-open').addEventListener('click',openAsk);
+  $('.b-cancel').addEventListener('click',closeAsk);
+  ask.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();closeAsk();}});
+  $('.b-submitask').addEventListener('click',e=>{
+   e.preventDefault();const value=$('.b-askform textarea').value.trim();if(!value)return;
+   $('.b-receipt').textContent=`You asked: ${value}`;$('.b-receipt').hidden=false;
+   setMoment('simple');
+   $('.b-response').textContent=/prompt/i.test(value)?'Example reply: A prompt is a question or instruction you give an AI.':'Example reply: Start with your goal. You can add details afterward.';
+   $('.b-askform textarea').value='';closeAsk();
+  });
+  $('.b-simple').addEventListener('click',()=>{setMoment('simple');$('.b-response').textContent='Type “Help me write a polite meeting email” in the outlined box.';});
+  $('.b-why').addEventListener('click',()=>{if(state.paused)return;$('.b-response').textContent='A clear goal gives the AI a useful starting point. You can refine its answer afterward.';detail.hidden=true;});
+  $('.b-more').addEventListener('click',()=>setMoment('focus'));
+  $('.b-hide').addEventListener('click',()=>{state.collapsed=!state.collapsed;draw();});
+  $('.b-pause').addEventListener('click',()=>{state.paused=!state.paused;draw();});
+  $('.b-new').addEventListener('click',()=>{$('.b-taskform textarea').value='';$('.b-worknote').textContent='A fresh practice conversation.';setMoment('simple');});
+  $('.b-submittask').addEventListener('click',e=>{
+   e.preventDefault();const value=$('.b-taskform textarea').value.trim();
+   if(!value){$('.b-worknote').textContent='Add a question before sending.';$('.b-taskform textarea').focus();return;}
+   $('.b-worknote').textContent='Practice question sent. This preview does not contact an AI service.';
+   if(!state.paused)setMoment('happy');
+  });
+  draw();
+  if(globalThis.Tweak){
+   const tweak=new Tweak({container:scene,onChange:draw});
+   tweak.addSelect(state,'moment',{label:'Teaching moment',options:[{label:'Simple step',value:'simple'},{label:'Complex step',value:'focus'},{label:'Needs clarification',value:'clarify'},{label:'Verified progress',value:'happy'}]});
+   if(layout!=='quiet')tweak.addToggle(state,'motion',{label:'Expression transitions'});
+  }
+ });
+})();
+</script>
+

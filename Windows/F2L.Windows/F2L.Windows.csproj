@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- Windows 10 2004+ APIs: on-device OCR (Windows.Media.Ocr) for finding buttons and cells on screen. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>F2L.Windows</AssemblyName>
+    <RootNamespace>F2L.Windows</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/Brand/F2L.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="F2L.Windows.Tests" />
+    <Resource Include="Assets/Fonts/*.ttf" />
+    <!-- app-icon.png is only the master for F2L.ico, so it isn't packed into the app. -->
+    <Resource Include="Assets/Brand/*.png" Exclude="Assets/Brand/app-icon.png" />
+    <Resource Include="Assets/Illustrations/*.png" />
+    <Resource Include="Assets/Pip/*.png" />
+    <Resource Include="Assets/Pip/Emotes/*.png" />
+    <Resource Include="Assets/Pip/frames.json" />
+    <!-- The AI tools library Pip teaches and recommends from; the Mac app reads the same file. -->
+    <EmbeddedResource Include="Assets/Knowledge/ai-tools.json" LogicalName="ai-tools.json" />
+    <None Update="Assets/Fonts/LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+    <PackageReference Include="System.Speech" Version="10.0.12" />
+    <None Update="local.settings.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" Condition="Exists('local.settings.json')" />
+  </ItemGroup>
+</Project>

@@ -2,23 +2,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "Beacon",
+    name: "F2L",
     platforms: [.macOS(.v15)],
     products: [
-        .executable(name: "Beacon", targets: ["Beacon"]),
-        .executable(name: "beacon-spike", targets: ["BeaconSpike"]),
+        .executable(name: "F2L", targets: ["F2L"]),
     ],
     targets: [
-        // Pure logic: prompts, parsing, geometry, config. No AppKit, fully unit-tested.
+        // Platform-neutral logic shared in behaviour with the Windows companion: prompts, the DeepSeek client,
+        // conversation storage, Pip's poses and placement. No AppKit, fully unit-tested.
         .target(name: "CoachCore"),
-        // The macOS app: island, overlay, capture, accessibility, voice.
+        // The macOS Pip companion. AppKit only (no SwiftUI macros), so it also builds with the Command Line Tools.
         .executableTarget(
-            name: "Beacon",
+            name: "F2L",
             dependencies: ["CoachCore"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
-        // Week-1 model spike: replays saved snapshots against a model and scores pointing.
-        .executableTarget(name: "BeaconSpike", dependencies: ["CoachCore"]),
+        // Swift Testing. Run with scripts/test.sh, which also works before Xcode's licence is accepted.
         .testTarget(name: "CoachCoreTests", dependencies: ["CoachCore"]),
     ]
 )
