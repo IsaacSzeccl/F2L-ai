@@ -1,0 +1,1571 @@
+{
+ "version": 1,
+ "checked": "2026-10-13",
+ "note": "Hand-written task recipes for Pip, drafted from the official documentation listed in each recipe's source. status is \"drafted\" until someone has followed the recipe on a real account and filled in verifiedOn, verifiedBy and verifiedWith. Interfaces change: Pip trusts the exact names on screen over these, and keeps the recipe's order and completeness.",
+ "recipes": [
+  {
+   "id": "gemini-start",
+   "tool": "gemini",
+   "title": "Sign in to Gemini and ask a first question",
+   "goal": "Reach the Gemini prompt box and get one useful answer.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "gemini",
+    "start",
+    "begin",
+    "first",
+    "sign",
+    "signin",
+    "account",
+    "open"
+   ],
+   "steps": [
+    {
+     "do": "Open gemini.google.com in your browser.",
+     "label": "Gemini",
+     "expect": "The Gemini page loads.",
+     "ifMissing": "Type gemini.google.com into the address bar yourself rather than searching for it."
+    },
+    {
+     "do": "Sign in with your Google account if you are asked to.",
+     "label": "Sign in",
+     "expect": "Your profile picture shows at the top right.",
+     "ifMissing": "You may already be signed in; skip this step if your picture is there."
+    },
+    {
+     "do": "Click the prompt box at the bottom and type your question.",
+     "label": "Ask Gemini",
+     "expect": "Your words appear in the box.",
+     "ifMissing": "The box may be labelled with a hint rather than a name; it is the wide box across the bottom."
+    },
+    {
+     "do": "Press Return to send it.",
+     "label": "Submit",
+     "expect": "Gemini starts writing an answer.",
+     "ifMissing": "Click the arrow button at the right end of the prompt box instead."
+    }
+   ],
+   "commonFailures": [
+    "No prompt box: the account may be a Workspace account whose administrator has turned Gemini off."
+   ],
+   "source": [
+    "https://support.google.com/gemini/answer/16047321"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "gemini-open-canvas",
+   "tool": "gemini",
+   "title": "Open Canvas to write and edit a draft",
+   "goal": "Write and edit a draft side by side with Gemini instead of in the chat.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "canvas",
+    "draft",
+    "write",
+    "writing",
+    "edit",
+    "document",
+    "side"
+   ],
+   "steps": [
+    {
+     "do": "Open gemini.google.com and sign in.",
+     "label": "Ask Gemini",
+     "expect": "The prompt box is visible.",
+     "ifMissing": "Follow the gemini-start recipe first."
+    },
+    {
+     "do": "Below the prompt box, click Add Files.",
+     "label": "Add Files",
+     "expect": "A menu of tools opens.",
+     "ifMissing": "The button may be a plus sign or be labelled Tools; open that menu instead."
+    },
+    {
+     "do": "Choose Canvas from the menu.",
+     "label": "Canvas",
+     "expect": "A Canvas chip appears in the prompt box.",
+     "ifMissing": "If Canvas is not in the menu, the account may not have the feature yet; say so rather than guessing."
+    },
+    {
+     "do": "Type what you want written and press Return.",
+     "label": "Submit",
+     "expect": "A Canvas panel opens beside the chat with your draft.",
+     "ifMissing": "Click the arrow button at the right end of the prompt box."
+    },
+    {
+     "do": "To change part of the draft, select that text, type the change in the prompt box and press Enter.",
+     "label": "Canvas",
+     "expect": "Only the selected text changes, and the draft saves itself."
+    }
+   ],
+   "commonFailures": [
+    "Canvas missing from the menu: the account may not have the feature yet.",
+    "Edits lost: Canvas saves as you go, so re-open the same chat rather than starting a new one."
+   ],
+   "source": [
+    "https://support.google.com/gemini/answer/16047321"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "gemini-canvas-export-docs",
+   "tool": "gemini",
+   "title": "Send a Canvas draft to Google Docs",
+   "goal": "Move a finished Canvas draft into a real Google Doc you can keep and share.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "canvas",
+    "export",
+    "docs",
+    "doc",
+    "google",
+    "save",
+    "share"
+   ],
+   "steps": [
+    {
+     "do": "Open the Canvas chat that holds your draft.",
+     "label": "Canvas",
+     "expect": "The draft shows in the Canvas panel.",
+     "ifMissing": "Follow the gemini-open-canvas recipe first."
+    },
+    {
+     "do": "At the top right of the Canvas panel, click Share & export.",
+     "label": "Share & export",
+     "expect": "A short menu opens.",
+     "ifMissing": "Look for an upload or three-dot button in the same corner."
+    },
+    {
+     "do": "Choose Export to Docs.",
+     "label": "Export to Docs",
+     "expect": "A new Google Doc opens in another tab with your text.",
+     "ifMissing": "Choose Share instead and copy the link if there is no Docs option."
+    }
+   ],
+   "commonFailures": [
+    "Nothing opens: the browser may have blocked the new tab; allow pop-ups for gemini.google.com."
+   ],
+   "source": [
+    "https://support.google.com/gemini/answer/16047321"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "gemini-share-canvas-link",
+   "tool": "gemini",
+   "title": "Share a Canvas creation by link",
+   "goal": "Give someone else a link to what you made in Canvas.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "canvas",
+    "share",
+    "link",
+    "send",
+    "someone"
+   ],
+   "steps": [
+    {
+     "do": "Open the Canvas chat that holds your creation.",
+     "label": "Canvas",
+     "expect": "The creation shows in the Canvas panel."
+    },
+    {
+     "do": "At the top right, click Share & export.",
+     "label": "Share & export",
+     "expect": "A short menu opens."
+    },
+    {
+     "do": "Choose Share.",
+     "label": "Share",
+     "expect": "A link beginning g.co/gemini/share appears."
+    },
+    {
+     "do": "Click Copy link and paste it where you want to share it.",
+     "label": "Copy link",
+     "expect": "The link is on your clipboard.",
+     "ifMissing": "Select the link text and copy it with Command-C on a Mac or Ctrl-C on Windows."
+    }
+   ],
+   "commonFailures": [
+    "The person cannot open it: sharing may be limited on a Workspace account."
+   ],
+   "source": [
+    "https://support.google.com/gemini/answer/16047321"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "gemini-create-gem",
+   "tool": "gemini",
+   "title": "Create a Gem, a reusable assistant with your instructions",
+   "goal": "Save instructions once so Gemini answers the same way every time you come back.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "gem",
+    "gems",
+    "assistant",
+    "reusable",
+    "custom",
+    "instructions",
+    "create",
+    "build",
+    "make"
+   ],
+   "steps": [
+    {
+     "do": "Open gemini.google.com and sign in.",
+     "label": "Ask Gemini",
+     "expect": "The prompt box is visible."
+    },
+    {
+     "do": "At the top left, click Open Sidebar.",
+     "label": "Open Sidebar",
+     "expect": "The sidebar opens down the left.",
+     "ifMissing": "The sidebar may already be open; look for the menu or hamburger button in that corner."
+    },
+    {
+     "do": "Click Gems in the sidebar.",
+     "label": "Gems",
+     "expect": "The Gems page opens.",
+     "ifMissing": "It may be called Explore Gems, or sit under Settings and help the first time."
+    },
+    {
+     "do": "Click New Gem.",
+     "label": "New Gem",
+     "expect": "An empty Gem form opens.",
+     "ifMissing": "Look for a plus button or Create a Gem on the same page."
+    },
+    {
+     "do": "Type a name, then write the instructions it should follow.",
+     "label": "Instructions",
+     "expect": "Your name and instructions show in the form.",
+     "ifMissing": "Cover four things: the role it should play, the task, the background it needs and the format you want back."
+    },
+    {
+     "do": "To add reference files, click Add files under Knowledge.",
+     "label": "Add files",
+     "expect": "Your file is listed under Knowledge.",
+     "ifMissing": "Skip this step if you have no files to add."
+    },
+    {
+     "do": "Click Save.",
+     "label": "Save",
+     "expect": "The Gem appears under My Gems.",
+     "ifMissing": "Look for a Create or Update button in the same corner."
+    }
+   ],
+   "commonFailures": [
+    "No Gems in the sidebar: a Workspace administrator may have turned the feature off.",
+    "Instructions too vague: click Use Gemini to re-write instructions to expand them."
+   ],
+   "source": [
+    "https://support.google.com/gemini/answer/15146780",
+    "https://support.google.com/gemini/answer/15235603"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "gemini-use-gem",
+   "tool": "gemini",
+   "title": "Use a Gem you already made",
+   "goal": "Start a chat with one of your saved assistants instead of plain Gemini.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "gem",
+    "gems",
+    "assistant",
+    "open",
+    "chat",
+    "saved"
+   ],
+   "steps": [
+    {
+     "do": "Open gemini.google.com and sign in.",
+     "label": "Ask Gemini",
+     "expect": "The prompt box is visible."
+    },
+    {
+     "do": "At the top left, click Open Sidebar.",
+     "label": "Open Sidebar",
+     "expect": "The sidebar opens."
+    },
+    {
+     "do": "Click Gems.",
+     "label": "Gems",
+     "expect": "The Gems page opens.",
+     "ifMissing": "It may be called Explore Gems."
+    },
+    {
+     "do": "Under My Gems, click the Gem you want.",
+     "label": "My Gems",
+     "expect": "A chat opens with that Gem's name at the top.",
+     "ifMissing": "If My Gems is empty, make one first with the gemini-create-gem recipe."
+    },
+    {
+     "do": "Type your question in the prompt box and press Return.",
+     "label": "Submit",
+     "expect": "The Gem answers in its own style."
+    }
+   ],
+   "commonFailures": [
+    "The Gem answers like plain Gemini: check its name is shown at the top of the chat."
+   ],
+   "source": [
+    "https://support.google.com/gemini/answer/15146780"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "gemini-deep-research",
+   "tool": "gemini",
+   "title": "Run a Deep Research report",
+   "goal": "Get a longer researched report with sources instead of a short chat answer.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "deep",
+    "research",
+    "report",
+    "sources",
+    "compare",
+    "investigate"
+   ],
+   "steps": [
+    {
+     "do": "Open gemini.google.com and sign in.",
+     "label": "Ask Gemini",
+     "expect": "The prompt box is visible."
+    },
+    {
+     "do": "Below the prompt box, click Add Files.",
+     "label": "Add Files",
+     "expect": "A menu of tools opens.",
+     "ifMissing": "The button may be a plus sign or be labelled Tools."
+    },
+    {
+     "do": "Choose Deep Research.",
+     "label": "Deep Research",
+     "expect": "A Deep Research chip appears in the prompt box.",
+     "ifMissing": "If it is not listed, the account may not have the feature yet."
+    },
+    {
+     "do": "Type your research question and press Return.",
+     "label": "Submit",
+     "expect": "Gemini shows a research plan for you to check."
+    },
+    {
+     "do": "Read the plan, and click Edit plan if you want it changed.",
+     "label": "Edit plan",
+     "expect": "The plan opens for editing.",
+     "ifMissing": "Skip this step to accept the plan as written."
+    },
+    {
+     "do": "Click Start research.",
+     "label": "Start research",
+     "expect": "Gemini begins working; this usually takes five to ten minutes.",
+     "ifMissing": "You can leave the chat and come back."
+    },
+    {
+     "do": "When the report is ready, click Open.",
+     "label": "Open",
+     "expect": "The finished report opens with its sources."
+    }
+   ],
+   "commonFailures": [
+    "It takes longer than ten minutes on a broad topic; leaving the chat does not cancel it."
+   ],
+   "source": [
+    "https://support.google.com/gemini/answer/15719111"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "gemini-upload-file",
+   "tool": "gemini",
+   "title": "Ask Gemini about a file you upload",
+   "goal": "Get a summary or answers from a document or picture of your own.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "upload",
+    "file",
+    "files",
+    "pdf",
+    "picture",
+    "image",
+    "attach",
+    "summarise",
+    "summarize",
+    "document"
+   ],
+   "steps": [
+    {
+     "do": "Open gemini.google.com and sign in.",
+     "label": "Ask Gemini",
+     "expect": "The prompt box is visible."
+    },
+    {
+     "do": "Below the prompt box, click Add Files.",
+     "label": "Add Files",
+     "expect": "A menu opens.",
+     "ifMissing": "The button may be a plus sign or a paperclip."
+    },
+    {
+     "do": "Choose Files and pick the file from your computer.",
+     "label": "Files",
+     "expect": "The file's name shows above the prompt box.",
+     "ifMissing": "You may be offered Google Drive as well as your computer."
+    },
+    {
+     "do": "Type what you want done with it and press Return.",
+     "label": "Submit",
+     "expect": "Gemini answers from the file's contents.",
+     "ifMissing": "Say what you want plainly, for example summarise this in five bullet points."
+    }
+   ],
+   "commonFailures": [
+    "The file is refused: it may be too large or an unsupported type.",
+    "Answers ignore the file: check the file's name is still shown above the prompt box."
+   ],
+   "source": [
+    "https://support.google.com/gemini/answer/16047321"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "gemini-schedule-action",
+   "tool": "gemini",
+   "title": "Schedule a recurring action",
+   "goal": "Have Gemini do something on a schedule, such as a weekly summary.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": "Needs Keep Activity turned on."
+   },
+   "tags": [
+    "schedule",
+    "scheduled",
+    "recurring",
+    "daily",
+    "weekly",
+    "repeat",
+    "automatic",
+    "automate",
+    "reminder"
+   ],
+   "steps": [
+    {
+     "do": "Open gemini.google.com and sign in.",
+     "label": "Ask Gemini",
+     "expect": "The prompt box is visible."
+    },
+    {
+     "do": "Type the task and when it should run, for example every Monday at 9am summarise my week, then press Return.",
+     "label": "Submit",
+     "expect": "Gemini replies with a summary of the scheduled action.",
+     "ifMissing": "Say the day and the time plainly in the same sentence as the task."
+    },
+    {
+     "do": "To check or change it later, click your profile picture, then Scheduled actions.",
+     "label": "Scheduled actions",
+     "expect": "Your scheduled actions are listed.",
+     "ifMissing": "It may sit under Settings; you can also ask Gemini to change the action in its own chat."
+    }
+   ],
+   "commonFailures": [
+    "Nothing is scheduled: Keep Activity must be on for this feature to work.",
+    "You can have at most ten active scheduled actions at a time."
+   ],
+   "source": [
+    "https://support.google.com/gemini/answer/16316416"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "workspace-gemini-docs",
+   "tool": "google-workspace",
+   "title": "Ask Gemini inside a Google Doc",
+   "goal": "Draft or rewrite text without leaving the document.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "paid Google Workspace or Google AI plan on some accounts",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "docs",
+    "doc",
+    "document",
+    "write",
+    "writing",
+    "draft",
+    "rewrite",
+    "panel",
+    "google"
+   ],
+   "steps": [
+    {
+     "do": "Open your document at docs.google.com.",
+     "label": "Google Docs",
+     "expect": "The document opens."
+    },
+    {
+     "do": "At the top right, click Ask Gemini.",
+     "label": "Ask Gemini",
+     "expect": "The Gemini side panel opens.",
+     "ifMissing": "Look for the star-shaped Gemini button in the same corner; it is hidden when the account has no Gemini plan."
+    },
+    {
+     "do": "In the side panel, choose a suggested prompt or write your own, then press Enter.",
+     "label": "Ask Gemini",
+     "expect": "Gemini writes a suggestion in the panel."
+    },
+    {
+     "do": "Click Insert to put the text into your document.",
+     "label": "Insert",
+     "expect": "The text appears in the document.",
+     "ifMissing": "Click Retry for another version first if the suggestion is not right."
+    }
+   ],
+   "commonFailures": [
+    "No Ask Gemini button: the account's plan or its administrator may not include Gemini in Workspace."
+   ],
+   "source": [
+    "https://support.google.com/docs/answer/14206696"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "workspace-gemini-slides",
+   "tool": "google-workspace",
+   "title": "Generate slides with Gemini in Google Slides",
+   "goal": "Turn a description into slides inside a Google Slides presentation.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "paid Google Workspace or Google AI plan on some accounts",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "slides",
+    "slide",
+    "presentation",
+    "deck",
+    "generate",
+    "google"
+   ],
+   "steps": [
+    {
+     "do": "Open your presentation at slides.google.com.",
+     "label": "Google Slides",
+     "expect": "The presentation opens."
+    },
+    {
+     "do": "At the top right, click Ask Gemini.",
+     "label": "Ask Gemini",
+     "expect": "The Gemini side panel opens.",
+     "ifMissing": "Look for the star-shaped Gemini button in the same corner."
+    },
+    {
+     "do": "Describe the slides you want and press Enter.",
+     "label": "Ask Gemini",
+     "expect": "Gemini drafts slide content in the panel."
+    },
+    {
+     "do": "Click Insert to add the generated slide to your presentation.",
+     "label": "Insert",
+     "expect": "The new slide appears in the deck.",
+     "ifMissing": "Use Retry for a different version before inserting."
+    }
+   ],
+   "commonFailures": [
+    "No Ask Gemini button: the account's plan may not include Gemini in Workspace."
+   ],
+   "source": [
+    "https://support.google.com/docs/answer/17111393"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "notebooklm-create-notebook",
+   "tool": "notebooklm",
+   "title": "Create a notebook and add your sources",
+   "goal": "Ask questions that are answered only from documents you choose, with citations.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "notebook",
+    "notebooklm",
+    "sources",
+    "source",
+    "citations",
+    "research",
+    "pdf",
+    "add"
+   ],
+   "steps": [
+    {
+     "do": "Open notebooklm.google.com and sign in with your Google account.",
+     "label": "NotebookLM",
+     "expect": "The notebooks page opens."
+    },
+    {
+     "do": "Click Create new notebook.",
+     "label": "Create new notebook",
+     "expect": "A source picker opens.",
+     "ifMissing": "Look for a plus button or New notebook on the same page."
+    },
+    {
+     "do": "Add your sources: PDFs, Google Docs, websites or YouTube links.",
+     "label": "Add sources",
+     "expect": "Each source is listed down the left.",
+     "ifMissing": "You can drag files onto the picker instead."
+    },
+    {
+     "do": "Type a question in the chat box and press Return.",
+     "label": "Chat",
+     "expect": "The answer appears with numbered citations to your sources.",
+     "ifMissing": "Answers come only from your sources, so add the document first if a fact is missing."
+    }
+   ],
+   "commonFailures": [
+    "A source is refused: it may be too large or behind a sign-in.",
+    "Answers say nothing is found: the fact may not be in the sources you added."
+   ],
+   "source": [
+    "https://support.google.com/notebooklm"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "m365-copilot-word-draft",
+   "tool": "microsoft-365-copilot",
+   "title": "Draft a document with Copilot in Word",
+   "goal": "Get a first draft written into a Word document.",
+   "requires": {
+    "account": [
+     "work",
+     "school",
+     "personal"
+    ],
+    "plan": "paid Microsoft 365 Copilot licence",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "word",
+    "draft",
+    "write",
+    "writing",
+    "document",
+    "letter",
+    "report"
+   ],
+   "steps": [
+    {
+     "do": "Open a blank document in Word, or put your cursor where the new text should go.",
+     "label": "Word",
+     "expect": "The cursor is where you want the text."
+    },
+    {
+     "do": "Open Copilot at the bottom right corner of the document.",
+     "label": "Copilot",
+     "expect": "A Copilot prompt box opens.",
+     "ifMissing": "There is also a Copilot button on the Home tab of the ribbon; use that if the corner shows nothing."
+    },
+    {
+     "do": "Describe what you want, saying the topic, who it is for, the tone, the format and the length.",
+     "label": "Copilot",
+     "expect": "Your description shows in the prompt box."
+    },
+    {
+     "do": "Click Generate.",
+     "label": "Generate",
+     "expect": "Copilot writes a draft into the document.",
+     "ifMissing": "Press Return to send the prompt instead."
+    },
+    {
+     "do": "Read the draft, then keep it, discard it, or type a follow-up to change it.",
+     "label": "Keep it",
+     "expect": "The draft stays in the document once you keep it.",
+     "ifMissing": "The buttons may read Keep, Discard and Regenerate; pick the one that matches what you want."
+    }
+   ],
+   "commonFailures": [
+    "No Copilot button: the account has no Microsoft 365 Copilot licence.",
+    "Always check facts, numbers and names in a Copilot draft before sending it."
+   ],
+   "source": [
+    "https://support.microsoft.com/en-us/word/copilot/draft-and-add-content-with-copilot-in-word"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "m365-copilot-word-from-file",
+   "tool": "microsoft-365-copilot",
+   "title": "Draft in Word from one of your own files",
+   "goal": "Base a Word draft on a document you already have instead of on nothing.",
+   "requires": {
+    "account": [
+     "work",
+     "school",
+     "personal"
+    ],
+    "plan": "paid Microsoft 365 Copilot licence",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "word",
+    "file",
+    "existing",
+    "reference",
+    "source",
+    "draft",
+    "based"
+   ],
+   "steps": [
+    {
+     "do": "Open a blank document in Word.",
+     "label": "Word",
+     "expect": "An empty document is open."
+    },
+    {
+     "do": "Open Copilot at the bottom right corner.",
+     "label": "Copilot",
+     "expect": "A Copilot prompt box opens.",
+     "ifMissing": "Use the Copilot button on the Home tab if the corner shows nothing."
+    },
+    {
+     "do": "Type a forward slash, then choose the file you want to draft from.",
+     "label": "Copilot",
+     "expect": "The file's name appears in the prompt box.",
+     "ifMissing": "The file must be in OneDrive or SharePoint for Copilot to find it; upload it there first."
+    },
+    {
+     "do": "Say what you want made from it, then click Generate.",
+     "label": "Generate",
+     "expect": "Copilot drafts from that file's contents."
+    }
+   ],
+   "commonFailures": [
+    "The file is not offered: it may be stored only on this computer rather than in OneDrive or SharePoint."
+   ],
+   "source": [
+    "https://support.microsoft.com/en-us/word/copilot/draft-and-add-content-with-copilot-in-word"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "m365-copilot-excel-insights",
+   "tool": "microsoft-365-copilot",
+   "title": "Get insights about a table with Copilot in Excel",
+   "goal": "Have Copilot find summaries, trends and outliers in a table of numbers.",
+   "requires": {
+    "account": [
+     "work",
+     "school",
+     "personal"
+    ],
+    "plan": "paid Microsoft 365 Copilot licence",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "excel",
+    "insights",
+    "data",
+    "numbers",
+    "table",
+    "trends",
+    "chart",
+    "pivottable",
+    "analyse",
+    "analyze"
+   ],
+   "steps": [
+    {
+     "do": "Open your workbook in Excel and click any cell inside the table.",
+     "label": "Excel",
+     "expect": "The table is on screen.",
+     "ifMissing": "Copilot works best when the data is a proper table with headings."
+    },
+    {
+     "do": "On the Home tab of the ribbon, click Copilot.",
+     "label": "Copilot",
+     "expect": "The Copilot pane opens at the side.",
+     "ifMissing": "Look for the Copilot icon at the right-hand end of the Home tab."
+    },
+    {
+     "do": "Ask for what you want in your own words, for example compare Q1 and Q2 sales.",
+     "label": "Copilot",
+     "expect": "Your question shows in the pane.",
+     "ifMissing": "Be specific: name the columns or the period you mean. Say PivotTable if you want one."
+    },
+    {
+     "do": "Press Return and read the insights Copilot returns.",
+     "label": "Copilot",
+     "expect": "Charts, PivotTables, summaries, trends or outliers appear."
+    }
+   ],
+   "commonFailures": [
+    "No Copilot button: the account has no Microsoft 365 Copilot licence.",
+    "Vague answers: ask about named columns instead of the whole sheet."
+   ],
+   "source": [
+    "https://support.microsoft.com/en-US/Excel/copilot/get-insights-about-numerical-data-with-copilot-in-excel"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "m365-copilot-powerpoint-from-file",
+   "tool": "microsoft-365-copilot",
+   "title": "Create a presentation from a file with Copilot in PowerPoint",
+   "goal": "Turn a Word document or PDF into a draft slide deck.",
+   "requires": {
+    "account": [
+     "work",
+     "school",
+     "personal"
+    ],
+    "plan": "paid Microsoft 365 Copilot licence",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "powerpoint",
+    "presentation",
+    "slides",
+    "deck",
+    "file",
+    "document",
+    "create"
+   ],
+   "steps": [
+    {
+     "do": "Create a new presentation in PowerPoint, or open one whose theme you want to keep.",
+     "label": "PowerPoint",
+     "expect": "A presentation is open."
+    },
+    {
+     "do": "On the Home tab, click Copilot.",
+     "label": "Copilot",
+     "expect": "The Copilot pane opens.",
+     "ifMissing": "Look for the Copilot icon at the right-hand end of the Home tab."
+    },
+    {
+     "do": "Choose Create a presentation from file.",
+     "label": "Create a presentation from",
+     "expect": "A file picker opens inside the pane.",
+     "ifMissing": "The option names the file type, for example Create presentation from file; pick whichever is offered."
+    },
+    {
+     "do": "Pick the file, or start typing to search for it.",
+     "label": "Create a presentation from",
+     "expect": "The file's name shows in the prompt.",
+     "ifMissing": "The file must be in OneDrive or SharePoint; Word documents under 24 MB work best."
+    },
+    {
+     "do": "Click Send.",
+     "label": "Send",
+     "expect": "Copilot drafts a presentation from the file.",
+     "ifMissing": "Press Return to send the prompt instead."
+    },
+    {
+     "do": "Edit the slides, and ask Copilot for more slides if you need them.",
+     "label": "Copilot",
+     "expect": "The deck matches what you need."
+    }
+   ],
+   "commonFailures": [
+    "Only one file can be used at a time.",
+    "The file is not offered: it may be stored only on this computer rather than in OneDrive or SharePoint."
+   ],
+   "source": [
+    "https://support.microsoft.com/en-us/powerpoint/copilot/create-a-new-presentation-with-copilot-in-powerpoint"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "m365-copilot-pages-from-answer",
+   "tool": "microsoft-365-copilot",
+   "title": "Turn a Copilot answer into a Copilot Page",
+   "goal": "Move a good chat answer onto an editable page you can work on and share.",
+   "requires": {
+    "account": [
+     "work",
+     "school",
+     "personal"
+    ],
+    "plan": "work or school account with SharePoint or OneDrive, or a Microsoft 365 Personal, Family, Premium or Pro subscription",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "pages",
+    "page",
+    "copilot",
+    "answer",
+    "editable",
+    "collaborate",
+    "share"
+   ],
+   "steps": [
+    {
+     "do": "Sign in at copilot.cloud.microsoft.",
+     "label": "Copilot",
+     "expect": "Copilot Chat opens.",
+     "ifMissing": "Type the address yourself rather than searching for it."
+    },
+    {
+     "do": "Ask Copilot your question and wait for the answer.",
+     "label": "Copilot",
+     "expect": "An answer appears in the chat."
+    },
+    {
+     "do": "Below the answer, click the ellipses to see more options.",
+     "label": "More options",
+     "expect": "A short menu opens.",
+     "ifMissing": "The ellipses are the three dots under the answer."
+    },
+    {
+     "do": "Click Edit in Pages.",
+     "label": "Edit in Pages",
+     "expect": "A page opens beside the chat with the answer on it.",
+     "ifMissing": "The button carries a pencil icon; it may be shown as the pencil alone."
+    },
+    {
+     "do": "Choose a new page or an existing one.",
+     "label": "Edit in Pages",
+     "expect": "The answer is added to the page you chose."
+    },
+    {
+     "do": "Click the page's title to rename it.",
+     "label": "Untitled",
+     "expect": "The page has the name you typed.",
+     "ifMissing": "Click directly on the title text at the top of the page."
+    }
+   ],
+   "commonFailures": [
+    "No Edit in Pages option: a work or school account needs SharePoint or OneDrive storage, and a personal account needs a paid Microsoft 365 subscription."
+   ],
+   "source": [
+    "https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-microsoft-365-copilot-pages"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "m365-copilot-pages-new",
+   "tool": "microsoft-365-copilot",
+   "title": "Start a new Copilot Page from the prompt box",
+   "goal": "Begin on a page straight away instead of starting in the chat.",
+   "requires": {
+    "account": [
+     "work",
+     "school",
+     "personal"
+    ],
+    "plan": "work or school account with SharePoint or OneDrive, or a Microsoft 365 Personal, Family, Premium or Pro subscription",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "pages",
+    "page",
+    "new",
+    "start",
+    "draft",
+    "create"
+   ],
+   "steps": [
+    {
+     "do": "Sign in at copilot.cloud.microsoft.",
+     "label": "Copilot",
+     "expect": "The Copilot Chat home screen opens."
+    },
+    {
+     "do": "Click the plus button to the left of the prompt box.",
+     "label": "Plus",
+     "expect": "A menu of options opens.",
+     "ifMissing": "Look for a plus sign at the left-hand end of the box where you type."
+    },
+    {
+     "do": "Hover over More, then click Draft page or code.",
+     "label": "Draft page or code",
+     "expect": "A blank page opens beside the chat.",
+     "ifMissing": "The option may sit directly in the menu rather than under More."
+    },
+    {
+     "do": "Describe what you want written and send the prompt.",
+     "label": "Copilot",
+     "expect": "Copilot writes onto the page."
+    }
+   ],
+   "commonFailures": [
+    "No plus button: your account may not have Copilot Pages."
+   ],
+   "source": [
+    "https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-microsoft-365-copilot-pages"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "m365-copilot-page-to-word",
+   "tool": "microsoft-365-copilot",
+   "title": "Turn a Copilot Page into a Word document",
+   "goal": "Keep a finished page as a Word file you can send or print.",
+   "requires": {
+    "account": [
+     "work",
+     "school",
+     "personal"
+    ],
+    "plan": "work or school account with SharePoint or OneDrive, or a paid Microsoft 365 subscription",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "pages",
+    "page",
+    "word",
+    "convert",
+    "export",
+    "download",
+    "file"
+   ],
+   "steps": [
+    {
+     "do": "Open the Copilot Page you want to keep.",
+     "label": "Copilot",
+     "expect": "The page is on screen."
+    },
+    {
+     "do": "At the top right of the page, open the menu of page options.",
+     "label": "More options",
+     "expect": "A menu opens.",
+     "ifMissing": "Look for three dots or a share button in that corner."
+    },
+    {
+     "do": "Choose the option that converts the page to a Word document.",
+     "label": "Word",
+     "expect": "A Word document is made from the page's contents.",
+     "ifMissing": "It may read Convert to Word document or Export; pick whichever names Word."
+    }
+   ],
+   "commonFailures": [
+    "The option is missing: the page may be read-only because someone else shared it with you."
+   ],
+   "source": [
+    "https://support.microsoft.com/en-us/Microsoft-365-Copilot/convert-your-microsoft-365-copilot-page-to-a-word-document"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "m365-copilot-build-agent",
+   "tool": "microsoft-365-copilot",
+   "title": "Build your own Copilot agent",
+   "goal": "Make a reusable assistant with your own instructions and knowledge.",
+   "requires": {
+    "account": [
+     "work",
+     "school"
+    ],
+    "plan": "paid Microsoft 365 Copilot licence",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "agent",
+    "agents",
+    "builder",
+    "build",
+    "create",
+    "assistant",
+    "reusable",
+    "custom"
+   ],
+   "steps": [
+    {
+     "do": "Open the Microsoft Copilot app or sign in at copilot.cloud.microsoft.",
+     "label": "Copilot",
+     "expect": "Copilot opens."
+    },
+    {
+     "do": "In the navigation pane, under Agents, click New agent.",
+     "label": "New agent",
+     "expect": "Agent Builder opens.",
+     "ifMissing": "Look for Agents down the left; the button may read Create agent."
+    },
+    {
+     "do": "Describe what the agent should do and click Send.",
+     "label": "Send",
+     "expect": "The agent's name, description and instructions fill in as you talk to it.",
+     "ifMissing": "To fill the form in yourself instead, click Skip to configure."
+    },
+    {
+     "do": "Open the Configure tab to set the name, description, instructions and suggested prompts yourself.",
+     "label": "Configure",
+     "expect": "Your wording shows in the form."
+    },
+    {
+     "do": "Add what it should know: SharePoint items, public websites or your work messages and email.",
+     "label": "Knowledge",
+     "expect": "Each source is listed under Knowledge.",
+     "ifMissing": "Only connectors your organisation has turned on will be offered."
+    },
+    {
+     "do": "Try the agent on the Try it tab, then refine its instructions.",
+     "label": "Try it",
+     "expect": "The agent answers the way you intended."
+    }
+   ],
+   "commonFailures": [
+    "No New agent button: the account has no Microsoft 365 Copilot licence, or an administrator has turned agents off.",
+    "The agent ignores a source: check it is listed under Knowledge and that you can open it yourself."
+   ],
+   "source": [
+    "https://support.microsoft.com/en-us/microsoft-365-copilot/build-your-own-agent-with-microsoft-365-copilot",
+    "https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/agent-builder-add-knowledge"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "m365-copilot-agent-sharepoint",
+   "tool": "microsoft-365-copilot",
+   "title": "Give a Copilot agent a SharePoint site to read",
+   "goal": "Ground an agent in your team's own documents so its answers cite them.",
+   "requires": {
+    "account": [
+     "work",
+     "school"
+    ],
+    "plan": "paid Microsoft 365 Copilot licence",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "agent",
+    "sharepoint",
+    "knowledge",
+    "connect",
+    "ground",
+    "documents",
+    "team",
+    "site"
+   ],
+   "steps": [
+    {
+     "do": "Open your agent in Agent Builder and go to the Configure tab.",
+     "label": "Configure",
+     "expect": "The agent's form is on screen.",
+     "ifMissing": "Make the agent first with the m365-copilot-build-agent recipe."
+    },
+    {
+     "do": "Under Knowledge, add a SharePoint source.",
+     "label": "Knowledge",
+     "expect": "A picker for SharePoint sites and files opens.",
+     "ifMissing": "The button may read Add knowledge or Add source."
+    },
+    {
+     "do": "Pick the site, library or file the agent should read.",
+     "label": "SharePoint",
+     "expect": "The source is listed under Knowledge.",
+     "ifMissing": "You can only add what your own account is allowed to open."
+    },
+    {
+     "do": "Save the agent, then ask it a question on the Try it tab.",
+     "label": "Try it",
+     "expect": "The answer cites the SharePoint documents."
+    }
+   ],
+   "commonFailures": [
+    "The agent cannot see a document: the agent only reads what the person asking is already allowed to open."
+   ],
+   "source": [
+    "https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/agent-builder-add-knowledge"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "m365-copilot-start",
+   "tool": "microsoft-365-copilot",
+   "title": "Find Copilot in your Microsoft 365 apps",
+   "goal": "Know where the Copilot button is in Word, Excel, PowerPoint, Outlook and Teams.",
+   "requires": {
+    "account": [
+     "work",
+     "school",
+     "personal"
+    ],
+    "plan": "paid Microsoft 365 Copilot licence",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "copilot",
+    "find",
+    "where",
+    "button",
+    "start",
+    "begin",
+    "office",
+    "microsoft"
+   ],
+   "steps": [
+    {
+     "do": "Open Word, Excel, PowerPoint, Outlook or Teams and sign in with your work or Microsoft account.",
+     "label": "Sign in",
+     "expect": "Your name shows at the top right of the app."
+    },
+    {
+     "do": "Look on the Home tab of the ribbon for the Copilot button.",
+     "label": "Copilot",
+     "expect": "The Copilot pane opens when clicked.",
+     "ifMissing": "In Word the prompt also appears at the bottom right of the page; in Outlook and Teams it sits in the toolbar."
+    },
+    {
+     "do": "Type what you want in your own words and read the result.",
+     "label": "Copilot",
+     "expect": "Copilot answers about what is open.",
+     "ifMissing": "Say what you want plainly, for example summarise this document."
+    }
+   ],
+   "commonFailures": [
+    "No Copilot button anywhere: the account has no Microsoft 365 Copilot licence.",
+    "The button is greyed out: the file may be stored only on this computer rather than in OneDrive or SharePoint."
+   ],
+   "source": [
+    "https://support.microsoft.com/en-us/word/copilot/draft-and-add-content-with-copilot-in-word",
+    "https://support.microsoft.com/en-US/Excel/copilot/get-insights-about-numerical-data-with-copilot-in-excel"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "copilot-web-start",
+   "tool": "microsoft-copilot",
+   "title": "Open Microsoft Copilot on the web and ask a question",
+   "goal": "Reach the free Microsoft Copilot assistant and get one useful answer.",
+   "requires": {
+    "account": [
+     "personal",
+     "work",
+     "school"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "copilot",
+    "microsoft",
+    "start",
+    "begin",
+    "first",
+    "open",
+    "free",
+    "web"
+   ],
+   "steps": [
+    {
+     "do": "Open copilot.microsoft.com in your browser.",
+     "label": "Copilot",
+     "expect": "The Copilot page loads.",
+     "ifMissing": "Type the address yourself rather than searching for it."
+    },
+    {
+     "do": "Sign in with your Microsoft account to keep your chats.",
+     "label": "Sign in",
+     "expect": "Your initial shows at the top right.",
+     "ifMissing": "You can ask questions without signing in, but the chats are not kept."
+    },
+    {
+     "do": "Type or speak your question in the message box.",
+     "label": "Message Copilot",
+     "expect": "Your words appear in the box.",
+     "ifMissing": "The box sits across the bottom of the page; it may show a hint rather than a name."
+    },
+    {
+     "do": "Press Return to send it.",
+     "label": "Submit",
+     "expect": "Copilot writes an answer, often with links to its sources.",
+     "ifMissing": "Click the arrow at the right end of the message box."
+    }
+   ],
+   "commonFailures": [
+    "A work or school sign-in may open the work version at copilot.cloud.microsoft instead, which looks different."
+   ],
+   "source": [
+    "https://copilot.microsoft.com"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "copilot-web-image",
+   "tool": "microsoft-copilot",
+   "title": "Create an image with Microsoft Copilot",
+   "goal": "Make a picture from a description, free, in the web assistant.",
+   "requires": {
+    "account": [
+     "personal",
+     "work",
+     "school"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "image",
+    "picture",
+    "create",
+    "draw",
+    "generate",
+    "art"
+   ],
+   "steps": [
+    {
+     "do": "Open copilot.microsoft.com and sign in.",
+     "label": "Copilot",
+     "expect": "The message box is visible."
+    },
+    {
+     "do": "Describe the picture you want and say you want an image, then press Return.",
+     "label": "Message Copilot",
+     "expect": "Copilot makes one or more pictures.",
+     "ifMissing": "Say the subject, the style and the mood plainly, for example draw a watercolour of a harbour at dawn."
+    },
+    {
+     "do": "Click a picture to see it larger, then save or share it from there.",
+     "label": "Copilot",
+     "expect": "The picture opens at full size with save and share options."
+    }
+   ],
+   "commonFailures": [
+    "Nothing is made: there is a daily limit on free image creation, and some subjects are refused."
+   ],
+   "source": [
+    "https://copilot.microsoft.com"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  },
+  {
+   "id": "copilot-studio-first-agent",
+   "tool": "copilot-studio",
+   "title": "Create a first agent in Copilot Studio",
+   "goal": "Build a custom agent with its own knowledge and publish it to Teams.",
+   "requires": {
+    "account": [
+     "work",
+     "school"
+    ],
+    "plan": "paid (a trial is sometimes offered)",
+    "regions": [],
+    "notes": ""
+   },
+   "tags": [
+    "studio",
+    "agent",
+    "custom",
+    "create",
+    "build",
+    "publish",
+    "teams",
+    "knowledge"
+   ],
+   "steps": [
+    {
+     "do": "Open copilotstudio.microsoft.com and sign in with your work account.",
+     "label": "Copilot Studio",
+     "expect": "The Copilot Studio home page opens."
+    },
+    {
+     "do": "Click Create and describe the agent you want.",
+     "label": "Create",
+     "expect": "A new agent is set up from your description.",
+     "ifMissing": "You may be offered a blank agent or a template; either works."
+    },
+    {
+     "do": "Add knowledge: the files or websites it should read.",
+     "label": "Knowledge",
+     "expect": "Each source is listed for the agent.",
+     "ifMissing": "The section may read Add knowledge or Sources."
+    },
+    {
+     "do": "Test the agent in the test panel at the side.",
+     "label": "Test",
+     "expect": "The agent answers from the knowledge you added.",
+     "ifMissing": "The panel may be opened with a Test your agent button."
+    },
+    {
+     "do": "Click Publish, then add the agent to Teams or a website.",
+     "label": "Publish",
+     "expect": "The agent is available where you published it.",
+     "ifMissing": "Publishing can need an administrator's approval in some organisations."
+    }
+   ],
+   "commonFailures": [
+    "No Create button: Copilot Studio needs a work account and a licence or trial.",
+    "Publishing is blocked: an administrator may have to approve the agent first."
+   ],
+   "source": [
+    "https://learn.microsoft.com/en-us/microsoft-copilot-studio/fundamentals-get-started"
+   ],
+   "status": "drafted",
+   "verifiedOn": "",
+   "verifiedBy": "",
+   "verifiedWith": ""
+  }
+ ]
+}

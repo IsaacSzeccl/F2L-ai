@@ -169,6 +169,9 @@ final class CompanionController: NSObject {
     var replyTarget: ScreenTarget?
     var stepTargets: [ScreenTarget?] = []
     var requestedCells: [CellReference] = []
+    /// The recipes sent with the current question. Their on-screen names are checked against the screen before Pip
+    /// points at one, so a renamed or missing button shows the recipe's own advice instead of a circle round a guess.
+    var turnRecipes: [Recipe] = []
     var targetPersistent = false
     var shownAccessibilityTip = false
 
@@ -569,8 +572,16 @@ final class CompanionController: NSObject {
             } else {
                 let names = await screenNames(captured)
                 guard myTurn == turn else { return }
+                // The front window's title says which page is open, so a bare "Copilot" question resolves to the
+                // product the learner is actually looking at.
+                let title = captured.map { ScreenCaptureService.windowTitle(of: $0.app.pid) }
+                // The same selection the question carries, kept so pointing can check the recipe's names on screen.
+                turnRecipes = CoachClient.reference(question: question, profile: profileDocument.profile,
+                                                    app: captured?.app.name, windowTitle: title,
+                                                    library: .shared, recipes: .shared).recipes
                 answer = try await coach.answer(question: CoachClient.compose(question: question, platform: "macOS", excel: context,
-                    profile: profileDocument.profile, app: captured?.app.name, screenNames: names, library: .shared), history: session.providerHistory(excluding: entry.turnID), jpeg: captured?.jpeg)
+                    profile: profileDocument.profile, app: captured?.app.name, windowTitle: title, screenNames: names,
+                    library: .shared, recipes: .shared), history: session.providerHistory(excluding: entry.turnID), jpeg: captured?.jpeg)
             }
             try Task.checkCancellation()
             guard myTurn == turn else { return }

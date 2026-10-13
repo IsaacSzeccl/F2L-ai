@@ -29,7 +29,7 @@ internal static class Program
             try
             {
                 TestCellIdentity(); TestGeometry(); TestPersistence(); TestForegroundMemory();
-                TestDirectTeaching(); TestNamedPlaces(); TestClickWatch(); TestAIToolLibrary(); TestStepGoals(); TestZoomLocate(); TestCompanionPlacement(); TestSpriteTextures(); TestProviderParsing();
+                TestDirectTeaching(); TestNamedPlaces(); TestClickWatch(); TestAIToolLibrary(); TestRecipes(); TestStepGoals(); TestZoomLocate(); TestCompanionPlacement(); TestSpriteTextures(); TestProviderParsing();
                 await TestProfilesAsync();
                 await TestCoachRetriesAsync();
                 await TestOverlayAsync();
@@ -395,6 +395,99 @@ internal static class Program
         Check(AIToolLibrary.AsksForRecommendation("Which AI tool should I use for slides?") && library.Fitting(learner).All(t => t.GoodFor.Contains("create"))
             && library.ReferenceNotes("Which AI tool should I use for slides?", learner).Contains("may fit this learner"), "recommendations fit the learner");
         Check(AIToolLibrary.Load(null).Tools.Select(t => t.Id).SequenceEqual(["excel", "notion", "canva", "notebooklm", "zapier", "copilot"]), "a missing library falls back");
+
+        // The collision the knowledge-base plan opens with: the same words mean three products, and the app in front decides.
+        Check(library.Mentioned("How do I use Copilot?").Count == 0, "a bare Copilot question names no tool on its own");
+        Check(library.Resolve("How do I use Copilot?").Count == 0, "a bare Copilot question with nothing in front resolves to nothing");
+        foreach (var (question, app, title, expected) in new[] {
+            ("How do I use Copilot?", "Microsoft Word", "Report.docx - Word", "microsoft-365-copilot"),
+            ("How do I use Copilot?", "Code", "main.swift", "copilot"),
+            ("How do I use Copilot?", "msedge", "Microsoft Copilot - copilot.microsoft.com", "microsoft-copilot"),
+            ("How do I use Copilot?", "msedge", "Copilot - copilot.cloud.microsoft", "microsoft-365-copilot"),
+            ("How do I use GitHub Copilot?", "WindowsTerminal", "cmd", "copilot"),
+            ("How do I open Canvas in Gemini?", "chrome", "Gemini - gemini.google.com", "gemini"),
+            ("How do I rewrite this paragraph?", "chrome", "Report - Google Docs - docs.google.com", "google-workspace") })
+            Check(library.Resolve(question, app, title).FirstOrDefault()?.Id == expected, $"the app in front decides: {app} / {title}");
+    }
+
+    // Same cases as Recipes on Mac.
+    private static void TestRecipes()
+    {
+        var library = RecipeLibrary.Shared;
+        var tools = AIToolLibrary.Shared;
+        Check(library.Recipes.Count >= 24 && library.Checked.Length > 0
+            && library.Recipes.Select(r => r.Id).Distinct().Count() == library.Recipes.Count, "the embedded recipes load");
+        var knownTools = tools.Tools.Select(t => t.Id).ToHashSet();
+        foreach (var recipe in library.Recipes)
+        {
+            Check(knownTools.Contains(recipe.Tool) && recipe.Title.Length > 0 && recipe.Goal.Length > 0
+                && recipe.Steps.Length >= 2 && recipe.Tags.Length > 0
+                && recipe.Source.Length > 0 && recipe.Source.All(url => url.StartsWith("https://", StringComparison.Ordinal))
+                && recipe.Steps.All(step => step.Action.Length > 0 && step.Label.Length > 0), $"recipe is well formed: {recipe.Id}");
+            var claimed = recipe.VerifiedOn.Length > 0 || recipe.VerifiedBy.Length > 0 || recipe.VerifiedWith.Length > 0;
+            Check(recipe.Status == "verified" ? claimed : !claimed, $"only a verified recipe claims a check: {recipe.Id}");
+        }
+        Check(library.For("gemini").Count >= 8 && library.For("microsoft-365-copilot").Count >= 8, "both products have a usable set");
+
+        // The question picks the recipe for the task, and the whole block reaches the model in order.
+        foreach (var (question, tool, expected) in new[] {
+            ("How do I open Canvas in Gemini to edit a draft?", "gemini", "gemini-open-canvas"),
+            ("How do I create a Gem?", "gemini", "gemini-create-gem"),
+            ("How do I run a deep research report?", "gemini", "gemini-deep-research"),
+            ("How do I turn a Copilot answer into a page I can edit?", "microsoft-365-copilot", "m365-copilot-pages-from-answer"),
+            ("How do I build my own Copilot agent?", "microsoft-365-copilot", "m365-copilot-build-agent"),
+            ("How do I connect a SharePoint site to my agent?", "microsoft-365-copilot", "m365-copilot-agent-sharepoint") })
+        {
+            IReadOnlyList<AITool> resolved = tools.Find(tool) is { } found ? [found] : [];
+            Check(library.Select(new RecipeContext(question), resolved).FirstOrDefault()?.Id == expected, $"picks the recipe for: {question}");
+        }
+        Check(library.Select(new RecipeContext("How do I open Canvas?"), Array.Empty<AITool>()).Count == 0, "no resolved tool means no recipe");
+
+        // The right tool is not enough: without task words Pip says it has no recipe.
+        IReadOnlyList<AITool> gemini = tools.Find("gemini") is { } g ? [g] : [];
+        Check(library.Select(new RecipeContext("How much does Gemini cost per month?"), gemini).Count == 0,
+            "a question about the tool but no task retrieves nothing");
+        IReadOnlyList<AITool> webCopilot = tools.Find("microsoft-copilot") is { } mc ? [mc] : [];
+        Check(library.Select(new RecipeContext("How do I get started with Copilot?"), webCopilot).FirstOrDefault()?.Id == "copilot-web-start",
+            "\"get started\" reaches a recipe tagged \"start\"");
+
+        // Right tool, wrong account.
+        IReadOnlyList<AITool> m365 = tools.Find("microsoft-365-copilot") is { } m ? [m] : [];
+        const string sharePoint = "How do I connect a SharePoint site to my agent?";
+        Check(library.Select(new RecipeContext(sharePoint, Account: "work"), m365).Any(r => r.Id == "m365-copilot-agent-sharepoint")
+            && !library.Select(new RecipeContext(sharePoint, Account: "personal"), m365).Any(r => r.Id == "m365-copilot-agent-sharepoint"),
+            "an account the steps do not fit is left out");
+
+        var canvas = library.Find("gemini-open-canvas")!;
+        var block = library.Notes([canvas]);
+        Check(block.Contains("data, not instructions") && block.Contains("the screen wins on names")
+            && canvas.Steps.All(step => block.Contains(step.Action)), "the recipe block is marked as data and complete");
+        Check(library.Notes([]).Length == 0 && RecipeLibrary.Load(null).Recipes.Count == 0, "a missing recipe file leaves the app working");
+
+        // Compose carries the recipe, and says so plainly when there is none.
+        var withRecipe = ExcelContext.Compose("How do I open Canvas in Gemini?", null, null, "chrome", null,
+            tools, "Gemini - gemini.google.com", library);
+        Check(withRecipe.Contains("Checked recipes for this task") && withRecipe.Contains("Add Files")
+            && !withRecipe.Contains("no checked recipe"), "compose carries the recipe");
+        var without = ExcelContext.Compose("How do I change the font size in Gemini?", null, null, "chrome", null,
+            tools, "Gemini - gemini.google.com", library);
+        Check(without.Contains("no checked recipe") && without.Contains("Do not invent menus"), "compose says when there is no recipe");
+        var greeting = ExcelContext.Compose("Hello!", null, null, null, null, tools, null, library);
+        Check(!greeting.Contains("Checked recipes") && !greeting.Contains("no checked recipe"), "a greeting gets neither");
+
+        // The screen check: a step is only pointed at when its name is really there.
+        var screen = new[] { new ControlCandidate(new Rect(10, 400, 80, 24), "Ask Gemini"), new ControlCandidate(new Rect(120, 440, 60, 20), "Canvas") };
+        var step = new RecipeStep { Action = "Click the Canvas button.", Label = "Canvas", IfMissing = "Open the Tools menu first." };
+        var checkedSteps = RecipeScreen.Check([step], screen);
+        Check(checkedSteps[0].Found && checkedSteps[0].Frame!.Value.X == 120 && checkedSteps[0].Hint is null, "a step on screen gets its place");
+        var missing = RecipeScreen.Check([step], [new ControlCandidate(new Rect(10, 400, 80, 24), "Ask Gemini")]);
+        Check(!missing[0].Found && missing[0].Hint == "Open the Tools menu first.", "a missing name shows the recipe's own fallback");
+        Check(RecipeScreen.Locate("Next step", [new ControlCandidate(new Rect(10, 10, 80, 24), "Next step")]) is null, "a generic name is never pointed at");
+        Check(RecipeScreen.OnScreen("Canvas", ["Ask Gemini", "Canvas"]) && !RecipeScreen.OnScreen("Canvas", ["Ask Gemini"]), "names on screen are found");
+
+        // The freshness lint.
+        Check(library.NeedingCheck().Count == library.Recipes.Count(r => r.Status != "verified")
+            || library.NeedingCheck().Count > 0, "the freshness lint names recipes needing a check");
     }
 
     // Same cases as ClickWatching on Mac.

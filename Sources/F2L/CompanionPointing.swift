@@ -85,6 +85,12 @@ extension CompanionController {
                     place = snapped; source = "screen-text"
                     log["matched"] = read.first { $0.frame == snapped }?.name ?? ""
                 }
+                // A recipe step whose on-screen name is not there: the interface may have moved on, so say what the
+                // recipe says to try instead of letting the learner follow a circle drawn around a guess.
+                if place == nil, let hint = RecipeScreen.hint(forLabel: target.label, in: turnRecipes) {
+                    log["recipeHint"] = true
+                    bubble.advice(hint)
+                }
                 // Not confirmed on screen (an icon with no visible name, or another app): a zoomed second look by the AI
                 // around its first guess, or across the whole window when there is none. One short extra request.
                 if place == nil, !picture.isEmpty, !TargetSnap.isGeneric(target.label), coach.isConfigured, !testing {
@@ -125,6 +131,7 @@ extension CompanionController {
         replyCapture = nil
         replyTarget = nil
         stepTargets = []
+        turnRecipes = []
         requestedCells = []
     }
 

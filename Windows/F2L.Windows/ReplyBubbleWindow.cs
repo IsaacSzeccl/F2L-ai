@@ -222,6 +222,10 @@ internal sealed partial class ReplyBubbleWindow : Window
     /// <summary>A short note under the current step, such as "You're already there".</summary>
     internal void Note(string line) { if (CurrentStep is not null) SetStatus(line, true); }
 
+    /// <summary>A recipe's own advice for when a button isn't where the recipe says, with nothing to press. Unlike
+    /// Note, it reads as a caution and shows whether or not a step is the current one. Same as advice() on Mac.</summary>
+    internal void Advice(string line) => SetStatus(line, false);
+
     /// <summary>F2L saw the step happen (the box got text, the app or page came to the front): tick it and move on.</summary>
     internal void StepDone()
     {

@@ -6,7 +6,7 @@ F2L AI helps people set up and learn AI tools and everyday work apps (ChatGPT, G
 
 The Mac and Windows apps are two native implementations of the same companion: same artwork, layout, wording, menus, saved conversation format and teaching rules.
 
-**New teammate?** Start with [docs/TEAM_SETUP.md](docs/TEAM_SETUP.md). Owner's checklist: [SETUP.md](SETUP.md). Decisions: [docs/DECISIONS.md](docs/DECISIONS.md). Changes and validation: [CHANGELOG.md](CHANGELOG.md). Artwork, prompts and font licences: [docs/ASSET_INVENTORY.md](docs/ASSET_INVENTORY.md).
+**New teammate?** Start with [docs/guides/TEAM_SETUP.md](docs/guides/TEAM_SETUP.md). Owner's checklist: [SETUP.md](SETUP.md). Decisions: [docs/reference/DECISIONS.md](docs/reference/DECISIONS.md). Changes and validation: [CHANGELOG.md](CHANGELOG.md). Artwork, prompts and font licences: [docs/reference/ASSET_INVENTORY.md](docs/reference/ASSET_INVENTORY.md).
 
 ## Open Pip
 
@@ -160,7 +160,7 @@ Windows/F2L.Windows.Tests/        Windows regression harness
 scripts/                          build-app.sh, run.sh, test.sh, setup-signing.sh, check-secrets.sh,
                                   tools/pip_frames.py (atlas rectangles), tools/preview_pip.swift (animation GIFs),
                                   tools/package_brand_icons.py (.icns/.ico), tools/preview_brand.swift (brand board)
-docs/                             Decisions, setup, design history, asset inventory and manifest
+docs/                             guides/, plans/, reference/, reports/ (see docs/README.md), plus asset roots companion-concepts/ and previews/
 ```
 
 ## Build and test

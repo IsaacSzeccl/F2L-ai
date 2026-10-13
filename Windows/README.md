@@ -10,7 +10,7 @@ Install the .NET 10 SDK, then double-click **Open F2L Companion.bat** in the rep
 dotnet run --project Windows/F2L.Windows/F2L.Windows.csproj
 ```
 
-See the [project change log](../CHANGELOG.md) for the implementation record and the [asset inventory](../docs/ASSET_INVENTORY.md) for stored artwork, prompts, fonts and archived UI previews.
+See the [project change log](../CHANGELOG.md) for the implementation record and the [asset inventory](../docs/reference/ASSET_INVENTORY.md) for stored artwork, prompts, fonts and archived UI previews.
 
 ## Conversation and voice
 

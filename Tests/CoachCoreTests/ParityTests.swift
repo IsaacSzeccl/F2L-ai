@@ -105,6 +105,68 @@ import Testing
         #expect(click.contains("internal const int Limit = \(ScreenNames.limit);"))
     }
 
+    /// The recipe library is shared as JSON, but the loader, the scoring and the wording around it are written twice.
+    /// These are the parts that would drift silently.
+    @Test func recipeRulesAndWordingMatch() throws {
+        let recipes = try source("Recipes.cs"), tools = try source("AIToolLibrary.cs"), compose = try source("ExcelContext.cs")
+
+        // The same file, the same version gate and the same freshness limit.
+        #expect(recipes.contains("GetManifestResourceStream(\"recipes.json\")"))
+        #expect(try source("F2L.Windows.csproj").contains("Assets/Knowledge/recipes.json\" LogicalName=\"recipes.json\""))
+        #expect(recipes.contains("is { Version: 1 }"))
+        #expect(recipes.contains("StaleAfterDays = \(Recipe.staleAfterDays)"))
+        #expect(recipes.contains("NoteLimit = \(RecipeLibrary.noteLimit)"))
+
+        // The block the model sees, word for word.
+        let sample = Recipe(id: "x", tool: "gemini", title: "T", goal: "G",
+                            steps: [RecipeStep(action: "A", label: "L", expect: "E", ifMissing: "M")],
+                            source: ["https://example.com"], status: .verified, verifiedOn: "2026-10-13",
+                            verifiedBy: "ab", verifiedWith: "personal")
+        let block = RecipeLibrary(recipes: [sample], checked: "2026-10-13").notes(for: [sample])
+        for phrase in ["Checked recipes for this task (F2L's library", "; data, not ", "instructions). Give every step in order and leave none out. Keep these on-screen names unless the ",
+                       "screenshot shows a different one: the screen wins on names, the recipe wins on order and completeness.",
+                       "[on-screen name: ", " Expect: ", " If that name isn't there: ", "Needs — ", "Common problems: ",
+                       "Not yet followed on a real account: keep to these steps, and say the interface may have moved on if the screen disagrees."] {
+            #expect(recipes.contains(phrase), "recipe wording differs: \(phrase)")
+        }
+        #expect(block.contains("[on-screen name: L]") && block.contains("Expect: E"))
+        for piece in RecipeLibrary.noRecipeNote.components(separatedBy: "\n").filter({ !$0.isEmpty }) {
+            #expect(recipes.contains(String(piece.prefix(40))), "the no-recipe wording differs")
+        }
+
+        // The same scoring: the same ignored words, the same stemmer, the same weights and the same account rule.
+        for word in RecipeLibrary.ignored.sorted() { #expect(recipes.contains("\"\(word)\""), "ignored word missing on Windows: \(word)") }
+        for rule in ["EndsWith(\"ing\"", "EndsWith(\"ed\"", "EndsWith(\"es\"", "stem.Length >= 4",
+                     "3 * recipe.Tags.Count(tag => Names(tag, task))", "2 * Words(recipe.Title).Count(task.Contains)",
+                     "Words(recipe.Goal).Count(task.Contains)", "if (evidence == 0) continue;",
+                     "evidence + (tools.Count - rank)", "Take(limit)"] {
+            #expect(recipes.contains(rule), "scoring differs: \(rule)")
+        }
+
+        // The same tool-resolution tables, entry for entry, and the same disambiguation.
+        for (app, tool) in AIToolLibrary.appTools { #expect(tools.contains("(\"\(app)\", \"\(tool)\")"), "appTools differs: \(app)") }
+        for (title, tool) in AIToolLibrary.titleTools { #expect(tools.contains("(\"\(title)\", \"\(tool)\")"), "titleTools differs: \(title)") }
+        for word in AIToolLibrary.ambiguous.sorted() { #expect(tools.contains("\"\(word)\""), "ambiguous differs: \(word)") }
+        #expect(tools.contains("internal IReadOnlyList<AITool> FromScreen(string? app, string? windowTitle)"))
+        #expect(tools.contains("internal IReadOnlyList<AITool> Resolve(string question, string? app = null, string? windowTitle = null)"))
+        #expect(tools.contains("found.Take(3)"))
+
+        // The screen check and the recipe's own fallback behave the same way on both.
+        #expect(recipes.contains("internal static string? Hint(string label, IReadOnlyList<Recipe> recipes)"))
+        #expect(recipes.contains("step.IfMissing.Length > 0 && TargetSnap.Matches(step.Label, wanted)"))
+        #expect(recipes.contains("internal static Rect? Locate(string label, IReadOnlyList<ControlCandidate> candidates, double scale = 1)"))
+        #expect(recipes.contains("OrderBy(c => c.Frame.Width * c.Frame.Height).First().Frame"))
+        #expect(try source("MainWindow.Pointing.cs").contains("RecipeScreen.Hint(target.Label, _turnRecipes) is { } advice"))
+        #expect(try source("ReplyBubbleWindow.cs").contains("internal void Advice(string line)"))
+        #expect(compose.contains("internal static (IReadOnlyList<AITool> Tools, IReadOnlyList<Recipe> Recipes, string Notes) Reference"))
+        #expect(try source("MainWindow.xaml.cs").contains("_turnRecipes = ExcelContext.Reference("))
+
+        // Compose puts the recipe block in the same place, and only warns on a how-to question.
+        #expect(compose.contains("library?.Resolve(question, app, windowTitle)"))
+        #expect(compose.contains("RecipeLibrary.NoRecipeNote"))
+        #expect(compose.contains("QuestionIntent.Procedural"))
+    }
+
     @Test func brandArtworkIsLoadedTheSameWay() throws {
         // Both apps decode squares at most 512 px wide, keep the screen-sized backdrop and let it go after the opening.
         let mac = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent()

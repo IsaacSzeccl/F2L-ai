@@ -317,6 +317,14 @@ final class ReplyBubble: CompanionPanel {
         startReveal()
     }
 
+    /// A recipe's own advice for when a button isn't where the recipe says, shown with nothing to press. Unlike
+    /// `note`, it reads as a caution and shows whether or not a step is the current one.
+    func advice(_ line: String) {
+        guard !ticked else { return }
+        setStatus(line, good: false)
+        arrange()
+    }
+
     /// A short note under the current page with one action, such as how to make pointing exact.
     func tip(_ line: String, action title: String, _ action: @escaping () -> Void) {
         guard !ticked else { return }

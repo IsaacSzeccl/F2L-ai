@@ -22,6 +22,8 @@
     <Resource Include="Assets/Pip/frames.json" />
     <!-- The AI tools library Pip teaches and recommends from; the Mac app reads the same file. -->
     <EmbeddedResource Include="Assets/Knowledge/ai-tools.json" LogicalName="ai-tools.json" />
+    <!-- The hand-checked task recipes Pip teaches from; the Mac app reads the same file. -->
+    <EmbeddedResource Include="Assets/Knowledge/recipes.json" LogicalName="recipes.json" />
     <None Update="Assets/Fonts/LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="System.Speech" Version="10.0.12" />
     <None Update="local.settings.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" Condition="Exists('local.settings.json')" />

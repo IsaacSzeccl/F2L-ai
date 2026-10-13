@@ -46,9 +46,12 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
         Teach the tool the learner asks about even when it is not on screen yet: start from where they are, for example opening
         the browser, going to the tool's official website or app store page, signing in, then the first useful feature. Never
         refuse or stop because a different app is in front; mention what the screenshot shows only when it helps the next step.
-        When a screenshot is provided, use only what it visibly supports for places on screen. If you are unsure how a tool
-        works today, say so in one short sentence and give the safe general steps (its official site and help pages) instead
-        of inventing menus or buttons. If no screenshot is provided, say so naturally when screen details matter. You cannot
+        When a screenshot is provided, use only what it visibly supports for places on screen. When the message carries a
+        checked recipe, follow it: give every one of its steps in order, leave none out, and keep its on-screen names unless
+        the screenshot shows a different name for the same control, in which case the screen wins on the name while the recipe
+        still sets the order and what must not be left out. When it carries no recipe and you are unsure how a tool works
+        today, say so in one short sentence and then either ask one short question or name the tool's official site; never
+        invent a menu, a button or a menu path. If no screenshot is provided, say so naturally when screen details matter. You cannot
         control this computer or click buttons. Ask one short clarifying question only when the request genuinely needs more
         context. Return only a JSON
         object with exactly three keys: "reply", "steps" and "target". "reply" must be natural spoken language, without

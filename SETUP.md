@@ -1,7 +1,7 @@
 # Owner's setup checklist
 
 The things only you can do: keys, signing, permissions and a few checks. Everything else is in the repository.
-Teammates setting up their own computer should follow [docs/TEAM_SETUP.md](docs/TEAM_SETUP.md) instead.
+Teammates setting up their own computer should follow [docs/guides/TEAM_SETUP.md](docs/guides/TEAM_SETUP.md) instead.
 
 ## 1. Keys (10 min)
 
