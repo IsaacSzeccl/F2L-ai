@@ -1,44 +1,39 @@
-# Week-1 model spike
+# Model check
 
-**Question:** which z.ai model can point at the right control, quickly enough to feel like a conversation?
-**Deadline:** decide by day 3–4. **Pass bar:** ≥80% hit rate on about 15 real cases, with the median time to the model's first output under 1 s.
+**Question:** does the configured model give a short, correct next step, in the expected JSON shape, quickly enough to feel like a conversation?
+**Current model:** DeepSeek Flash (`deepseek-flash`), thinking disabled, temperature 0.2, at most 650 output tokens, JSON mode with one plain-text retry.
 
-## Why the spike is shaped like this
+The original week-1 spike compared z.ai models for an Accessibility-based pointing prototype. That prototype and its `f2l-spike` tool have been removed; F2L now asks one model for a reply plus an optional target, and verifies Excel cells locally instead of trusting the model's coordinates. This page describes how to check a model for the current design.
 
-The coach gets its coordinates from macOS Accessibility, not from the model. The model's job is to **pick the right id** from a list of real on-screen controls (`point_at`), or to draw an approximate box when the control isn't in the list (`point_at_region`). So the spike measures:
+## What matters now
 
-1. **Valid pointer:** whether the model called `point_at` with an id that exists. An invented id fails, because the app refuses to draw it.
-2. **Hit:** whether it chose the control a human would.
-3. **Speed:** time to the first streamed token or tool call. This is the part of the latency the model controls.
+1. **Readable replies:** the model returns `{"reply": "...", "target": ...}`. A blank or unreadable reply is retried once without JSON mode; two failures show "DeepSeek sent back an empty reply".
+2. **Direct teaching:** the reply starts with the action or answer, usually one step in 1–3 short sentences (the prompt is `TeachingReply.style` + `DeepSeekClient.teachingPrompt`, identical in `CoachClient.cs`).
+3. **Honest targets:** `target` is null unless one visible control is clearly the next step. Excel cells must come back as `{"cell": "B2"}` so F2L can verify them with Excel; rectangles are only drawn as dashed, approximate hints, and never over Excel.
+4. **Follow-ups:** questions with earlier history still get real answers. (Plain-text history once made JSON mode return only spaces; history is now sent in the JSON shape.)
 
-## Steps
+## Quick checks
 
-1. **Collect cases (about 1 hour).** Turn on developer mode once with `defaults write app.beacon.coach developerMode -bool true` and restart Beacon. This keeps the snapshot tool out of learners' menus, because it's the only feature that writes screen contents to disk. Open the target screen, then hover the top bar → **⋯** → **Save spike snapshot (developer)**. You have 3 seconds to make sure the target window is in front. Each snapshot saves `case-<time>.json` and `case-<time>.jpg` to `~/Library/Application Support/Beacon/spike-cases/`. Cover every element the demo needs:
-   - ChatGPT: empty home page (message box), message typed (send button), model picker, attach button, a response with copy/regenerate buttons, the sidebar "new chat" button
-   - Gemini and Copilot: the same core set
-   - At least two screens with **few or no AX controls**, to exercise the `point_at_region` fallback
-2. **Label each case.** In each JSON file, replace `"question": "EDIT ME…"` with what a learner would say ("where do I type my question?"). Set `"expectedElementID"` to the right id; open the JSON and search the `elements` list for the label.
-3. **Run the candidates:**
-   ```bash
-   export ZAI_API_KEY=…
-   swift run beacon-spike ~/Library/Application\ Support/Beacon/spike-cases --model glm-4.6v --runs 2
-   swift run beacon-spike ~/Library/Application\ Support/Beacon/spike-cases --model glm-5.3-flashx --runs 2
-   # if both fail:
-   ANTHROPIC_API_KEY=… swift run beacon-spike ~/Library/Application\ Support/Beacon/spike-cases --provider anthropic
-   ```
-4. **Decide.** Choose the model that clears the bar, and set it in Settings → Coach model. Record the numbers in the table below. They're your evidence for the pitch's reliability claim.
+```bash
+# Mac: three follow-up questions with history against the real service
+F2L_LIVE_DEEPSEEK=1 scripts/test.sh --filter LiveDeepSeek
+```
 
-## Candidates (from the z.ai docs, Oct 2026)
+```powershell
+# Windows: a SUM question and a follow-up with history
+dotnet run --project Windows/F2L.Windows.Tests/F2L.Windows.Tests.csproj -- --provider-smoke
+```
 
-| Model | Vision | Tools | Thinking | Price in/out per 1M | Notes |
-|---|---|---|---|---|---|
-| `glm-4.6v` (default) | yes | native function calling | can be disabled | $0.30 / $0.90 | Safest for `point_at` |
-| `glm-4.6v-flashx` | yes | yes | can be disabled | $0.04 / $0.40 | Used for the background summary; try it as the coach if `glm-4.6v` is slow |
-| `glm-5.3-flashx` | yes (native multimodal) | yes | **always on**, sent as `reasoning_effort: low` | $0.37 / $1.25 | Rated at about 200 tok/s, but the reasoning step adds time before the first word |
-| `glm-5.3` | **no (text only)** | yes | always on | $1.40 / $4.40 | Unsuitable: can't see the screen |
+Both use the key from `local.settings.json` and send no screen picture.
+
+## Trying another model
+
+1. Change `model` in `Sources/CoachCore/DeepSeekClient.swift` and `Model` in `Windows/F2L.Windows/CoachClient.cs` (the Swift parity tests fail if they differ).
+2. Run the quick checks above, then ask 10–15 real questions with screen sharing on: an empty ChatGPT page ("where do I type?"), a filled message ("how do I send?"), Excel ("circle B2", "how do I add up column B?"), and a screen with no obvious target.
+3. Record the results below. Keep a model only if it gives the right next step in at least 12 of 15 questions, never draws a rectangle over an Excel cell, and starts speaking in under about 3 seconds.
 
 ## Results
 
-| Date | Model | Cases × runs | Valid | Hit rate | First event p50 / p90 | Decision |
+| Date | Model | Questions | Right next step | Bad targets | Typical reply time | Decision |
 |---|---|---|---|---|---|---|
-| | | | | | | |
+| 2026-10-08 | `deepseek-flash` | live follow-up check (3 runs) | 3/3 real answers | n/a (no screen) | about 2 s each | kept |

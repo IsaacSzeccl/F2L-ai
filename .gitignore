@@ -7,10 +7,42 @@ DerivedData/
 .omc/
 # Spike snapshots contain screenshots; never commit them.
 spike-cases/
-# Bug reports contain screen content and typed text.
-bug-reports/
 *.env
-*.cer
+**/bin/
+**/obj/
+Windows/F2L.Windows/local.settings.json
+Windows/artifacts/
+/local.settings.json
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# API keys never leave this computer. local.settings.json (any folder), .env files and signing keychains stay local;
+# scripts/check-secrets.sh (installed as the pre-commit hook) also refuses a commit that contains a key.
+**/local.settings.json
 .env
 .env.*
+**/*.keychain-db
+
+# Credentials, local editor state, and private runtime data.
+*.keychain
+*.pem
+*.key
+*.p12
+*.pfx
+*.mobileprovision
+local.settings.json.*
+.env*
 !.env.example
+!.env.template
+.vscode/
+.Rhistory
+__pycache__/
+*.pyc
+*.log
+diagnostics/
+sessions/
+conversation.json
+keychain-password
+profile.json
+profile.json.*

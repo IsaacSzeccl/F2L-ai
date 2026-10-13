@@ -1,0 +1,2149 @@
+{
+ "version": 1,
+ "checked": "2026-10-11",
+ "note": "Reference notes about AI tools for Pip. Interfaces change: Pip trusts what is on screen over these notes.",
+ "tools": [
+  {
+   "id": "chatgpt",
+   "name": "ChatGPT",
+   "aliases": [
+    "openai",
+    "gpt",
+    "chat gpt",
+    "custom gpt",
+    "gpts"
+   ],
+   "category": "AI assistant",
+   "summary": "OpenAI's general AI assistant for writing, questions, files, images and voice.",
+   "url": "https://chatgpt.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize",
+    "create",
+    "analyze",
+    "learn",
+    "build"
+   ],
+   "start": [
+    "Open chatgpt.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type what you need in the message box at the bottom and press Return.",
+    "Use the + button beside the box to add a file or picture."
+   ],
+   "features": [
+    "Chat and follow-up questions",
+    "Reads files, PDFs and pictures you add",
+    "Makes images",
+    "Projects and custom GPTs keep instructions for repeated work"
+   ],
+   "common": true
+  },
+  {
+   "id": "claude",
+   "name": "Claude",
+   "aliases": [
+    "anthropic",
+    "claude.ai"
+   ],
+   "category": "AI assistant",
+   "summary": "Anthropic's AI assistant, strong at long documents, careful writing and code.",
+   "url": "https://claude.ai",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create",
+    "analyze",
+    "learn",
+    "build"
+   ],
+   "start": [
+    "Open claude.ai in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type your request in the box and press Return.",
+    "Use the paperclip or + button to add documents."
+   ],
+   "features": [
+    "Long documents and PDFs",
+    "Projects with shared files and instructions",
+    "Artifacts: documents and small apps beside the chat"
+   ],
+   "common": true
+  },
+  {
+   "id": "gemini",
+   "name": "Gemini",
+   "aliases": [
+    "google gemini",
+    "bard",
+    "gems"
+   ],
+   "category": "AI assistant",
+   "summary": "Google's AI assistant, connected to Google apps such as Gmail, Docs and Drive.",
+   "url": "https://gemini.google.com",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize",
+    "create",
+    "analyze",
+    "learn"
+   ],
+   "start": [
+    "Open gemini.google.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Sign in with your Google account.",
+    "Type in the Ask Gemini box and press Return."
+   ],
+   "features": [
+    "Works with Gmail, Docs, Drive and Maps",
+    "Gems: saved assistants with your instructions",
+    "Deep Research reports",
+    "Canvas for drafts and code"
+   ],
+   "common": true
+  },
+  {
+   "id": "microsoft-copilot",
+   "name": "Microsoft Copilot",
+   "aliases": [
+    "copilot app",
+    "bing chat",
+    "bing copilot"
+   ],
+   "category": "AI assistant",
+   "summary": "Microsoft's free AI assistant on the web, in Windows and in Edge.",
+   "url": "https://copilot.microsoft.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan available",
+   "goodFor": [
+    "organize",
+    "create",
+    "learn"
+   ],
+   "start": [
+    "Open copilot.microsoft.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type or speak your question in the message box."
+   ],
+   "features": [
+    "Chat with web answers",
+    "Image creation",
+    "Built into Windows and the Edge sidebar"
+   ],
+   "common": true
+  },
+  {
+   "id": "grok",
+   "name": "Grok",
+   "aliases": [
+    "xai",
+    "x ai",
+    "grok bot"
+   ],
+   "category": "AI assistant",
+   "summary": "xAI's AI assistant, also built into X (Twitter), with live web and X search.",
+   "url": "https://grok.com",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "learn",
+    "create"
+   ],
+   "start": [
+    "Open grok.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Sign in with X, Google, Apple or email.",
+    "Type your question in the box; turn on search modes from the options beside it."
+   ],
+   "features": [
+    "Answers with live web and X posts",
+    "Image creation",
+    "Voice mode in the mobile app"
+   ],
+   "common": true
+  },
+  {
+   "id": "deepseek",
+   "name": "DeepSeek",
+   "aliases": [
+    "deep seek"
+   ],
+   "category": "AI assistant",
+   "summary": "A low-cost AI assistant from DeepSeek, good at reasoning, maths and code.",
+   "url": "https://chat.deepseek.com",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan available",
+   "goodFor": [
+    "analyze",
+    "learn",
+    "build"
+   ],
+   "start": [
+    "Open chat.deepseek.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type your question in the message box.",
+    "Turn on DeepThink for harder reasoning, or Search for web answers."
+   ],
+   "features": [
+    "Free chat",
+    "Step-by-step reasoning mode",
+    "Web search",
+    "Cheap API for developers"
+   ],
+   "common": false
+  },
+  {
+   "id": "perplexity",
+   "name": "Perplexity",
+   "aliases": [
+    "perplexity ai"
+   ],
+   "category": "AI search",
+   "summary": "An AI answer engine that searches the web and shows its sources.",
+   "url": "https://www.perplexity.ai",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "learn",
+    "analyze"
+   ],
+   "start": [
+    "Open perplexity.ai in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type a question and press Return.",
+    "Open the numbered sources to check where each answer came from."
+   ],
+   "features": [
+    "Answers with citations",
+    "Follow-up questions",
+    "Research mode for longer reports",
+    "Spaces to group research"
+   ],
+   "common": true
+  },
+  {
+   "id": "meta-ai",
+   "name": "Meta AI",
+   "aliases": [
+    "meta ai",
+    "llama"
+   ],
+   "category": "AI assistant",
+   "summary": "Meta's AI assistant inside WhatsApp, Instagram, Messenger and meta.ai.",
+   "url": "https://www.meta.ai",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan available",
+   "goodFor": [
+    "learn",
+    "create"
+   ],
+   "start": [
+    "Open WhatsApp, Instagram or Messenger, or go to meta.ai.",
+    "Tap the Meta AI button or start a chat with Meta AI.",
+    "Type your question."
+   ],
+   "features": [
+    "Inside apps you already use",
+    "Image creation",
+    "Free"
+   ],
+   "common": false
+  },
+  {
+   "id": "le-chat",
+   "name": "Le Chat (Mistral)",
+   "aliases": [
+    "mistral",
+    "mistral ai"
+   ],
+   "category": "AI assistant",
+   "summary": "Mistral AI's assistant from France, with web search and document reading.",
+   "url": "https://chat.mistral.ai",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "learn",
+    "create"
+   ],
+   "start": [
+    "Open chat.mistral.ai in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type your request in the message box."
+   ],
+   "features": [
+    "Fast answers",
+    "Web search",
+    "Document reading"
+   ],
+   "common": false
+  },
+  {
+   "id": "kimi",
+   "name": "Kimi",
+   "aliases": [
+    "moonshot",
+    "kimi chat"
+   ],
+   "category": "AI assistant",
+   "summary": "Moonshot AI's assistant, known for reading very long documents.",
+   "url": "https://www.kimi.com",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan available",
+   "goodFor": [
+    "analyze",
+    "learn"
+   ],
+   "start": [
+    "Open kimi.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type a question or add files to read."
+   ],
+   "features": [
+    "Long documents",
+    "Web search",
+    "Slides and research helpers"
+   ],
+   "common": false
+  },
+  {
+   "id": "qwen",
+   "name": "Qwen Chat",
+   "aliases": [
+    "tongyi",
+    "tongyi qianwen",
+    "alibaba qwen"
+   ],
+   "category": "AI assistant",
+   "summary": "Alibaba's Qwen AI assistant for chat, documents, images and code.",
+   "url": "https://chat.qwen.ai",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan available",
+   "goodFor": [
+    "learn",
+    "create",
+    "build"
+   ],
+   "start": [
+    "Open chat.qwen.ai in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Pick a model at the top if you want, then type your request."
+   ],
+   "features": [
+    "Chat and documents",
+    "Image and video creation",
+    "Coding help"
+   ],
+   "common": false
+  },
+  {
+   "id": "doubao",
+   "name": "Doubao",
+   "aliases": [
+    "豆包",
+    "bytedance doubao"
+   ],
+   "category": "AI assistant",
+   "summary": "ByteDance's AI assistant, popular in China, for chat, writing and images.",
+   "url": "https://www.doubao.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan available",
+   "goodFor": [
+    "create",
+    "learn"
+   ],
+   "start": [
+    "Open doubao.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type or speak your request."
+   ],
+   "features": [
+    "Chat and writing",
+    "Image creation",
+    "Voice calls with the assistant"
+   ],
+   "common": false
+  },
+  {
+   "id": "yuanbao",
+   "name": "Tencent Yuanbao",
+   "aliases": [
+    "元宝",
+    "tencent yuanbao",
+    "yuan bao"
+   ],
+   "category": "AI assistant",
+   "summary": "Tencent's AI assistant, connected to WeChat articles and search.",
+   "url": "https://yuanbao.tencent.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan available",
+   "goodFor": [
+    "learn",
+    "create"
+   ],
+   "start": [
+    "Open yuanbao.tencent.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Sign in, for example with WeChat.",
+    "Type your question; choose the model or search option if shown."
+   ],
+   "features": [
+    "Answers with WeChat and web search",
+    "Document reading",
+    "Writing help"
+   ],
+   "common": false
+  },
+  {
+   "id": "workbuddy",
+   "name": "Tencent WorkBuddy",
+   "aliases": [
+    "work buddy",
+    "workbuddy",
+    "腾讯 workbuddy"
+   ],
+   "category": "AI agent",
+   "summary": "Tencent's desktop AI agent for office work: describe a task and it plans the steps and produces documents, sheets or code in folders you allow.",
+   "url": "https://www.tencentcloud.com/products/workbuddy",
+   "platforms": [
+    "mac",
+    "windows"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize",
+    "build",
+    "analyze"
+   ],
+   "start": [
+    "Go to the WorkBuddy page on Tencent Cloud and download the desktop app for your computer.",
+    "Install it, open it and sign in with your Tencent account.",
+    "Choose which folder it may use, then describe one task in plain words, for example 'turn these notes into a weekly report'.",
+    "Review the plan and the result before using it."
+   ],
+   "features": [
+    "Plans and carries out multi-step office tasks",
+    "Reads and writes files only in folders you allow",
+    "Works with documents, spreadsheets, images and code"
+   ],
+   "common": true
+  },
+  {
+   "id": "ernie",
+   "name": "ERNIE Bot (Wenxiaoyan)",
+   "aliases": [
+    "文心一言",
+    "wenxiaoyan",
+    "文小言",
+    "baidu ai"
+   ],
+   "category": "AI assistant",
+   "summary": "Baidu's AI assistant for chat, search and writing in Chinese.",
+   "url": "https://yiyan.baidu.com",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan available",
+   "goodFor": [
+    "learn",
+    "create"
+   ],
+   "start": [
+    "Open yiyan.baidu.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type your question in the box."
+   ],
+   "features": [
+    "Chinese-language answers",
+    "Baidu search",
+    "Writing help"
+   ],
+   "common": false
+  },
+  {
+   "id": "poe",
+   "name": "Poe",
+   "aliases": [],
+   "category": "AI assistant",
+   "summary": "Quora's app for trying many AI models (ChatGPT, Claude, Gemini and others) in one place.",
+   "url": "https://poe.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "learn"
+   ],
+   "start": [
+    "Open poe.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Pick a bot from the list on the left, then type your message."
+   ],
+   "features": [
+    "Many AI models in one app",
+    "Make simple bots"
+   ],
+   "common": false
+  },
+  {
+   "id": "notion",
+   "name": "Notion",
+   "aliases": [
+    "notion ai"
+   ],
+   "category": "Notes & workspace",
+   "summary": "A workspace for notes, docs, tasks and wikis, with Notion AI for writing and search.",
+   "url": "https://www.notion.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize",
+    "create"
+   ],
+   "start": [
+    "Open notion.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click New page in the left sidebar, give it a title, and type / to add a heading, list, table or database.",
+    "Press Space on an empty line, or type /ai, to ask Notion AI to write or summarise."
+   ],
+   "features": [
+    "Pages, databases and task boards",
+    "Notion AI writes, summarises and answers from your pages",
+    "Templates for planning and wikis",
+    "Share pages with your team"
+   ],
+   "common": true
+  },
+  {
+   "id": "google-workspace",
+   "name": "Google Workspace with Gemini",
+   "aliases": [
+    "gmail",
+    "google docs",
+    "google sheets",
+    "google slides",
+    "google drive",
+    "google meet",
+    "gemini in gmail"
+   ],
+   "category": "Notes & workspace",
+   "summary": "Gmail, Docs, Sheets, Slides, Drive and Meet, with Gemini built in on supported plans.",
+   "url": "https://workspace.google.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize",
+    "create",
+    "analyze"
+   ],
+   "start": [
+    "Open Gmail, Docs, Sheets or Drive in your browser and sign in with your Google account.",
+    "Look for the Gemini star button at the top right of the app.",
+    "Ask Gemini to draft, summarise or analyse what is open."
+   ],
+   "features": [
+    "Help me write in Gmail and Docs",
+    "Gemini side panel in Docs, Sheets, Slides and Drive",
+    "Meeting notes in Meet"
+   ],
+   "common": true
+  },
+  {
+   "id": "microsoft-365-copilot",
+   "name": "Microsoft 365 Copilot",
+   "aliases": [
+    "word",
+    "powerpoint",
+    "outlook",
+    "teams",
+    "microsoft 365",
+    "office copilot",
+    "m365 copilot"
+   ],
+   "category": "Notes & workspace",
+   "summary": "Copilot inside Word, Excel, PowerPoint, Outlook and Teams for drafting, analysing and summarising.",
+   "url": "https://www.microsoft.com/microsoft-365/copilot",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Paid (some offer a trial)",
+   "goodFor": [
+    "organize",
+    "create",
+    "analyze"
+   ],
+   "start": [
+    "Open Word, Excel, PowerPoint, Outlook or Teams and sign in with your work or Microsoft account.",
+    "Click the Copilot button on the Home tab (or the Copilot icon).",
+    "Type what you want, for example 'summarise this document', and review the result."
+   ],
+   "features": [
+    "Drafts in Word",
+    "Formulas, charts and insights in Excel",
+    "Slides from a document in PowerPoint",
+    "Meeting recaps in Teams"
+   ],
+   "common": true
+  },
+  {
+   "id": "excel",
+   "name": "Excel",
+   "aliases": [
+    "microsoft excel",
+    "spreadsheet"
+   ],
+   "category": "Spreadsheets",
+   "summary": "Microsoft's spreadsheet app, with Copilot for formulas, charts and analysis.",
+   "url": "https://www.microsoft.com/microsoft-365/excel",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "analyze",
+    "organize"
+   ],
+   "start": [
+    "Open Excel (desktop, or excel.cloud.microsoft in the browser).",
+    "Click a blank workbook or open your file.",
+    "Select your data, then use the Home or Insert tab, or Copilot on the Home tab."
+   ],
+   "features": [
+    "Formulas such as SUM and XLOOKUP",
+    "Charts and PivotTables",
+    "Copilot explains and builds formulas"
+   ],
+   "common": true
+  },
+  {
+   "id": "notebooklm",
+   "name": "Gemini Notebook (formerly NotebookLM)",
+   "aliases": [
+    "notebook lm",
+    "notebooklm",
+    "gemini notebook"
+   ],
+   "category": "Research",
+   "summary": "Google's research notebook: add your sources and ask questions, get summaries, study guides and audio overviews grounded in them.",
+   "url": "https://notebooklm.google.com",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "learn",
+    "analyze"
+   ],
+   "start": [
+    "Open notebooklm.google.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click Create new notebook and add sources: PDFs, Google Docs, websites or YouTube links.",
+    "Ask questions in the chat; answers cite your sources.",
+    "Use the Studio panel for an audio overview, study guide or mind map."
+   ],
+   "features": [
+    "Answers only from your sources, with citations",
+    "Audio and video overviews",
+    "Study guides, flashcards and mind maps"
+   ],
+   "common": true
+  },
+  {
+   "id": "slack-ai",
+   "name": "Slack AI",
+   "aliases": [
+    "slack"
+   ],
+   "category": "Notes & workspace",
+   "summary": "AI in Slack that summarises channels and threads and answers questions from your workspace.",
+   "url": "https://slack.com/ai",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Paid (some offer a trial)",
+   "goodFor": [
+    "organize"
+   ],
+   "start": [
+    "Open Slack and sign in to your workspace.",
+    "Look for the AI or summary button at the top of a channel or thread.",
+    "Ask a question in the search bar to get an AI answer from your workspace."
+   ],
+   "features": [
+    "Channel and thread summaries",
+    "Answers from your workspace",
+    "Huddle notes"
+   ],
+   "common": false
+  },
+  {
+   "id": "zoom-ai",
+   "name": "Zoom AI Companion",
+   "aliases": [
+    "zoom"
+   ],
+   "category": "Meetings",
+   "summary": "AI in Zoom that writes meeting summaries and answers questions about a meeting.",
+   "url": "https://www.zoom.com/en/ai-assistant/",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize"
+   ],
+   "start": [
+    "Open Zoom and sign in.",
+    "In a meeting, click AI Companion in the toolbar.",
+    "Turn on the meeting summary, then find it after the meeting in your Zoom account or email."
+   ],
+   "features": [
+    "Meeting summaries",
+    "Ask about what you missed",
+    "Next steps from meetings"
+   ],
+   "common": false
+  },
+  {
+   "id": "otter",
+   "name": "Otter.ai",
+   "aliases": [
+    "otter ai"
+   ],
+   "category": "Meetings",
+   "summary": "Records and transcribes meetings and writes summaries and action items.",
+   "url": "https://otter.ai",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize"
+   ],
+   "start": [
+    "Open otter.ai in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Connect your calendar so Otter can join meetings, or press Record for a live conversation.",
+    "Open the transcript afterwards to see the summary and action items."
+   ],
+   "features": [
+    "Live transcripts",
+    "Meeting summaries",
+    "Action items"
+   ],
+   "common": false
+  },
+  {
+   "id": "fireflies",
+   "name": "Fireflies.ai",
+   "aliases": [],
+   "category": "Meetings",
+   "summary": "An AI notetaker that joins video calls and writes transcripts and summaries.",
+   "url": "https://fireflies.ai",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize"
+   ],
+   "start": [
+    "Open fireflies.ai in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Connect your calendar so the notetaker joins your meetings.",
+    "Read the summary and search the transcript afterwards."
+   ],
+   "features": [
+    "Transcripts",
+    "Summaries",
+    "Search across meetings"
+   ],
+   "common": false
+  },
+  {
+   "id": "grammarly",
+   "name": "Grammarly",
+   "aliases": [],
+   "category": "Writing",
+   "summary": "Checks grammar and tone and rewrites text in email, documents and the browser.",
+   "url": "https://www.grammarly.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open grammarly.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Install the browser extension or desktop app.",
+    "Start writing anywhere; click the Grammarly button to see suggestions or ask it to rewrite."
+   ],
+   "features": [
+    "Grammar and spelling",
+    "Tone suggestions",
+    "Rewrite and shorten"
+   ],
+   "common": true
+  },
+  {
+   "id": "quillbot",
+   "name": "QuillBot",
+   "aliases": [],
+   "category": "Writing",
+   "summary": "Paraphrases, summarises and checks writing.",
+   "url": "https://quillbot.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create",
+    "learn"
+   ],
+   "start": [
+    "Open quillbot.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Choose Paraphraser or Summarizer at the left.",
+    "Paste your text and click the button to rewrite or summarise."
+   ],
+   "features": [
+    "Paraphrasing",
+    "Summaries",
+    "Grammar check"
+   ],
+   "common": false
+  },
+  {
+   "id": "gamma",
+   "name": "Gamma",
+   "aliases": [
+    "gamma ai",
+    "gamma.app",
+    "gamma app"
+   ],
+   "category": "Presentations",
+   "summary": "Makes presentations, documents and simple web pages from a prompt or outline.",
+   "url": "https://gamma.app",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open gamma.app in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click Create new, choose Presentation, and type your topic or paste an outline.",
+    "Review the outline, pick a theme, then click Generate.",
+    "Edit any card by clicking it; export to PDF or PowerPoint."
+   ],
+   "features": [
+    "Slides from a prompt",
+    "Themes and layouts",
+    "Export to PowerPoint or PDF"
+   ],
+   "common": true
+  },
+  {
+   "id": "clickup",
+   "name": "ClickUp Brain",
+   "aliases": [
+    "clickup"
+   ],
+   "category": "Project management",
+   "summary": "Task and project management with an AI assistant for writing and status updates.",
+   "url": "https://clickup.com/ai",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize"
+   ],
+   "start": [
+    "Open clickup.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Create a Space and a List for your project.",
+    "Use the AI button in a task or doc to write, summarise or plan."
+   ],
+   "features": [
+    "Tasks and projects",
+    "AI summaries and updates"
+   ],
+   "common": false
+  },
+  {
+   "id": "motion",
+   "name": "Motion",
+   "aliases": [
+    "usemotion",
+    "motion app",
+    "motion ai"
+   ],
+   "category": "Project management",
+   "summary": "An AI planner that schedules your tasks into your calendar automatically.",
+   "url": "https://www.usemotion.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Paid (some offer a trial)",
+   "goodFor": [
+    "organize"
+   ],
+   "start": [
+    "Open usemotion.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Connect your calendar.",
+    "Add tasks with deadlines; Motion places them in your calendar."
+   ],
+   "features": [
+    "Automatic scheduling",
+    "Projects",
+    "Meeting booking"
+   ],
+   "common": false
+  },
+  {
+   "id": "zapier",
+   "name": "Zapier",
+   "aliases": [],
+   "category": "Automation",
+   "summary": "Connects apps so a repeatable task runs by itself, with AI steps and agents.",
+   "url": "https://zapier.com",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build",
+    "organize"
+   ],
+   "start": [
+    "Open zapier.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click Create and choose Zap.",
+    "Pick a trigger (the app and event that starts it), then add an action (what happens next).",
+    "Test each step, then turn the Zap on."
+   ],
+   "features": [
+    "Thousands of app connections",
+    "AI steps and agents",
+    "Templates for common tasks"
+   ],
+   "common": true
+  },
+  {
+   "id": "n8n",
+   "name": "n8n",
+   "aliases": [
+    "n8n.io",
+    "n8n cloud"
+   ],
+   "category": "Automation",
+   "summary": "An open-source workflow automation tool with AI agent nodes; use n8n Cloud or run it yourself.",
+   "url": "https://n8n.io",
+   "platforms": [
+    "web",
+    "mac",
+    "windows"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build"
+   ],
+   "start": [
+    "Go to n8n.io and start a free cloud trial, or install it yourself with Docker or npm.",
+    "Click Create workflow (or the + button).",
+    "Add a trigger node (for example On a schedule or a Webhook), then click + to add nodes such as an AI Agent, Gmail or Google Sheets.",
+    "Connect your accounts in each node's Credentials, click Execute workflow to test, then switch it to Active."
+   ],
+   "features": [
+    "Visual workflow editor",
+    "AI Agent node with tools and memory",
+    "Hundreds of integrations",
+    "Self-hosting keeps data on your server"
+   ],
+   "common": true
+  },
+  {
+   "id": "make",
+   "name": "Make",
+   "aliases": [
+    "integromat",
+    "make.com"
+   ],
+   "category": "Automation",
+   "summary": "A visual tool for building automated workflows between apps (formerly Integromat).",
+   "url": "https://www.make.com",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build"
+   ],
+   "start": [
+    "Open make.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click Create a new scenario.",
+    "Click the big + to add the first app, then add more modules and connect them.",
+    "Click Run once to test, then turn on scheduling."
+   ],
+   "features": [
+    "Visual scenarios",
+    "Many app connections",
+    "AI modules"
+   ],
+   "common": false
+  },
+  {
+   "id": "power-automate",
+   "name": "Power Automate",
+   "aliases": [
+    "microsoft power automate"
+   ],
+   "category": "Automation",
+   "summary": "Microsoft's automation tool for flows between Microsoft 365 and other apps.",
+   "url": "https://www.microsoft.com/power-platform/products/power-automate",
+   "platforms": [
+    "web",
+    "windows"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build",
+    "organize"
+   ],
+   "start": [
+    "Go to make.powerautomate.com and sign in with your Microsoft account.",
+    "Click Create and choose a cloud flow type, or describe the flow to Copilot.",
+    "Add a trigger and actions, then test and save."
+   ],
+   "features": [
+    "Flows across Microsoft 365",
+    "Desktop automation on Windows",
+    "Copilot builds flows from a description"
+   ],
+   "common": false
+  },
+  {
+   "id": "ifttt",
+   "name": "IFTTT",
+   "aliases": [],
+   "category": "Automation",
+   "summary": "Simple 'if this then that' automations between apps and devices.",
+   "url": "https://ifttt.com",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize",
+    "build"
+   ],
+   "start": [
+    "Open ifttt.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click Create, choose the 'If This' trigger, then the 'Then That' action.",
+    "Connect the services it asks for and click Finish."
+   ],
+   "features": [
+    "Simple app and device automations"
+   ],
+   "common": false
+  },
+  {
+   "id": "copilot-studio",
+   "name": "Microsoft Copilot Studio",
+   "aliases": [
+    "copilot studio"
+   ],
+   "category": "AI agents",
+   "summary": "Builds custom AI agents for Microsoft 365 and Teams without much code.",
+   "url": "https://www.microsoft.com/microsoft-copilot/microsoft-copilot-studio",
+   "platforms": [
+    "web"
+   ],
+   "access": "Paid (some offer a trial)",
+   "goodFor": [
+    "build"
+   ],
+   "start": [
+    "Go to copilotstudio.microsoft.com and sign in with a work account.",
+    "Click Create and describe the agent you want.",
+    "Add knowledge (files or websites), test it in the panel, then publish to Teams or a website."
+   ],
+   "features": [
+    "Custom agents",
+    "Uses your company data",
+    "Publish to Teams"
+   ],
+   "common": false
+  },
+  {
+   "id": "coze",
+   "name": "Coze",
+   "aliases": [
+    "扣子",
+    "coze bot"
+   ],
+   "category": "AI agents",
+   "summary": "ByteDance's platform for building AI bots and agents without code.",
+   "url": "https://www.coze.com",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build"
+   ],
+   "start": [
+    "Open coze.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click Create, choose an agent, and describe what it should do.",
+    "Add plugins or knowledge, test in the preview, then publish."
+   ],
+   "features": [
+    "No-code bots",
+    "Plugins and workflows",
+    "Publish to chat apps"
+   ],
+   "common": false
+  },
+  {
+   "id": "dify",
+   "name": "Dify",
+   "aliases": [],
+   "category": "AI agents",
+   "summary": "An open-source platform for building AI apps, chatbots and agent workflows.",
+   "url": "https://dify.ai",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build"
+   ],
+   "start": [
+    "Go to dify.ai and sign up for the cloud version, or self-host it.",
+    "Click Create from Blank and choose Chatbot, Agent or Workflow.",
+    "Add your model key and knowledge, test, then publish."
+   ],
+   "features": [
+    "Visual AI workflows",
+    "Knowledge bases",
+    "Self-hosting"
+   ],
+   "common": false
+  },
+  {
+   "id": "custom-gpts",
+   "name": "Custom GPTs and Gems",
+   "aliases": [
+    "gpt builder",
+    "gems",
+    "gem",
+    "custom gpt"
+   ],
+   "category": "AI agents",
+   "summary": "Saved assistants with your own instructions and files, in ChatGPT (GPTs) or Gemini (Gems).",
+   "url": "https://chatgpt.com/gpts",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build",
+    "organize"
+   ],
+   "start": [
+    "In ChatGPT, open GPTs in the sidebar and click Create; in Gemini, open Gem manager and click New Gem.",
+    "Write the instructions: who it helps, what it should do and how it should answer.",
+    "Add files it should use, test it in the preview, then save."
+   ],
+   "features": [
+    "Reusable instructions",
+    "Your own files as knowledge",
+    "Share with your team"
+   ],
+   "common": false
+  },
+  {
+   "id": "canva",
+   "name": "Canva",
+   "aliases": [
+    "canva ai",
+    "magic studio"
+   ],
+   "category": "Design",
+   "summary": "Design tool for presentations, social posts and documents, with Canva AI.",
+   "url": "https://www.canva.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open canva.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click Create a design and pick a type, or search a template.",
+    "Use Canva AI (Magic) to generate a design, write text or edit pictures.",
+    "Click Share to download or present."
+   ],
+   "features": [
+    "Templates for every format",
+    "Canva AI writes and designs",
+    "Background remover and photo edits"
+   ],
+   "common": true
+  },
+  {
+   "id": "adobe-firefly",
+   "name": "Adobe Firefly",
+   "aliases": [
+    "firefly",
+    "adobe ai"
+   ],
+   "category": "Images",
+   "summary": "Adobe's AI for creating and editing images, video and audio, designed for commercial use.",
+   "url": "https://firefly.adobe.com",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open firefly.adobe.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Choose Text to image (or another tool) and type what you want to see.",
+    "Pick a style and click Generate; download the result you like."
+   ],
+   "features": [
+    "Text to image",
+    "Generative fill",
+    "Video and audio tools"
+   ],
+   "common": false
+  },
+  {
+   "id": "figma",
+   "name": "Figma AI",
+   "aliases": [
+    "figma make"
+   ],
+   "category": "Design",
+   "summary": "Figma's design tool with AI to create designs, prototypes and apps from prompts.",
+   "url": "https://www.figma.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create",
+    "build"
+   ],
+   "start": [
+    "Open figma.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Create a design file, or try Figma Make to describe an app or prototype.",
+    "Use the AI actions in the toolbar to generate or rename layers."
+   ],
+   "features": [
+    "Design and prototypes",
+    "Figma Make for app prototypes"
+   ],
+   "common": false
+  },
+  {
+   "id": "midjourney",
+   "name": "Midjourney",
+   "aliases": [
+    "mid journey"
+   ],
+   "category": "Images",
+   "summary": "Creates high-quality images and short videos from text prompts.",
+   "url": "https://www.midjourney.com",
+   "platforms": [
+    "web"
+   ],
+   "access": "Paid (some offer a trial)",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open midjourney.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type a description in the Imagine bar at the top and press Return.",
+    "Pick a result and use Vary or Upscale, then download."
+   ],
+   "features": [
+    "Artistic images",
+    "Styles and variations",
+    "Short videos"
+   ],
+   "common": false
+  },
+  {
+   "id": "ideogram",
+   "name": "Ideogram",
+   "aliases": [],
+   "category": "Images",
+   "summary": "Makes images that include clear, correct text, good for posters and logos.",
+   "url": "https://ideogram.ai",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open ideogram.ai in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type a prompt including the words you want on the image, and click Generate."
+   ],
+   "features": [
+    "Readable text in images",
+    "Posters and logos"
+   ],
+   "common": false
+  },
+  {
+   "id": "leonardo",
+   "name": "Leonardo AI",
+   "aliases": [
+    "leonardo.ai"
+   ],
+   "category": "Images",
+   "summary": "Image and video generation with fine control over styles.",
+   "url": "https://leonardo.ai",
+   "platforms": [
+    "web",
+    "ios"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open leonardo.ai in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Open Image Creation, type a prompt and choose a style.",
+    "Click Generate and download the one you like."
+   ],
+   "features": [
+    "Image styles",
+    "Video generation",
+    "Canvas editing"
+   ],
+   "common": false
+  },
+  {
+   "id": "capcut",
+   "name": "CapCut",
+   "aliases": [
+    "剪映",
+    "jianying"
+   ],
+   "category": "Video",
+   "summary": "Video editor with AI captions, effects and templates, popular for social video.",
+   "url": "https://www.capcut.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open capcut.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click New project and import your clips.",
+    "Use Auto captions and templates; export when done."
+   ],
+   "features": [
+    "Auto captions",
+    "Templates",
+    "AI effects"
+   ],
+   "common": true
+  },
+  {
+   "id": "runway",
+   "name": "Runway",
+   "aliases": [
+    "runwayml",
+    "runway ml",
+    "runway ai"
+   ],
+   "category": "Video",
+   "summary": "AI video generation and editing from text, images or video.",
+   "url": "https://runwayml.com",
+   "platforms": [
+    "web",
+    "ios"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open runwayml.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Choose a video generation tool, add a prompt or image, and click Generate."
+   ],
+   "features": [
+    "Text and image to video",
+    "Video editing tools"
+   ],
+   "common": false
+  },
+  {
+   "id": "synthesia",
+   "name": "Synthesia",
+   "aliases": [],
+   "category": "Video",
+   "summary": "Makes training and explainer videos with AI presenters from a script.",
+   "url": "https://www.synthesia.io",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open synthesia.io in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click Create video, pick a template and avatar, and paste your script.",
+    "Preview, then generate the video."
+   ],
+   "features": [
+    "AI presenters",
+    "Many languages",
+    "Training videos"
+   ],
+   "common": false
+  },
+  {
+   "id": "heygen",
+   "name": "HeyGen",
+   "aliases": [],
+   "category": "Video",
+   "summary": "AI avatar videos and video translation with lip-sync.",
+   "url": "https://www.heygen.com",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open heygen.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Choose an avatar or create your own, then type the script.",
+    "Generate and download, or translate an existing video."
+   ],
+   "features": [
+    "AI avatars",
+    "Video translation"
+   ],
+   "common": false
+  },
+  {
+   "id": "descript",
+   "name": "Descript",
+   "aliases": [],
+   "category": "Video",
+   "summary": "Edit video and podcasts by editing the transcript like a document.",
+   "url": "https://www.descript.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open descript.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Create a project and import a recording; it is transcribed automatically.",
+    "Delete words in the transcript to cut the video; use AI tools to remove filler words."
+   ],
+   "features": [
+    "Text-based editing",
+    "Remove filler words",
+    "Studio sound"
+   ],
+   "common": false
+  },
+  {
+   "id": "elevenlabs",
+   "name": "ElevenLabs",
+   "aliases": [
+    "eleven labs"
+   ],
+   "category": "Audio",
+   "summary": "Realistic AI voices for narration, dubbing and voice agents.",
+   "url": "https://elevenlabs.io",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create",
+    "build"
+   ],
+   "start": [
+    "Open elevenlabs.io in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Open Text to Speech, paste your text and choose a voice.",
+    "Click Generate and download the audio."
+   ],
+   "features": [
+    "Natural voices",
+    "Dubbing into other languages",
+    "Voice agents"
+   ],
+   "common": false
+  },
+  {
+   "id": "suno",
+   "name": "Suno",
+   "aliases": [],
+   "category": "Audio",
+   "summary": "Creates songs with vocals from a text description.",
+   "url": "https://suno.com",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "create"
+   ],
+   "start": [
+    "Open suno.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Click Create, describe the song or write lyrics, and choose a style.",
+    "Generate, listen and download."
+   ],
+   "features": [
+    "Songs from prompts",
+    "Custom lyrics"
+   ],
+   "common": false
+  },
+  {
+   "id": "copilot",
+   "name": "GitHub Copilot",
+   "aliases": [
+    "github copilot"
+   ],
+   "category": "Coding",
+   "summary": "An AI pair programmer in VS Code and other editors for code suggestions and chat.",
+   "url": "https://github.com/features/copilot",
+   "platforms": [
+    "mac",
+    "windows"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build"
+   ],
+   "start": [
+    "Sign in to GitHub and turn on Copilot (a free plan exists).",
+    "Install the GitHub Copilot extension in VS Code and sign in.",
+    "Start typing code for suggestions, or open Copilot Chat to ask about your code."
+   ],
+   "features": [
+    "Code completion",
+    "Chat about your code",
+    "Agent mode for multi-file changes"
+   ],
+   "common": true
+  },
+  {
+   "id": "cursor",
+   "name": "Cursor",
+   "aliases": [
+    "cursor ai"
+   ],
+   "category": "Coding",
+   "summary": "An AI code editor that can write and edit code across a project.",
+   "url": "https://cursor.com",
+   "platforms": [
+    "mac",
+    "windows"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build"
+   ],
+   "start": [
+    "Download Cursor from cursor.com and install it.",
+    "Open your project folder.",
+    "Open the chat or agent panel and describe the change you want; review each edit before accepting."
+   ],
+   "features": [
+    "AI chat in the editor",
+    "Agent edits across files"
+   ],
+   "common": false
+  },
+  {
+   "id": "claude-code",
+   "name": "Claude Code",
+   "aliases": [],
+   "category": "Coding",
+   "summary": "Anthropic's coding agent that works in your terminal, IDE or desktop app.",
+   "url": "https://code.claude.com/docs",
+   "platforms": [
+    "mac",
+    "windows"
+   ],
+   "access": "Paid (some offer a trial)",
+   "goodFor": [
+    "build"
+   ],
+   "start": [
+    "Install Claude Code by following the guide at code.claude.com/docs.",
+    "Open your project folder and start Claude Code.",
+    "Describe the task; review and approve its changes."
+   ],
+   "features": [
+    "Reads and edits your codebase",
+    "Runs commands with your approval"
+   ],
+   "common": false
+  },
+  {
+   "id": "replit",
+   "name": "Replit",
+   "aliases": [],
+   "category": "App building",
+   "summary": "Build and publish apps in the browser by describing them to the Replit Agent.",
+   "url": "https://replit.com",
+   "platforms": [
+    "web",
+    "mac",
+    "windows",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build"
+   ],
+   "start": [
+    "Open replit.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Describe the app you want in the Agent box and press Start.",
+    "Answer its questions, try the preview, then click Deploy to publish."
+   ],
+   "features": [
+    "Apps from a description",
+    "Hosting and databases"
+   ],
+   "common": false
+  },
+  {
+   "id": "lovable",
+   "name": "Lovable",
+   "aliases": [],
+   "category": "App building",
+   "summary": "Builds web apps and websites from a chat description.",
+   "url": "https://lovable.dev",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build",
+    "create"
+   ],
+   "start": [
+    "Open lovable.dev in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Describe your app in the box and press Return.",
+    "Refine it in chat, then click Publish."
+   ],
+   "features": [
+    "Apps from chat",
+    "Publish and share"
+   ],
+   "common": false
+  },
+  {
+   "id": "bolt",
+   "name": "Bolt",
+   "aliases": [
+    "bolt.new"
+   ],
+   "category": "App building",
+   "summary": "StackBlitz's AI app builder that writes and runs a web app in the browser.",
+   "url": "https://bolt.new",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build"
+   ],
+   "start": [
+    "Open bolt.new in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Describe the app and press Return.",
+    "Edit through chat, then deploy."
+   ],
+   "features": [
+    "Full web apps in the browser"
+   ],
+   "common": false
+  },
+  {
+   "id": "v0",
+   "name": "v0",
+   "aliases": [
+    "v0.dev",
+    "vercel v0"
+   ],
+   "category": "App building",
+   "summary": "Vercel's AI tool that builds web interfaces and apps from a description.",
+   "url": "https://v0.app",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "build",
+    "create"
+   ],
+   "start": [
+    "Open v0.app in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Describe the page or app you want.",
+    "Refine it in chat, then publish or copy the code."
+   ],
+   "features": [
+    "Interfaces from prompts",
+    "React code"
+   ],
+   "common": false
+  },
+  {
+   "id": "google-ai-studio",
+   "name": "Google AI Studio",
+   "aliases": [
+    "ai studio"
+   ],
+   "category": "Coding",
+   "summary": "Google's free workspace to try Gemini models, build prompts and get an API key.",
+   "url": "https://aistudio.google.com",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan available",
+   "goodFor": [
+    "build",
+    "learn"
+   ],
+   "start": [
+    "Open aistudio.google.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type a prompt to try a Gemini model.",
+    "Click Get API key to use Gemini in your own app."
+   ],
+   "features": [
+    "Try Gemini models",
+    "Get an API key",
+    "Build small apps"
+   ],
+   "common": false
+  },
+  {
+   "id": "elicit",
+   "name": "Elicit",
+   "aliases": [
+    "elicit ai",
+    "elicit.com"
+   ],
+   "category": "Research",
+   "summary": "Finds and summarises research papers to answer research questions.",
+   "url": "https://elicit.com",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "learn",
+    "analyze"
+   ],
+   "start": [
+    "Open elicit.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Type a research question.",
+    "Review the list of papers and their summaries; open papers to check."
+   ],
+   "features": [
+    "Paper search",
+    "Summaries and data extraction"
+   ],
+   "common": false
+  },
+  {
+   "id": "consensus",
+   "name": "Consensus",
+   "aliases": [
+    "consensus.app",
+    "consensus ai"
+   ],
+   "category": "Research",
+   "summary": "An AI search engine that answers questions from scientific papers.",
+   "url": "https://consensus.app",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "learn"
+   ],
+   "start": [
+    "Open consensus.app in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Ask a yes/no or research question.",
+    "Read the summary and open the cited papers."
+   ],
+   "features": [
+    "Answers from papers",
+    "Consensus meter"
+   ],
+   "common": false
+  },
+  {
+   "id": "khanmigo",
+   "name": "Khanmigo",
+   "aliases": [
+    "khan academy"
+   ],
+   "category": "Learning",
+   "summary": "Khan Academy's AI tutor that guides you to answers instead of giving them.",
+   "url": "https://www.khanmigo.ai",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "learn"
+   ],
+   "start": [
+    "Open khanmigo.ai in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Pick a subject or activity and start chatting."
+   ],
+   "features": [
+    "Step-by-step tutoring",
+    "Teacher tools"
+   ],
+   "common": false
+  },
+  {
+   "id": "duolingo-max",
+   "name": "Duolingo Max",
+   "aliases": [
+    "duolingo"
+   ],
+   "category": "Learning",
+   "summary": "Duolingo's AI features for practising conversations and explaining answers.",
+   "url": "https://www.duolingo.com",
+   "platforms": [
+    "web",
+    "ios",
+    "android"
+   ],
+   "access": "Paid (some offer a trial)",
+   "goodFor": [
+    "learn"
+   ],
+   "start": [
+    "Install Duolingo and pick a language.",
+    "With Max, use Video Call or Explain My Answer during lessons."
+   ],
+   "features": [
+    "AI conversation practice",
+    "Answer explanations"
+   ],
+   "common": false
+  },
+  {
+   "id": "julius",
+   "name": "Julius AI",
+   "aliases": [
+    "julius"
+   ],
+   "category": "Data",
+   "summary": "Analyses spreadsheets and data files and makes charts when you ask in plain words.",
+   "url": "https://julius.ai",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "analyze"
+   ],
+   "start": [
+    "Open julius.ai in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Upload a spreadsheet or CSV.",
+    "Ask a question about the data, for example 'show sales by month as a chart'."
+   ],
+   "features": [
+    "Charts from questions",
+    "Data cleaning",
+    "Python behind the scenes"
+   ],
+   "common": false
+  },
+  {
+   "id": "hubspot",
+   "name": "HubSpot Breeze",
+   "aliases": [
+    "hubspot ai",
+    "breeze"
+   ],
+   "category": "Business",
+   "summary": "AI tools in HubSpot's CRM for emails, customer insights and support agents.",
+   "url": "https://www.hubspot.com/products/artificial-intelligence",
+   "platforms": [
+    "web"
+   ],
+   "access": "Free plan; more with a paid plan",
+   "goodFor": [
+    "organize",
+    "create"
+   ],
+   "start": [
+    "Open hubspot.com in your browser (or install the app).",
+    "Sign in or create an account; most offer Google, Microsoft or Apple sign-in.",
+    "Open Breeze in the CRM to draft emails or summarise a contact.",
+    "Set up AI agents for customer support or prospecting from the Breeze menu."
+   ],
+   "features": [
+    "CRM assistant",
+    "Email drafting",
+    "Customer agents"
+   ],
+   "common": false
+  },
+  {
+   "id": "shopify-magic",
+   "name": "Shopify Magic and Sidekick",
+   "aliases": [
+    "shopify",
+    "sidekick"
+   ],
+   "category": "Business",
+   "summary": "AI in Shopify for product descriptions, store edits and an assistant for running the shop.",
+   "url": "https://www.shopify.com/magic",
+   "platforms": [
+    "web"
+   ],
+   "access": "Paid (some offer a trial)",
+   "goodFor": [
+    "create",
+    "organize"
+   ],
+   "start": [
+    "Sign in to your Shopify admin.",
+    "In a product, click the Magic button beside the description to generate text.",
+    "Open Sidekick to ask questions or make changes in plain words."
+   ],
+   "features": [
+    "Product descriptions",
+    "Store assistant",
+    "Image editing"
+   ],
+   "common": false
+  },
+  {
+   "id": "intercom-fin",
+   "name": "Intercom Fin",
+   "aliases": [
+    "fin ai",
+    "intercom"
+   ],
+   "category": "Business",
+   "summary": "An AI customer-service agent that answers customers from your help content.",
+   "url": "https://fin.ai",
+   "platforms": [
+    "web"
+   ],
+   "access": "Paid (some offer a trial)",
+   "goodFor": [
+    "build",
+    "organize"
+   ],
+   "start": [
+    "Sign up at fin.ai or in Intercom.",
+    "Add your help articles and website as knowledge.",
+    "Test Fin's answers, then turn it on for your chat or email."
+   ],
+   "features": [
+    "Customer support agent",
+    "Learns from your help pages"
+   ],
+   "common": false
+  }
+ ]
+}
