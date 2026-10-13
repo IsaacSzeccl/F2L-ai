@@ -49,7 +49,7 @@ F2L's proposed distinction should be its complete beginner learning experience: 
 
 ## Character directions
 
-See [the F2L character exploration sheet](companion-concepts/character-studies-f2l.png). Generated concept art is a visual brief; it still needs consistent production artwork and animation assets.
+See [the F2L character exploration sheet](../companion-concepts/character-studies-f2l.png). Generated concept art is a visual brief; it still needs consistent production artwork and animation assets.
 
 | Direction | Personality and identity | Tradeoff |
 |---|---|---|

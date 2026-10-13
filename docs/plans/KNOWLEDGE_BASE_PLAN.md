@@ -32,9 +32,15 @@
   ],
   "commonFailures": ["Canvas missing: the account may not have the feature yet."],
   "source": ["https://support.google.com/..."],
+  "status": "verified",
   "verifiedOn": "2026-10-15", "verifiedBy": "initials", "verifiedWith": "personal account, Chrome on macOS"
 }
 ```
+
+`status` is `"drafted"` until a person has followed the recipe on a real account, and `"verified"` after. A drafted
+recipe must leave `verifiedOn`, `verifiedBy` and `verifiedWith` empty, and the schema lint fails if it claims any of
+them: an unverified recipe can never pose as a checked one. The recipe block also tells the model when a recipe is
+only drafted, so Pip says the interface may have moved on if the screen disagrees.
 
 **Selection.** Pick recipes by context rather than by keyword:
 1. Resolve the tool from the front app and window title first, the question second. Make bare "copilot" ambiguous (add it to `ambiguous`), and treat GitHub Copilot as its own tool that needs "github" or a code editor in front.
@@ -60,10 +66,21 @@
 
 **Cut order if behind:** Phase 5, then broad recipes beyond the demo flow, then the re-plan path. **Never cut:** the verified demo recipes and the label check.
 
+### Where each phase stands (13 Oct)
+
+| Phase | State | What is left |
+|---|---|---|
+| 0. Baseline | **done** | Evaluation set written (`Tests/Fixtures/kb-eval.json`, 30 cases, 10 held out); baseline measured and recorded in 4.4b. |
+| 1. Loader and selection | **done** | Schema, loader, `RecipeLibrary.select(...)` and the Copilot disambiguation on both platforms, wired into `compose()`; parity tests extended. The C# could not be compiled here (no `dotnet` on this machine), so it is checked by the Swift parity tests only — **build and run `F2L.Windows.Tests` on Windows before relying on it**. |
+| 2. Author recipes | **drafted, not verified** | 25 recipes (12 Gemini-family, 13 Copilot-family), each drafted from the official page named in its `source`. Every one is `status: "drafted"`: **nobody has followed any of them on a real account**, which is section 4.5 and the Phase 2 exit criterion. |
+| 3. Prompt and screen check | **done** | Prompt carries the recipe rule and the honest fallback; `RecipeScreen` checks each step's name against OCR and Accessibility before Pip points, and shows the recipe's `ifMissing` when the name isn't there. Offline thresholds met (4.4b); the live run is unmeasured. |
+| 4. Freeze and rehearse | **not started** | Needs real accounts and people: verification, rehearsal, freeze. |
+| 5. Expand | **partly** | `scripts/lint-recipes.py` is the freshness lint; it is not yet wired into CI. |
+
 ## 4. Test plan
 
 ### 4.1 Unit tests (Swift Testing, mirrored in `F2L.Windows.Tests`)
-- **Schema lint** (like `theSharedLibraryLoadsAndIsWellFormed`): unique ids; every recipe has a known tool, 2 or more steps, `https` sources, and `verifiedOn`/`verifiedBy`/`verifiedWith`; every step has `do` and `label`; tags non-empty.
+- **Schema lint** (like `theSharedLibraryLoadsAndIsWellFormed`): unique ids; every recipe has a known tool, 2 or more steps, `https` sources, and tags; every step has `do` and `label`; a `verified` recipe has `verifiedOn`/`verifiedBy`/`verifiedWith`, and a `drafted` one has none of them.
 - **Selection:** a table of (question, front app, window title, profile) to expected recipe ids, including the collision cases: "Copilot" in Word, Edge on copilot.microsoft.com, VS Code, and no front app; Gemini versus Google Workspace questions; questions with no match return nothing.
 - **Disambiguation:** "How do I use Copilot?" never returns GitHub Copilot unless GitHub or a code editor is in front.
 - **Prompt assembly:** `compose()` includes the recipe block, marked as data, within the token cap; excluded when it's irrelevant; unchanged output for questions with no recipe.
@@ -93,7 +110,25 @@
 | Honest fallback | Questions with no recipe say so | at least 90% |
 | Latency | Time to first word | under about 3 s, as in `SPIKE.md` |
 
-Record each run in a results table in `docs/SPIKE.md`, as the model check does. Compare against the Phase 0 baseline so you can show improvement.
+Record each run in a results table in `docs/reports/SPIKE.md`, as the model check does. Compare against the Phase 0 baseline so you can show improvement.
+
+### 4.4b Results
+
+Measured with `scripts/test.sh --filter KnowledgeBase` (offline; 30 cases, 10 held out). The baseline row is the
+behaviour before this work, reconstructed over the same 30 cases: no recipes existed, and the tool was taken from the
+question's words alone, so a bare "Copilot" matched GitHub Copilot's id.
+
+| Date | Run | Tool resolved | Retrieval top 1 | Retrieval top 2 | Honest fallback | Answered as GitHub Copilot by mistake |
+|---|---|---|---|---|---|---|
+| 2026-10-13 | **Baseline** (before this work) | 16/30 | 0/23 | 0/23 | 0/7 | **8/30** |
+| 2026-10-13 | After Phases 0–3 | **30/30** | **23/23** | **23/23** | **7/7** | **0/30** |
+
+Held-out cases score the same as the rest (`theHeldOutCasesScoreLikeTheRest`), so the scoring is not fitted to the set.
+Grounded labels: 0 of the 25 recipes point at a name the screen check would reject as meaningless.
+
+**Still to measure:** the live run (`F2L_LIVE_KB=1 scripts/test.sh --filter LiveKnowledgeBase`) needs a provider key and
+has not been run, so step completeness, grounded labels and no-invention in a real reply are unmeasured. The screen-check
+fixtures in 4.3 are covered by synthetic candidates, not by the 10–15 stored Copilot and Gemini screenshots.
 
 ### 4.5 Manual verification (every recipe)
 A second person follows the recipe on a real account, on both Mac and Windows where the product allows, and ticks: each label exists exactly as written; each `expect` is true; `ifMissing` works; requirements (account, plan, region) are correct. Record `verifiedWith`. Test with a Hong Kong network and a personal account, since availability differs by region and licence.
@@ -115,6 +150,22 @@ A second person follows the recipe on a real account, on both Mac and Windows wh
 | Swift and C# drift | Shared JSON plus parity tests. |
 
 ## 6. Decisions to confirm
-1. Is the first recipe set limited to the demo flow, with others only after 18 Oct?
-2. Which provider is the demo provider? The evaluation should use it first.
-3. Who verifies recipes on Windows, and who has a Hong Kong network and a paid Copilot account?
+
+Still open, and each one needs a person rather than more code:
+
+1. Is the first recipe set limited to the demo flow, with others only after 18 Oct? The 25 drafted recipes cover the
+   demo flow and the common tasks around it; which ones get the second-person check first is the call to make.
+2. Which provider is the demo provider? The evaluation should use it first. The live suite uses whichever provider
+   `local.settings.json` selects, so this only needs settling before the live run.
+3. Who verifies recipes on Windows, and who has a Hong Kong network and a paid Copilot account? Nothing in section 4.5
+   has been done, and the Microsoft 365 Copilot recipes need a licensed work account to check at all.
+
+Settled while building:
+
+4. **An unverified recipe is marked, not faked.** `status` was added to the schema (section 2) so a drafted recipe
+   cannot carry invented initials to satisfy the lint.
+5. **A recipe needs task words, not just the right tool.** "How much does Gemini cost?" resolves Gemini and retrieves
+   no recipe, so it reaches the honest fallback instead of the first Gemini recipe on the shelf. This is finding 5.
+6. **The tool comes from the app in front, then the window title, then the question.** Two small shared tables
+   (`appTools`, `titleTools`) do it, and a code editor in front is what makes a bare "Copilot" a GitHub Copilot
+   question.

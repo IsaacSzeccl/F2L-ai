@@ -37,3 +37,26 @@ Both use the key from `local.settings.json` and send no screen picture.
 | Date | Model | Questions | Right next step | Bad targets | Typical reply time | Decision |
 |---|---|---|---|---|---|---|
 | 2026-10-08 | `deepseek-flash` | live follow-up check (3 runs) | 3/3 real answers | n/a (no screen) | about 2 s each | kept |
+
+## Knowledge-base evaluation
+
+A separate measure of answer quality: does Pip retrieve the right checked recipe, resolve the right tool, and admit
+when it has none? The set is `Tests/Fixtures/kb-eval.json` (30 cases, 10 held out). Thresholds and the full method are
+in `docs/plans/KNOWLEDGE_BASE_PLAN.md`, section 4.
+
+```bash
+# Offline: retrieval and tool resolution only, no network. Runs on every test run.
+scripts/test.sh --filter KnowledgeBase
+
+# Live: sends all 30 cases through the configured provider and scores the real replies. Costs tokens.
+F2L_LIVE_KB=1 scripts/test.sh --filter LiveKnowledgeBase
+
+# Which recipes nobody has followed on a real account yet, and which checks have gone stale.
+scripts/lint-recipes.py
+```
+
+| Date | Run | Tool resolved | Retrieval top 2 | Honest fallback | Answered as GitHub Copilot by mistake | Notes |
+|---|---|---|---|---|---|---|
+| 2026-10-13 | baseline, before the recipe work | 16/30 | 0/23 | 0/7 | 8/30 | No recipes existed; the tool came from the question's words alone. |
+| 2026-10-13 | offline, after Phases 0–3 | 30/30 | 23/23 | 7/7 | 0/30 | All 25 recipes are still `status: "drafted"`. |
+| — | live | — | — | — | — | Not yet run: needs a provider key and a decision on the demo provider. |
