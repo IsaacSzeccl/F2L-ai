@@ -2,6 +2,12 @@
 
 This log records the local implementation and design work through 8 October 2026. Entries describe the working checkout; they are not release tags or a claim that changes have been committed or pushed. Earlier work is grouped by milestone where individual edit times were not recorded. Git history remains the record of previously committed changes.
 
+## 14 October 2026 — Every lesson step looks at the screen again
+
+- **Problem:** a how-to answer plans all its steps from the one screenshot sent with the question, so steps 2, 3, ... were circled from a screen that had since changed (a menu opened, a page loaded, another app came to the front) and the circles were wrong or invented.
+- **Fix (Mac):** each time a step after the first is shown, F2L pictures the app as it is now and asks the AI where this step happens (`StepGuide`, `CompanionStepGuide.swift`). The reply gives the place and, when the screen isn't ready, a short note ("The Insert tab isn't open yet. Click Insert first."). The picture is dropped after the reply. Without a key, with sharing off, or on any failure, the step falls back to the first plan, as before. A step the AI can't see is found by name only, never drawn from the old guess.
+- 4 new Swift tests (164). **Windows not ported or compiled**: `MainWindow.Lesson.cs` / `ZoomLocate.cs` need the same per-step request.
+
 ## 13 October 2026 — Knowledge-base recipes and docs reorganisation
 
 - 25 drafted Gemini and Copilot recipes, Copilot disambiguation by front app, recipe-aware prompt and screen check, a 30-case offline evaluation (tool resolved 16/30 → 30/30), and a build fix so recipes ship in the Mac bundle. Swift tests 127 → 160. Windows C# not compiled.

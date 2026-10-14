@@ -96,7 +96,7 @@ Pick a model that accepts images (all defaults do). Both apps look in the same p
 
 ## Privacy
 
-- With **Share my screen with Pip** on, sending a question takes one picture of the app you were last using (never the whole screen, never in the background) and sends it with your question to the AI provider you chose. Pictures are not saved. Turn sharing off from Pip's menu at any time.
+- With **Share my screen with Pip** on, sending a question takes one picture of the app you were last using (never the whole screen, never in the background) and sends it with your question to the AI provider you chose. During a lesson, each step after the first takes a new picture of the app when the step appears (after you finish the one before, or press Show me again), so the circle matches what is on screen now; this needs the same sharing switch and goes to the same provider. Pictures are not saved. Turn sharing off from Pip's menu at any time.
 - "Circle A1" requests don't call the AI; they're answered on your computer by asking Excel.
 - The latest 500 messages and draft of each session are saved separately: Mac `~/Library/Application Support/F2L/sessions/<id>.json`, Windows `%LOCALAPPDATA%\F2L\sessions\<id>.json`. The legacy `conversation.json` is left untouched. Sessions are not automatically restored.
 - After an Excel question, the selection line refreshes while the input is open and sharing is enabled. These background reads stay local; only the selection at question time accompanies a model request.
