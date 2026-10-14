@@ -128,6 +128,10 @@ extension CompanionController {
     }
 
     func forgetPlaces() {
+        stepGuideTask?.cancel()
+        stepGuideTask = nil
+        lessonGoal = ""
+        lessonSteps = []
         replyCapture = nil
         replyTarget = nil
         stepTargets = []
@@ -183,6 +187,8 @@ extension CompanionController {
 
     func clearHighlight() {
         highlightVersion += 1
+        stepGuideTask?.cancel()
+        stepGuideTask = nil
         guide?.close()
         guide = nil
         stopTeachingCompanion()
