@@ -528,7 +528,16 @@ final class CompanionController: NSObject {
     func runTurn(_ entry: ConversationEntry, question: String, app: ForegroundApp?, turn myTurn: Int) async {
         var captured: CapturedScreen?
         var screenUnavailable: String?
+        // How long each part of the turn took, written to pointing.log ("kind": "turn") to find what makes Pip slow.
+        let began = Date()
+        var timing: [String: Any] = ["kind": "turn", "provider": coach.provider.name, "app": app?.name ?? ""]
+        func mark(_ name: String, since start: Date) { timing[name] = (Date().timeIntervalSince(start) * 100).rounded() / 100 }
+        var waiting: Task<Void, Never>?
         defer {
+            waiting?.cancel()
+            mark("totalSeconds", since: began)
+            timing["outcome"] = timing["outcome"] ?? (myTurn == turn ? "error-or-cancelled" : "superseded")
+            PointingDiagnostics.record(timing)
             captured?.jpeg.resetBytes(in: 0..<(captured?.jpeg.count ?? 0))
             if myTurn == turn, !closed {
                 pendingReply = nil
@@ -544,9 +553,12 @@ final class CompanionController: NSObject {
             if screenSharingEnabled {
                 do {
                     // A cell-pointing request only needs to know which window Excel is in; no picture is taken.
+                    let start = Date()
                     captured = directCellRequest ? try capture.locate(app) : try await capture.capture(app)
+                    mark("captureSeconds", since: start)
                 } catch let error as ScreenCaptureError {
                     screenUnavailable = error.message
+                    timing["capture"] = "unavailable"
                 }
             }
             guard myTurn == turn else { return }
@@ -575,7 +587,9 @@ final class CompanionController: NSObject {
                 answer = CoachAnswer(reply: result.verified || findOnScreen ? "Select \(cell.address): column \(cell.columnLetters), row \(cell.row)." : result.message,
                                      target: findOnScreen ? ScreenTarget(left: 0, top: 0, right: 0, bottom: 0, label: cell.address, cell: cell.address) : nil)
             } else {
+                var start = Date()
                 let names = await screenNames(captured)
+                mark("screenNamesSeconds", since: start)
                 guard myTurn == turn else { return }
                 // The front window's title says which page is open, so a bare "Copilot" question resolves to the
                 // product the learner is actually looking at.
@@ -584,12 +598,24 @@ final class CompanionController: NSObject {
                 turnRecipes = CoachClient.reference(question: question, profile: profileDocument.profile,
                                                     app: captured?.app.name, windowTitle: title,
                                                     library: .shared, recipes: .shared).recipes
+                start = Date()
+                // Say so when the AI is slow, instead of a "Thinking…" that looks stuck.
+                let providerName = coach.provider.name
+                waiting = Task { [weak self] in
+                    try? await Task.sleep(for: .seconds(12))
+                    guard !Task.isCancelled, let self, myTurn == self.turn, self.pendingReply === entry else { return }
+                    self.say("Still waiting for \(providerName). It's answering slowly right now; I'll show the reply as soon as it arrives.", emote: .thinking)
+                }
                 answer = try await coach.answer(question: CoachClient.compose(question: question, platform: "macOS", excel: context,
                     profile: profileDocument.profile, app: captured?.app.name, windowTitle: title, screenNames: names,
                     library: .shared, recipes: .shared), history: session.providerHistory(excluding: entry.turnID), jpeg: captured?.jpeg)
+                waiting?.cancel()
+                mark("aiSeconds", since: start)
+                timing["steps"] = answer.steps.count
             }
             try Task.checkCancellation()
             guard myTurn == turn else { return }
+            timing["outcome"] = "answered"
             entry.text = answer.text
             entry.status = "complete"
             pendingReply = nil
@@ -615,6 +641,7 @@ final class CompanionController: NSObject {
             guard myTurn == turn, !closed else { return }
             entry.text = (error as? CoachRequestError)?.message ?? (error as? ScreenCaptureError)?.message
                 ?? "I couldn't finish that request. Please try again."
+            timing["outcome"] = "error: \(error)"
             entry.status = "error"
             say(entry.text)
         }
