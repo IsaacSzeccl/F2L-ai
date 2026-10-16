@@ -5,6 +5,23 @@ import Vision
 /// Reads the words in a window picture on this Mac (Apple Vision; nothing is sent anywhere), so Pip can find a button,
 /// tab or Excel heading exactly where it appears on screen.
 enum ScreenReading {
+    /// The Mac's preferred languages that Vision can read (yue-Hant-HK → yue-Hant, ja-HK → ja-JP), then English.
+    static let recognitionLanguages: [String] = {
+        let supported = (try? VNRecognizeTextRequest().supportedRecognitionLanguages()) ?? ["en-US"]
+        var chosen: [String] = []
+        for preferred in Locale.preferredLanguages {
+            let parts = preferred.split(separator: "-").map(String.init)
+            guard let language = parts.first else { continue }
+            // Script first (zh-Hant, yue-Hant), then the language alone (ja → ja-JP).
+            let script = parts.count > 1 && parts[1].count == 4 ? "\(language)-\(parts[1])" : nil
+            let match = supported.first { $0 == script } ?? supported.first { $0 == preferred }
+                ?? supported.first { $0.split(separator: "-").first.map(String.init) == language }
+            if let match, !chosen.contains(match) { chosen.append(match) }
+        }
+        if !chosen.contains("en-US") { chosen.append("en-US") }
+        return chosen
+    }()
+
     /// Lines of words with their places in global top-left points. `frame` is the window the picture shows.
     static func lines(jpeg: Data, frame: CGRect) -> [[ScreenWord]] {
         guard !jpeg.isEmpty, let source = CGImageSourceCreateWithData(jpeg as CFData, nil),
@@ -13,6 +30,9 @@ enum ScreenReading {
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = false // headings like "D" and "12" must stay as they are
         request.minimumTextHeight = 0.006
+        // English alone can't read a Chinese or Japanese app: read the Mac's own languages as well.
+        request.recognitionLanguages = recognitionLanguages
+        request.automaticallyDetectsLanguage = true
         do { try VNImageRequestHandler(cgImage: image).perform([request]) } catch { return [] }
         func place(_ box: CGRect) -> CGRect {
             // Vision boxes are normalised with the origin at the bottom left.
