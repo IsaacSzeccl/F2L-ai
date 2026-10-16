@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
@@ -162,8 +163,67 @@ internal sealed class RecipeLibrary
             if (recipe.Tags.Any(tag => wanted.Contains(tag.ToLowerInvariant()))) score += 1;
             scored.Add((recipe, score, offset));
         }
+        if (scored.Count == 0 && IsGettingStarted(context.Question) && context.Profile is { } profile)
+            return Fitting(profile, order, account) is { } fit ? [fit] : [];
         return scored.OrderByDescending(entry => entry.Score).ThenBy(entry => entry.Offset)
             .Take(limit).Select(entry => entry.Recipe).ToList();
+    }
+
+    /// <summary>For a how-to question that names no tool and fits nothing on screen: the recipe, for any tool, that the
+    /// question's task clearly asks for (at least two of its tags). Same scoring as RecipeLibrary.suggest on Mac.</summary>
+    internal Recipe? Suggest(RecipeContext context, IReadOnlyList<AITool> tools)
+    {
+        var task = Words(context.Question);
+        var usable = tools.Select(tool => tool.Id).ToHashSet();
+        var account = context.Account.ToLowerInvariant();
+        var ranked = new List<(Recipe Recipe, int Score, int Offset)>();
+        for (var offset = 0; offset < Recipes.Count; offset++)
+        {
+            var recipe = Recipes[offset];
+            if (!usable.Contains(recipe.Tool)) continue;
+            if (account.Length > 0 && recipe.Requires.Account.Length > 0
+                && !recipe.Requires.Account.Any(allowed => allowed.ToLowerInvariant() == account)) continue;
+            var tags = recipe.Tags.Count(tag => Names(tag, task));
+            if (tags >= 2) ranked.Add((recipe, tags * 3 + Words(recipe.Title).Count(task.Contains), offset));
+        }
+        return ranked.OrderByDescending(entry => entry.Score).ThenBy(entry => entry.Offset).Select(entry => entry.Recipe).FirstOrDefault();
+    }
+
+    /// <summary>How many of a recipe's tags the question names. Same as RecipeLibrary.tagHits on Mac.</summary>
+    internal static int TagHits(Recipe recipe, string question)
+    {
+        var task = Words(question);
+        return recipe.Tags.Count(tag => Names(tag, task));
+    }
+
+    /// <summary>Said with a suggested recipe: propose the tool first, then teach it. Same wording as on Mac.</summary>
+    internal static string SuggestionNote(string tool) =>
+        $"\nNo tool was named and the app on screen has no recipe for this. F2L suggests {tool}: in \"reply\", propose it in one or two "
+        + $"sentences and say why it fits the learner's work, then teach every step, starting by opening {tool} when it is not on screen.";
+
+    /// <summary>"Teach me Gemini", "I'm new to Gemini": a question that names the tool and no task.</summary>
+    private static readonly Regex GettingStarted = new(@"\b(teach|learn|new|start|started|begin|beginner|use|using|help|show|guide|try)\b",
+        RegexOptions.IgnoreCase);
+
+    internal static bool IsGettingStarted(string question) => GettingStarted.IsMatch(question);
+
+    /// <summary>For a getting-started question, the resolved tool's recipe that best fits the learner's work (role,
+    /// goal and what they want to learn). Same scoring as RecipeLibrary.fitting on Mac.</summary>
+    private Recipe? Fitting(LearnerProfile profile, Dictionary<string, int> order, string account)
+    {
+        var work = Words(string.Join(" ", new[] { profile.Role, profile.Goal }.Concat(profile.Learning ?? [])));
+        if (work.Count == 0) return null;
+        var ranked = new List<(Recipe Recipe, int Score, int Offset)>();
+        for (var offset = 0; offset < Recipes.Count; offset++)
+        {
+            var recipe = Recipes[offset];
+            if (!order.TryGetValue(recipe.Tool, out var rank)) continue;
+            if (account.Length > 0 && recipe.Requires.Account.Length > 0
+                && !recipe.Requires.Account.Any(allowed => allowed.ToLowerInvariant() == account)) continue;
+            var evidence = 3 * recipe.Tags.Count(tag => Names(tag, work)) + Words(recipe.Title).Count(work.Contains);
+            if (evidence > 0) ranked.Add((recipe, evidence * 10 - rank, offset));
+        }
+        return ranked.OrderByDescending(entry => entry.Score).ThenBy(entry => entry.Offset).Select(entry => entry.Recipe).FirstOrDefault();
     }
 
     /// <summary>About 1,500 tokens. Same as RecipeLibrary.noteLimit on Mac.</summary>

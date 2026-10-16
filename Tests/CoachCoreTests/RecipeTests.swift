@@ -265,3 +265,30 @@ import Testing
         #expect(RecipeReplyCheck.check(reply, recipe: recipe).isGrounded)
     }
 }
+
+@Suite struct GettingStarted {
+    @Test func aNewAccountantAskingAboutGeminiIsShownTheInvoiceSkill() throws {
+        let library = RecipeLibrary.shared, tools = AIToolLibrary.shared
+        var profile = LearnerProfile()
+        profile.role = "Accountant"; profile.goal = "Invoice Processing"
+        let gemini = try #require(tools.find("gemini"))
+        for question in ["Teach me to use Gemini", "I'm new to Gemini. Teach me how to use it."] {
+            let chosen = library.select(RecipeContext(question: question, profile: profile), tools: [gemini])
+            #expect(chosen.map(\.id) == ["gemini-invoice-review-skill"], "\(question): \(chosen.map(\.id))")
+        }
+        // Without a profile that fits, a bare tool question still gets no recipe (Pip says it isn't sure).
+        #expect(library.select(RecipeContext(question: "Teach me to use Gemini"), tools: [gemini]).isEmpty)
+    }
+}
+
+@Suite struct ProposingATool {
+    @Test func anAccountantsInvoiceQuestionInExcelIsAnsweredWithGemini() {
+        let question = "I'm an accountant. Can you teach me a way to read my invoices automatically?"
+        let found = CoachClient.reference(question: question, app: "Microsoft Excel", library: .shared, recipes: .shared)
+        #expect(found.recipes.map(\.id) == ["gemini-invoice-review-skill"])
+        #expect(found.tools.first?.id == "gemini" && found.notes.contains("F2L suggests Gemini"))
+        // A question that names its own tool is not redirected.
+        #expect(!CoachClient.reference(question: "How do I sum a column in Excel?", app: "Microsoft Excel", library: .shared, recipes: .shared)
+            .notes.contains("F2L suggests"))
+    }
+}

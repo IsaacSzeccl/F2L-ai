@@ -57,6 +57,14 @@ struct PlaceFinder {
             result.place = snapped; result.source = "screen-text"
             log["matched"] = read.first { $0.frame == snapped }?.name ?? ""
         }
+        // "Customize 自訂" or "自訂 (Customize)": the on-screen half alone.
+        if result.place == nil, TargetSnap.isWideScript(label) {
+            let shown = label.split { !TargetSnap.isWideScript(String($0)) }.map(String.init).max { $0.count < $1.count }
+            if let shown, shown != label, let snapped = TargetSnap.snap(box: estimate, label: shown, candidates: controls) ?? TargetSnap.snap(box: estimate, label: shown, candidates: read, byPosition: false) {
+                result.place = snapped; result.source = "accessibility"
+                log["matched"] = (controls + read).first { $0.frame == snapped }?.name ?? shown
+            }
+        }
         // Not there by name: the app may be in another language, or call the control something else ("Open
         // Sidebar" against 開啟側邊欄 or "Main menu"). Ask the AI which name on screen is the same control (text only).
         if result.place == nil, !TargetSnap.isGeneric(label), askAI, coach.isConfigured {

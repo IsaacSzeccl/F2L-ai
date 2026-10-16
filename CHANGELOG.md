@@ -2,6 +2,10 @@
 
 This log records the local implementation and design work through 8 October 2026. Entries describe the working checkout; they are not release tags or a claim that changes have been committed or pushed. Earlier work is grouped by milestone where individual edit times were not recorded. Git history remains the record of previously committed changes.
 
+## 16 October 2026 — Pip proposes the right tool (the demo story)
+
+- "I'm an accountant… teach me a way to read my invoices automatically" names no tool. With Excel in front it picked a weak Copilot recipe; with nothing fitting it had none. Now, when the question names no tool and another tool's recipe fits the task clearly better (more of its tags), Pip proposes that tool and why, then teaches it from where the learner is (`RecipeLibrary.suggest`, `suggestionNote`; both apps). A getting-started question ("teach me to use Gemini") picks the recipe that fits the learner's profile (`fitting`). The invoice lesson says to recommend a Skill first.
+
 ## 16 October 2026 — Answers in the learner's language; "the demo" finds the demo lesson
 
 - An English question about a Chinese Gemini came back all in Chinese, and "Let's try the demo" or "create the skill" found no lesson (Chrome's tab title "Google Gemini" didn't count as Gemini), so Pip pointed at an old chat and invented a "save as notebook" step. Now each question says which language the learner wrote in (`TeachingReply.language(of:)`, both apps) and Pip answers in it, naming controls with their on-screen names in brackets ("Click Customize (自訂)"); "Google Gemini" in a window title means Gemini; the invoice lesson is tagged "demo".

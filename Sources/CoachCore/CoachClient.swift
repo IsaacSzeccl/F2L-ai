@@ -324,12 +324,23 @@ public struct CoachClient: Sendable {
         -> (tools: [AITool], recipes: [Recipe], notes: String) {
         // The tool is resolved from the app in front before the question's own words, so a bare "Copilot" in Word is
         // not answered with GitHub Copilot's coding notes.
-        let tools = library?.resolve(question: question, app: app, windowTitle: windowTitle) ?? []
+        var tools = library?.resolve(question: question, app: app, windowTitle: windowTitle) ?? []
         var notes = library?.referenceNotes(question: question, profile: profile, tools: tools) ?? ""
         var chosen: [Recipe] = []
+        let moment = RecipeContext(question: question, app: app ?? "", windowTitle: windowTitle ?? "", account: account, profile: profile)
+        if let recipes, !tools.isEmpty { chosen = recipes.select(moment, tools: tools) }
+        // Nothing named, and what's on screen fits the task less well than another tool's recipe (or not at all):
+        // propose the tool whose recipe the task asks for.
+        if let recipes, let library, library.mentioned(in: question).isEmpty,
+           QuestionIntent.classify(question) == .procedural || RecipeLibrary.isGettingStarted(question),
+           let suggested = recipes.suggest(moment, tools: library.tools), !chosen.contains(where: { $0.id == suggested.id }),
+           RecipeLibrary.tagHits(suggested, question: question) > (chosen.first.map { RecipeLibrary.tagHits($0, question: question) } ?? 0),
+           let tool = library.find(suggested.tool) {
+            chosen = [suggested]
+            tools.insert(tool, at: 0)
+            notes = library.referenceNotes(question: question, profile: profile, tools: tools) + RecipeLibrary.suggestionNote(tool.name)
+        }
         if let recipes, !tools.isEmpty {
-            let moment = RecipeContext(question: question, app: app ?? "", windowTitle: windowTitle ?? "", account: account, profile: profile)
-            chosen = recipes.select(moment, tools: tools)
             if !chosen.isEmpty { notes += recipes.notes(for: chosen) }
             // Only a how-to question is told there is no recipe; a greeting or a quick fact needs no such warning.
             else if QuestionIntent.classify(question) == .procedural { notes += RecipeLibrary.noRecipeNote }

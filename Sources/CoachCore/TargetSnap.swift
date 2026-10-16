@@ -71,7 +71,7 @@ public enum TargetSnap {
     }
 
     /// Han, kana or hangul in the text.
-    static func isWideScript(_ text: String) -> Bool {
+    public static func isWideScript(_ text: String) -> Bool {
         text.unicodeScalars.contains { (0x3040...0x30FF).contains($0.value) || (0x3400...0x9FFF).contains($0.value)
             || (0xAC00...0xD7AF).contains($0.value) || (0xF900...0xFAFF).contains($0.value) }
     }

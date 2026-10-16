@@ -398,7 +398,7 @@
     ],
     "plan": "free ok",
     "regions": [],
-    "notes": "Up to 10 files can be attached to one prompt, subject to availability; if a batch is refused, send three and then two with the same skill."
+    "notes": "When the learner is new or asks how to start with Gemini for their invoice work, first recommend a Skill in one or two sentences: Gemini then follows the same rules on every invoice, writes MISSING or REVIEW instead of guessing, and a person still checks every row. Then teach every step. Up to 10 files can be attached to one prompt, subject to availability; if a batch is refused, send three and then two with the same skill."
    },
    "tags": [
     "invoice",
@@ -426,7 +426,9 @@
     "total",
     "demo",
     "accounts",
-    "accountant"
+    "processing",
+    "finance",
+    "bookkeeping"
    ],
    "steps": [
     {

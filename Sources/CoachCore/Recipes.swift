@@ -274,7 +274,64 @@ public struct RecipeLibrary: Sendable {
             if recipe.tags.contains(where: { wanted.contains($0.lowercased()) }) { score += 1 }
             return (recipe, score, entry.offset)
         }
+        if scored.isEmpty, Self.isGettingStarted(context.question), let profile = context.profile {
+            return fitting(profile, tools: tools, order: order, account: account).map { [$0] } ?? []
+        }
         return scored.sorted { ($0.score, -$0.offset) > ($1.score, -$1.offset) }.prefix(limit).map { $0.recipe }
+    }
+
+    /// For a how-to question that names no tool and fits nothing on screen ("teach me a way to read my invoices
+    /// automatically" with Excel in front): the recipe, for any tool, that the question's task clearly asks for (at
+    /// least two of its tags), so Pip can propose that tool and teach it. Nil when nothing fits that well.
+    public func suggest(_ context: RecipeContext, tools: [AITool]) -> Recipe? {
+        let task = Self.words(context.question)
+        let usable = Set(tools.map(\.id))
+        let account = context.account.lowercased()
+        let ranked = recipes.enumerated().compactMap { entry -> (recipe: Recipe, score: Int, offset: Int)? in
+            let recipe = entry.element
+            guard usable.contains(recipe.tool) else { return nil }
+            if !account.isEmpty, !recipe.requires.account.isEmpty,
+               !recipe.requires.account.contains(where: { $0.lowercased() == account }) { return nil }
+            let tags = recipe.tags.filter { Self.names($0, in: task) }.count
+            return tags >= 2 ? (recipe, tags * 3 + Self.words(recipe.title).intersection(task).count, entry.offset) : nil
+        }
+        return ranked.sorted { ($0.score, -$0.offset) > ($1.score, -$1.offset) }.first?.recipe
+    }
+
+    /// How many of a recipe's tags the question names: how clearly the question asks for it.
+    public static func tagHits(_ recipe: Recipe, question: String) -> Int {
+        let task = words(question)
+        return recipe.tags.filter { names($0, in: task) }.count
+    }
+
+    /// Said with a suggested recipe: propose the tool first, then teach it from where the learner is.
+    public static func suggestionNote(_ tool: String) -> String {
+        "\nNo tool was named and the app on screen has no recipe for this. F2L suggests \(tool): in \"reply\", propose it in one or two "
+            + "sentences and say why it fits the learner's work, then teach every step, starting by opening \(tool) when it is not on screen."
+    }
+
+    /// "Teach me Gemini", "I'm new to Gemini": a question that names the tool and no task.
+    static let gettingStarted = try! NSRegularExpression(
+        pattern: #"\b(teach|learn|new|start|started|begin|beginner|use|using|help|show|guide|try)\b"#, options: [.caseInsensitive])
+
+    static func isGettingStarted(_ question: String) -> Bool {
+        gettingStarted.firstMatch(in: question, range: NSRange(question.startIndex..., in: question)) != nil
+    }
+
+    /// For a getting-started question, the resolved tool's recipe that best fits the learner's work (their role, goal
+    /// and what they want to learn), so a new accountant asking "teach me Gemini" is shown the invoice skill.
+    func fitting(_ profile: LearnerProfile, tools: [AITool], order: [String: Int], account: String) -> Recipe? {
+        let work = Self.words(([profile.role, profile.goal] + profile.learning).joined(separator: " "))
+        guard !work.isEmpty else { return nil }
+        let ranked = recipes.enumerated().compactMap { entry -> (recipe: Recipe, score: Int, offset: Int)? in
+            let recipe = entry.element
+            guard let rank = order[recipe.tool] else { return nil }
+            if !account.isEmpty, !recipe.requires.account.isEmpty,
+               !recipe.requires.account.contains(where: { $0.lowercased() == account }) { return nil }
+            let evidence = 3 * recipe.tags.filter { Self.names($0, in: work) }.count + Self.words(recipe.title).intersection(work).count
+            return evidence > 0 ? (recipe, evidence * 10 - rank, entry.offset) : nil
+        }
+        return ranked.sorted { ($0.score, -$0.offset) > ($1.score, -$1.offset) }.first?.recipe
     }
 
     /// About 1,500 tokens: whole recipes are worth their cost, but never more than a question's worth of them.

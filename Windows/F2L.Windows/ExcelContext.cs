@@ -26,8 +26,19 @@ internal sealed record ExcelContext(string Sheet, IReadOnlyList<string> Areas, s
         // not answered with GitHub Copilot's coding notes.
         var tools = library?.Resolve(question, app, windowTitle) ?? [];
         var text = library?.ReferenceNotes(question, profile, tools) ?? "";
+        var moment = new RecipeContext(question, app ?? "", windowTitle ?? "", account, profile);
+        IReadOnlyList<Recipe> chosen = recipes is null || tools.Count == 0 ? [] : recipes.Select(moment, tools);
+        // Nothing named and nothing on screen fits: propose the tool whose recipe the task asks for.
+        if (recipes is not null && library is not null && library.Mentioned(question).Count == 0
+            && (QuestionIntentClassifier.Classify(question) == QuestionIntent.Procedural || RecipeLibrary.IsGettingStarted(question))
+            && recipes.Suggest(moment, library.Tools) is { } suggested && chosen.All(recipe => recipe.Id != suggested.Id)
+            && RecipeLibrary.TagHits(suggested, question) > (chosen.Count > 0 ? RecipeLibrary.TagHits(chosen[0], question) : 0)
+            && library.Find(suggested.Tool) is { } tool)
+        {
+            tools = new[] { tool }.Concat(tools).ToList();
+            return (tools, [suggested], library.ReferenceNotes(question, profile, tools) + RecipeLibrary.SuggestionNote(tool.Name) + recipes.Notes([suggested]));
+        }
         if (recipes is null || tools.Count == 0) return (tools, [], text);
-        var chosen = recipes.Select(new RecipeContext(question, app ?? "", windowTitle ?? "", account, profile), tools);
         if (chosen.Count > 0) return (tools, chosen, text + recipes.Notes(chosen));
         // Only a how-to question is told there is no recipe; a greeting or a quick fact needs no such warning.
         return (tools, [], QuestionIntentClassifier.Classify(question) == QuestionIntent.Procedural
