@@ -4,7 +4,7 @@ These decisions were settled in the design review of the v1 PRD (Oct 2026). Wher
 
 ## Current companion decisions — 8 October 2026
 
-This section supersedes conflicting presentation and Windows implementation details in the historical sections below. See [CHANGELOG.md](../CHANGELOG.md) for the change and validation record.
+This section supersedes conflicting presentation and Windows implementation details in the historical sections below. See [CHANGELOG.md](../../CHANGELOG.md) for the change and validation record.
 
 - **F2L AI** (F2L) remains the product name; **Pip** is its amber lantern companion. The Mac and Windows apps are two native implementations of the same companion and must behave identically: same artwork, layout, wording, menus, conversation file and teaching rules. Shared rules exist once per platform (`Sources/CoachCore`, and the matching C# files) and the Swift tests compare them with the C# sources. Each platform reaches the desktop through its own APIs (Accessibility and ScreenCaptureKit on Mac; Win32, UI Automation and Excel automation on Windows).
 - Teaching starts with the useful instruction or answer, normally one short step. Omit praise, filler and unnecessary follow-up questions. Expressions follow question type and active listening/thinking/speaking, not question length or difficulty labels.
@@ -37,7 +37,7 @@ These explicit user decisions supersede conflicting product scope and presentati
 | 7 | **Push-to-talk** by holding the right ⌥ Option key, or the orb. Pressing it again interrupts the coach. | Always-listening with barge-in | No echo problems; interrupting is trivial. |
 | 8 | **Screen context per turn:** Accessibility controls every turn; a fresh screenshot only when the words refer to the screen; otherwise a cached one-line summary from a background vision loop that runs only when the window changes. | Separate realtime session context | Saves latency and cost on turns that don't need pixels. |
 | 9 | **Proactive nudges only from Accessibility signals:** typed into the circled box and paused, sent it, or clicked the circled control. | Frame-diff vision | Cheap and reliable; doesn't talk over the learner at random moments. |
-| 10 | **LLM: z.ai first**, behind one `LLMClient` protocol; Anthropic is implemented as a switch in Settings. | GPT-4o / Claude | User's choice; the week-1 spike picks the exact model ([SPIKE.md](SPIKE.md)). |
+| 10 | **LLM: z.ai first**, behind one `LLMClient` protocol; Anthropic is implemented as a switch in Settings. | GPT-4o / Claude | User's choice; the week-1 spike picks the exact model ([SPIKE.md](../reports/SPIKE.md)). |
 | 11 | **Privacy:** capture only the front window, never the full display; no screenshot while a password box is focused (checked right before each capture); a pause control; nothing written to disk (the spike snapshot tool is developer-mode only); the start screen names each vendor and what it receives, including the background window summaries and whether speech stays on-device. | "Processed live and not stored" | We can't promise vendors' retention, so we state what's sent and to whom. |
 | 12 | **Keys in the macOS Keychain**, entered through Settings; the app runs only on team Macs for Oct 18 and Oct 24. | Not specified | Keys never go in the repo or the app binary. A hosted proxy is the "production" step for the pitch, not built now. |
 | 13 | **English** demo. | English / Mandarin | Cantonese is a roadmap item, not a claim. |
@@ -46,4 +46,4 @@ These explicit user decisions supersede conflicting product scope and presentati
 
 ## Things the code relies on that were not verified live
 
-These are listed in [SETUP.md](../SETUP.md), "What has and hasn't been verified": z.ai's base64 image format, z.ai and ElevenLabs data retention, and Chrome Accessibility coverage on each AI site.
+These are listed in [SETUP.md](../../SETUP.md), "What has and hasn't been verified": z.ai's base64 image format, z.ai and ElevenLabs data retention, and Chrome Accessibility coverage on each AI site.

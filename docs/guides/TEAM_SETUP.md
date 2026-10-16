@@ -28,7 +28,7 @@ Create `local.settings.json` in the `F2L-ai` folder (it's Git-ignored):
 { "DeepSeekApiKey": "sk-…", "ElevenLabsApiKey": "" }
 ```
 
-Use your own key and never commit it. Other places F2L can read keys from are listed in the [README](../README.md#keys).
+Use your own key and never commit it. Other places F2L can read keys from are listed in the [README](../../README.md#keys).
 
 ## Step 3 (Mac only): sign once
 
@@ -100,4 +100,4 @@ dotnet run --project Windows/F2L.Windows/F2L.Windows.csproj               # run 
 | Voice in and out | `Voice.swift` | `VoiceServices.cs` |
 | Artwork and fonts (shared) | `Windows/F2L.Windows/Assets/` | same |
 
-When you change one platform's shared rules, change the other's to match and run both test suites. Decisions and their reasons are in [DECISIONS.md](DECISIONS.md).
+When you change one platform's shared rules, change the other's to match and run both test suites. Decisions and their reasons are in [DECISIONS.md](../reference/DECISIONS.md).

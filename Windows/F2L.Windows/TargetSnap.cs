@@ -24,7 +24,7 @@ internal static class TargetSnap
         return string.Join(' ', words);
     }
 
-    private static bool Matches(string name, string label)
+    internal static bool Matches(string name, string label)
     {
         name = Normalise(name);
         if (name.Length == 0) return false;
@@ -35,7 +35,7 @@ internal static class TargetSnap
         return nameWords.Count > 0 && labelWords.Count > 0 && (labelWords.IsSubsetOf(nameWords) || nameWords.IsSubsetOf(labelWords));
     }
 
-    private static bool Sensible(Rect frame, double scale) =>
+    internal static bool Sensible(Rect frame, double scale) =>
         frame.Width >= 6 * scale && frame.Height >= 6 * scale && frame.Width <= 700 * scale && frame.Height <= 300 * scale;
 
     /// <summary>The control the model meant, or null to keep its own (approximate) box.</summary>

@@ -2,6 +2,17 @@
 
 This log records the local implementation and design work through 8 October 2026. Entries describe the working checkout; they are not release tags or a claim that changes have been committed or pushed. Earlier work is grouped by milestone where individual edit times were not recorded. Git history remains the record of previously committed changes.
 
+## 14 October 2026 — Every lesson step looks at the screen again
+
+- **Problem:** a how-to answer plans all its steps from the one screenshot sent with the question, so steps 2, 3, ... were circled from a screen that had since changed (a menu opened, a page loaded, another app came to the front) and the circles were wrong or invented.
+- **Fix (Mac):** each time a step after the first is shown, F2L pictures the app as it is now and asks the AI where this step happens (`StepGuide`, `CompanionStepGuide.swift`). The reply gives the place and, when the screen isn't ready, a short note ("The Insert tab isn't open yet. Click Insert first."). The picture is dropped after the reply. Without a key, with sharing off, or on any failure, the step falls back to the first plan, as before. A step the AI can't see is found by name only, never drawn from the old guess.
+- 4 new Swift tests (164). **Windows not ported or compiled**: `MainWindow.Lesson.cs` / `ZoomLocate.cs` need the same per-step request.
+
+## 13 October 2026 — Knowledge-base recipes and docs reorganisation
+
+- 25 drafted Gemini and Copilot recipes, Copilot disambiguation by front app, recipe-aware prompt and screen check, a 30-case offline evaluation (tool resolved 16/30 → 30/30), and a build fix so recipes ship in the Mac bundle. Swift tests 127 → 160. Windows C# not compiled.
+- Docs moved into `guides/`, `plans/`, `reference/`, `reports/`. See `docs/guides/MERGE_GUIDE.md` and `docs/reports/13102026-knowledge-base-recipes-and-docs-reorg.md`.
+
 ## 11 October 2026 — Review of the brand and animation work
 
 - **Planned well and integrated cleanly:** one coordinated palette across the ten pictures, decorative images hidden from screen readers with the native text kept, every file listed with its hash (37 assets, all match), and the same pictures in the same places on Mac and Windows.
@@ -138,7 +149,7 @@ This log records the local implementation and design work through 8 October 2026
 - Consolidated the changes below, including the known validation limits, and updated the current product decisions.
 - Kept both original character concept sheets, both production sprite atlases and their exact generation prompts in the repository. Confirmed all four generated PNGs match the original image-generation outputs byte for byte.
 - Archived the original layout exploration HTML and both controlled WPF UI previews under `docs/`. The preview copies survive cleanup of the ignored `Windows/artifacts/` directory.
-- Added the [asset inventory](docs/ASSET_INVENTORY.md), a [SHA-256 manifest](docs/asset-manifest.json), and a repeatable [asset verification script](scripts/verify-assets.ps1). The inventory includes font attribution and the bundled licence.
+- Added the [asset inventory](docs/reference/ASSET_INVENTORY.md), a [SHA-256 manifest](docs/asset-manifest.json), and a repeatable [asset verification script](scripts/verify-assets.ps1). The inventory includes font attribution and the bundled licence.
 - Added Git attributes that preserve asset bytes across Windows/macOS checkouts, including the archived prompt and licence text covered by the checksums.
 - Linked the records from the project and Windows READMEs. This milestone changes documentation and asset storage only; the application checks below were completed during the implementation milestone.
 - Archive verification passed for all 13 files (7,968,316 bytes), with no unlisted assets. Checked 44 local documentation links, asset Git attributes, asset inclusion, the local-settings exclusion and whitespace. No application rebuild was needed for this documentation/archive change.
@@ -199,21 +210,21 @@ Primary files: `ConversationSession.cs`, `ConversationView.xaml` / `.cs`, `Voice
 
 - Renamed the product from Beacon to F2L in display names, package products, bundle metadata, scripts and setup documentation. Historical source directory names remain where renaming was unnecessary.
 - Set macOS and Windows as the intended release platforms. The present native Windows companion and original macOS prototype have different feature coverage; release parity is not yet established.
-- Recorded the floating-companion concept, separate question/reply areas, context-driven emotions, two-way voice, uncluttered guidance and future expansion from AI tools to other desktop tasks in the [design plan](docs/COMPANION_DESIGN_PLAN.md) and [compatibility plan](docs/COMPATIBILITY_PLAN.md).
+- Recorded the floating-companion concept, separate question/reply areas, context-driven emotions, two-way voice, uncluttered guidance and future expansion from AI tools to other desktop tasks in the [design plan](docs/plans/COMPANION_DESIGN_PLAN.md) and [compatibility plan](docs/plans/COMPATIBILITY_PLAN.md).
 - Created Pip, Mori and Tiko concept studies, then the F2L-labelled revision. Preserved the original sheet and generation prompts. Selected the amber lantern Pip for the Windows implementation.
 - Added the native .NET 10 WPF Windows application: floating draggable/resizable Pip, companion controls, conversation flow, screen guidance, Windows voice input/output and optional ElevenLabs speech.
 - Added DeepSeek configuration in a local Git-ignored file with no API-key entry form. The current configured coach model is `deepseek-flash`; active-app screenshots are supplied when screen sharing is enabled, without requiring an attachment.
 - Added Windows setup instructions and a sample configuration; excluded local settings, build output and temporary artifacts from Git.
 - Created/repaired the owner's **F2L Companion** desktop shortcut to point to this OneDrive checkout's Debug executable. The installed shortcut is outside the repository; its target is `Windows/F2L.Windows/bin/Debug/net10.0-windows/F2L.Windows.exe` relative to this checkout. A build is required before using that target on another machine.
 
-Primary areas: `Windows/`, `App/Info.plist`, `Package.swift`, product strings under `Sources/`, `.gitignore`, `scripts/`, `README.md`, `SETUP.md`, `docs/TEAM_SETUP.md` and `docs/SPIKE.md`.
+Primary areas: `Windows/`, `App/Info.plist`, `Package.swift`, product strings under `Sources/`, `.gitignore`, `scripts/`, `README.md`, `SETUP.md`, `docs/guides/TEAM_SETUP.md` and `docs/reports/SPIKE.md`.
 
 ## Existing macOS review fixes included in this checkout
 
 - Cancelled in-flight work on pause and invalidated stale captures/pointers after screen-sharing or source changes.
 - Cancelled/reset background summaries so outdated context cannot leak into a later question.
 - Prevented screenshot-region pointing without an available screenshot and added the corresponding core regression coverage.
-- Recorded the review against commit `5626501` in [LOCAL_REVIEW.md](docs/LOCAL_REVIEW.md). These Swift changes were reviewed locally but not built or tested on this Windows host; the document retains its original review date and limitations.
+- Recorded the review against commit `5626501` in [LOCAL_REVIEW.md](docs/reports/LOCAL_REVIEW.md). These Swift changes were reviewed locally but not built or tested on this Windows host; the document retains its original review date and limitations.
 
 Primary files: `Sources/Beacon/CoachSession.swift`, `Sources/Beacon/ScreenCapturer.swift`, `Sources/CoachCore/Pointer.swift`, `Sources/CoachCore/PromptBuilder.swift` and `Tests/CoachCoreTests/CoachCoreTests.swift`.
 

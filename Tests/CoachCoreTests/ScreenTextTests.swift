@@ -29,9 +29,16 @@ import Testing
 
     @Test func misreadOrMissingHeadingsStillPlaceTheCell() throws {
         // Reading single letters is unreliable: A and E are missed, C comes back lower case, rows 3 and 6 are missed.
-        let words = ["B", "c", "D", "F"].map { letter in
-            ScreenWord(text: letter, frame: CGRect(x: 100 + CGFloat(Int(letter.uppercased().unicodeScalars.first!.value) - 65) * 64 + 28, y: 182, width: 8, height: 12))
-        } + [1, 2, 4, 5, 7].map { ScreenWord(text: "\($0)", frame: CGRect(x: 70, y: 200 + CGFloat($0 - 1) * 20 + 4, width: 12, height: 12)) }
+        let columns: [ScreenWord] = ["B", "c", "D", "F"].map { letter in
+            let index: Int = Int(letter.uppercased().unicodeScalars.first!.value) - 65
+            let x: CGFloat = 100 + CGFloat(index) * 64 + 28
+            return ScreenWord(text: letter, frame: CGRect(x: x, y: 182, width: 8, height: 12))
+        }
+        let rows: [ScreenWord] = [1, 2, 4, 5, 7].map { (row: Int) in
+            let y: CGFloat = 200 + CGFloat(row - 1) * 20 + 4
+            return ScreenWord(text: "\(row)", frame: CGRect(x: 70, y: y, width: 12, height: 12))
+        }
+        let words: [ScreenWord] = columns + rows
         let d3 = try #require(ScreenText.excelCell("D3", words: words))
         #expect(abs(d3.minX - 292) < 0.5 && abs(d3.minY - 240) < 0.5 && abs(d3.width - 64) < 0.5 && abs(d3.height - 20) < 0.5)
     }

@@ -6,7 +6,7 @@ F2L AI helps people set up and learn AI tools and everyday work apps (ChatGPT, G
 
 The Mac and Windows apps are two native implementations of the same companion: same artwork, layout, wording, menus, saved conversation format and teaching rules.
 
-**New teammate?** Start with [docs/TEAM_SETUP.md](docs/TEAM_SETUP.md). Owner's checklist: [SETUP.md](SETUP.md). Decisions: [docs/DECISIONS.md](docs/DECISIONS.md). Changes and validation: [CHANGELOG.md](CHANGELOG.md). Artwork, prompts and font licences: [docs/ASSET_INVENTORY.md](docs/ASSET_INVENTORY.md).
+**New teammate?** Start with [docs/guides/TEAM_SETUP.md](docs/guides/TEAM_SETUP.md). Owner's checklist: [SETUP.md](SETUP.md). Decisions: [docs/reference/DECISIONS.md](docs/reference/DECISIONS.md). Changes and validation: [CHANGELOG.md](CHANGELOG.md). Artwork, prompts and font licences: [docs/reference/ASSET_INVENTORY.md](docs/reference/ASSET_INVENTORY.md).
 
 ## Open Pip
 
@@ -96,7 +96,7 @@ Pick a model that accepts images (all defaults do). Both apps look in the same p
 
 ## Privacy
 
-- With **Share my screen with Pip** on, sending a question takes one picture of the app you were last using (never the whole screen, never in the background) and sends it with your question to the AI provider you chose. Pictures are not saved. Turn sharing off from Pip's menu at any time.
+- With **Share my screen with Pip** on, sending a question takes one picture of the app you were last using (never the whole screen, never in the background) and sends it with your question to the AI provider you chose. During a lesson, each step after the first takes a new picture of the app when the step appears (after you finish the one before, or press Show me again), so the circle matches what is on screen now; this needs the same sharing switch and goes to the same provider. Pictures are not saved. Turn sharing off from Pip's menu at any time.
 - "Circle A1" requests don't call the AI; they're answered on your computer by asking Excel.
 - The latest 500 messages and draft of each session are saved separately: Mac `~/Library/Application Support/F2L/sessions/<id>.json`, Windows `%LOCALAPPDATA%\F2L\sessions\<id>.json`. The legacy `conversation.json` is left untouched. Sessions are not automatically restored.
 - After an Excel question, the selection line refreshes while the input is open and sharing is enabled. These background reads stay local; only the selection at question time accompanies a model request.
@@ -160,7 +160,7 @@ Windows/F2L.Windows.Tests/        Windows regression harness
 scripts/                          build-app.sh, run.sh, test.sh, setup-signing.sh, check-secrets.sh,
                                   tools/pip_frames.py (atlas rectangles), tools/preview_pip.swift (animation GIFs),
                                   tools/package_brand_icons.py (.icns/.ico), tools/preview_brand.swift (brand board)
-docs/                             Decisions, setup, design history, asset inventory and manifest
+docs/                             guides/, plans/, reference/, reports/ (see docs/README.md), plus asset roots companion-concepts/ and previews/
 ```
 
 ## Build and test

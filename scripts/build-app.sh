@@ -24,8 +24,8 @@ cp "$ROOT/App/Info.plist" "$APP/Contents/Info.plist"
 # Pip's artwork and fonts are shared with the Windows app; there is one copy in the repository.
 cp "$ASSETS/Pip/"*.png "$ASSETS/Pip/frames.json" "$APP/Contents/Resources/Assets/Pip/"
 cp "$ASSETS/Fonts/"*.ttf "$ASSETS/Fonts/LICENSE.txt" "$APP/Contents/Resources/Assets/Fonts/"
-# The AI tools library Pip teaches and recommends from (shared with Windows).
-cp "$ASSETS/Knowledge/ai-tools.json" "$APP/Contents/Resources/Assets/Knowledge/"
+# The AI tools library and the checked task recipes Pip teaches from (both shared with Windows).
+cp "$ASSETS/Knowledge/ai-tools.json" "$ASSETS/Knowledge/recipes.json" "$APP/Contents/Resources/Assets/Knowledge/"
 # Original brand masters and illustrations are shared by both desktop hosts.
 mkdir -p "$APP/Contents/Resources/Assets/Brand" "$APP/Contents/Resources/Assets/Illustrations"
 # app-icon.png is only the master for F2L.icns, so it stays out of the app.

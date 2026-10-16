@@ -1,0 +1,445 @@
+{
+ "version": 1,
+ "note": "The knowledge-base evaluation set. Ten cases are held out: nobody tunes the scoring on them.",
+ "cases": [
+  {
+   "id": "copilot-in-word",
+   "question": "How do I use Copilot to write this up?",
+   "app": "Microsoft Word",
+   "windowTitle": "Quarterly report.docx - Word",
+   "account": "work",
+   "expectedRecipe": "m365-copilot-word-draft",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [
+    "Copilot",
+    "Generate"
+   ],
+   "forbidden": [
+    "GitHub",
+    "Visual Studio Code"
+   ],
+   "heldOut": false
+  },
+  {
+   "id": "copilot-in-vscode",
+   "question": "How do I use Copilot here?",
+   "app": "Code",
+   "windowTitle": "main.swift - solo-level",
+   "account": "work",
+   "expectedRecipe": "",
+   "expectedTool": "copilot",
+   "requiredLabels": [],
+   "forbidden": [
+    "Microsoft 365 Copilot licence"
+   ],
+   "heldOut": false
+  },
+  {
+   "id": "copilot-on-web",
+   "question": "How do I get started with Copilot?",
+   "app": "Microsoft Edge",
+   "windowTitle": "Microsoft Copilot - copilot.microsoft.com",
+   "account": "personal",
+   "expectedRecipe": "copilot-web-start",
+   "expectedTool": "microsoft-copilot",
+   "requiredLabels": [
+    "Copilot",
+    "Message Copilot"
+   ],
+   "forbidden": [
+    "GitHub"
+   ],
+   "heldOut": false
+  },
+  {
+   "id": "copilot-no-front-app",
+   "question": "How do I use Copilot?",
+   "app": "",
+   "windowTitle": "",
+   "account": "",
+   "expectedRecipe": "",
+   "expectedTool": "",
+   "requiredLabels": [],
+   "forbidden": [
+    "GitHub"
+   ],
+   "heldOut": false
+  },
+  {
+   "id": "copilot-in-excel",
+   "question": "Can Copilot tell me the trends in this table?",
+   "app": "Microsoft Excel",
+   "windowTitle": "Sales.xlsx - Excel",
+   "account": "work",
+   "expectedRecipe": "m365-copilot-excel-insights",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [
+    "Copilot"
+   ],
+   "forbidden": [
+    "GitHub"
+   ],
+   "heldOut": true
+  },
+  {
+   "id": "copilot-in-powerpoint",
+   "question": "Can Copilot build a deck from my Word document?",
+   "app": "Microsoft PowerPoint",
+   "windowTitle": "Presentation1 - PowerPoint",
+   "account": "work",
+   "expectedRecipe": "m365-copilot-powerpoint-from-file",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [
+    "Copilot",
+    "Send"
+   ],
+   "forbidden": [
+    "GitHub"
+   ],
+   "heldOut": false
+  },
+  {
+   "id": "github-copilot-named",
+   "question": "How do I turn on GitHub Copilot in my editor?",
+   "app": "Terminal",
+   "windowTitle": "zsh",
+   "account": "personal",
+   "expectedRecipe": "",
+   "expectedTool": "copilot",
+   "requiredLabels": [],
+   "forbidden": [
+    "Microsoft 365"
+   ],
+   "heldOut": false
+  },
+  {
+   "id": "copilot-pages-from-answer",
+   "question": "How do I turn a Copilot answer into a page I can edit?",
+   "app": "Microsoft Edge",
+   "windowTitle": "Microsoft Copilot - copilot.cloud.microsoft",
+   "account": "work",
+   "expectedRecipe": "m365-copilot-pages-from-answer",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [
+    "Edit in Pages"
+   ],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "copilot-pages-new",
+   "question": "How do I start a new Copilot page from scratch?",
+   "app": "Microsoft Edge",
+   "windowTitle": "Microsoft Copilot - copilot.cloud.microsoft",
+   "account": "work",
+   "expectedRecipe": "m365-copilot-pages-new",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [
+    "Draft page or code"
+   ],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "copilot-build-agent",
+   "question": "How do I build my own Copilot agent?",
+   "app": "Microsoft Edge",
+   "windowTitle": "Microsoft Copilot - copilot.cloud.microsoft",
+   "account": "work",
+   "expectedRecipe": "m365-copilot-build-agent",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [
+    "New agent",
+    "Configure",
+    "Try it"
+   ],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "copilot-agent-sharepoint",
+   "question": "How do I connect a SharePoint site to my agent?",
+   "app": "Microsoft Edge",
+   "windowTitle": "Microsoft Copilot - copilot.cloud.microsoft",
+   "account": "work",
+   "expectedRecipe": "m365-copilot-agent-sharepoint",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [
+    "Knowledge",
+    "Try it"
+   ],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "copilot-word-from-file",
+   "question": "Can Copilot draft in Word based on an existing file?",
+   "app": "Microsoft Word",
+   "windowTitle": "Document1 - Word",
+   "account": "work",
+   "expectedRecipe": "m365-copilot-word-from-file",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [
+    "Copilot",
+    "Generate"
+   ],
+   "forbidden": [],
+   "heldOut": true
+  },
+  {
+   "id": "copilot-page-to-word",
+   "question": "How do I convert my Copilot page into a Word document?",
+   "app": "Microsoft Edge",
+   "windowTitle": "Microsoft Copilot - copilot.cloud.microsoft",
+   "account": "work",
+   "expectedRecipe": "m365-copilot-page-to-word",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [
+    "Word"
+   ],
+   "forbidden": [],
+   "heldOut": true
+  },
+  {
+   "id": "copilot-where-is-button",
+   "question": "Where is the Copilot button in Office?",
+   "app": "Microsoft Outlook",
+   "windowTitle": "Inbox - Outlook",
+   "account": "work",
+   "expectedRecipe": "m365-copilot-start",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [
+    "Copilot"
+   ],
+   "forbidden": [],
+   "heldOut": true
+  },
+  {
+   "id": "copilot-studio-agent",
+   "question": "How do I create an agent in Copilot Studio and publish it to Teams?",
+   "app": "Microsoft Edge",
+   "windowTitle": "Copilot Studio - copilotstudio.microsoft.com",
+   "account": "work",
+   "expectedRecipe": "copilot-studio-first-agent",
+   "expectedTool": "copilot-studio",
+   "requiredLabels": [
+    "Create",
+    "Publish"
+   ],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "copilot-make-image",
+   "question": "How do I make a picture with Microsoft Copilot?",
+   "app": "Safari",
+   "windowTitle": "Microsoft Copilot - copilot.microsoft.com",
+   "account": "personal",
+   "expectedRecipe": "copilot-web-image",
+   "expectedTool": "microsoft-copilot",
+   "requiredLabels": [],
+   "forbidden": [],
+   "heldOut": true
+  },
+  {
+   "id": "gemini-canvas",
+   "question": "How do I open Canvas in Gemini to edit a draft?",
+   "app": "Google Chrome",
+   "windowTitle": "Gemini - gemini.google.com",
+   "account": "personal",
+   "expectedRecipe": "gemini-open-canvas",
+   "expectedTool": "gemini",
+   "requiredLabels": [
+    "Add Files",
+    "Canvas"
+   ],
+   "forbidden": [
+    "Bard"
+   ],
+   "heldOut": false
+  },
+  {
+   "id": "gemini-canvas-export",
+   "question": "How do I export my Canvas draft to Google Docs?",
+   "app": "Google Chrome",
+   "windowTitle": "Gemini - gemini.google.com",
+   "account": "personal",
+   "expectedRecipe": "gemini-canvas-export-docs",
+   "expectedTool": "gemini",
+   "requiredLabels": [
+    "Share & export",
+    "Export to Docs"
+   ],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "gemini-make-gem",
+   "question": "How do I create a Gem in Gemini?",
+   "app": "Google Chrome",
+   "windowTitle": "Gemini - gemini.google.com",
+   "account": "personal",
+   "expectedRecipe": "gemini-create-gem",
+   "expectedTool": "gemini",
+   "requiredLabels": [
+    "Gems",
+    "New Gem",
+    "Save"
+   ],
+   "forbidden": [
+    "Bard"
+   ],
+   "heldOut": false
+  },
+  {
+   "id": "gemini-deep-research",
+   "question": "How do I run a deep research report in Gemini?",
+   "app": "Google Chrome",
+   "windowTitle": "Gemini - gemini.google.com",
+   "account": "personal",
+   "expectedRecipe": "gemini-deep-research",
+   "expectedTool": "gemini",
+   "requiredLabels": [
+    "Deep Research",
+    "Start research"
+   ],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "gemini-schedule",
+   "question": "Can Gemini send me a weekly summary automatically?",
+   "app": "Google Chrome",
+   "windowTitle": "Gemini - gemini.google.com",
+   "account": "personal",
+   "expectedRecipe": "gemini-schedule-action",
+   "expectedTool": "gemini",
+   "requiredLabels": [
+    "Scheduled actions"
+   ],
+   "forbidden": [],
+   "heldOut": true
+  },
+  {
+   "id": "gemini-upload",
+   "question": "How do I upload a PDF to Gemini and summarise it?",
+   "app": "Google Chrome",
+   "windowTitle": "Gemini - gemini.google.com",
+   "account": "personal",
+   "expectedRecipe": "gemini-upload-file",
+   "expectedTool": "gemini",
+   "requiredLabels": [
+    "Add Files",
+    "Files"
+   ],
+   "forbidden": [],
+   "heldOut": true
+  },
+  {
+   "id": "gemini-first-question",
+   "question": "I just signed up for Gemini. How do I begin?",
+   "app": "Google Chrome",
+   "windowTitle": "Gemini - gemini.google.com",
+   "account": "personal",
+   "expectedRecipe": "gemini-start",
+   "expectedTool": "gemini",
+   "requiredLabels": [
+    "Ask Gemini"
+   ],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "gemini-in-docs",
+   "question": "How do I ask Gemini to rewrite a paragraph inside my Google Doc?",
+   "app": "Google Chrome",
+   "windowTitle": "Report - Google Docs - docs.google.com",
+   "account": "workspace",
+   "expectedRecipe": "workspace-gemini-docs",
+   "expectedTool": "google-workspace",
+   "requiredLabels": [
+    "Ask Gemini",
+    "Insert"
+   ],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "gemini-in-slides",
+   "question": "How do I generate slides with Gemini in Google Slides?",
+   "app": "Google Chrome",
+   "windowTitle": "Deck - Google Slides",
+   "account": "workspace",
+   "expectedRecipe": "workspace-gemini-slides",
+   "expectedTool": "google-workspace",
+   "requiredLabels": [
+    "Ask Gemini",
+    "Insert"
+   ],
+   "forbidden": [],
+   "heldOut": true
+  },
+  {
+   "id": "notebooklm-sources",
+   "question": "How do I make a notebook in NotebookLM and add my sources?",
+   "app": "Google Chrome",
+   "windowTitle": "NotebookLM - notebooklm.google.com",
+   "account": "personal",
+   "expectedRecipe": "notebooklm-create-notebook",
+   "expectedTool": "notebooklm",
+   "requiredLabels": [
+    "Create new notebook"
+   ],
+   "forbidden": [],
+   "heldOut": true
+  },
+  {
+   "id": "no-recipe-excel-formula",
+   "question": "What does the SUM function do?",
+   "app": "Microsoft Excel",
+   "windowTitle": "Book1.xlsx - Excel",
+   "account": "work",
+   "expectedRecipe": "",
+   "expectedTool": "microsoft-365-copilot",
+   "requiredLabels": [],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "no-recipe-greeting",
+   "question": "Hello!",
+   "app": "",
+   "windowTitle": "",
+   "account": "",
+   "expectedRecipe": "",
+   "expectedTool": "",
+   "requiredLabels": [],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "no-recipe-unknown-tool",
+   "question": "How do I set up a Zapier zap for my invoices?",
+   "app": "Google Chrome",
+   "windowTitle": "Zapier - zapier.com",
+   "account": "personal",
+   "expectedRecipe": "",
+   "expectedTool": "zapier",
+   "requiredLabels": [],
+   "forbidden": [],
+   "heldOut": false
+  },
+  {
+   "id": "no-recipe-gemini-pricing",
+   "question": "How much does Gemini cost per month?",
+   "app": "Google Chrome",
+   "windowTitle": "Gemini - gemini.google.com",
+   "account": "personal",
+   "expectedRecipe": "",
+   "expectedTool": "gemini",
+   "requiredLabels": [],
+   "forbidden": [],
+   "heldOut": true
+  }
+ ]
+}

@@ -169,6 +169,14 @@ final class CompanionController: NSObject {
     var replyTarget: ScreenTarget?
     var stepTargets: [ScreenTarget?] = []
     var requestedCells: [CellReference] = []
+    /// The question and steps of the current lesson, and the fresh look at the screen for the step being shown.
+    var lessonGoal = "", lessonSteps: [String] = []
+    var stepGuideTask: Task<Void, Never>?
+    /// Step 1 is shown right after the question's own picture; every later showing of a step takes a new one.
+    var firstStepSeen = false
+    /// The recipes sent with the current question. Their on-screen names are checked against the screen before Pip
+    /// points at one, so a renamed or missing button shows the recipe's own advice instead of a circle round a guess.
+    var turnRecipes: [Recipe] = []
     var targetPersistent = false
     var shownAccessibilityTip = false
 
@@ -188,7 +196,7 @@ final class CompanionController: NSObject {
             guard let self else { return }
             switch focus {
             case .reply: point(at: replyTarget, checkRequest: true)
-            case .step(let number): point(at: stepTargets.indices.contains(number) ? stepTargets[number] : nil, checkRequest: false)
+            case .step(let number): guideStep(number)
             case .nothing: break
             }
             // Each page starts fresh: clicks on its circle and typing in its box are watched while it is shown.
@@ -569,8 +577,16 @@ final class CompanionController: NSObject {
             } else {
                 let names = await screenNames(captured)
                 guard myTurn == turn else { return }
+                // The front window's title says which page is open, so a bare "Copilot" question resolves to the
+                // product the learner is actually looking at.
+                let title = captured.map { ScreenCaptureService.windowTitle(of: $0.app.pid) }
+                // The same selection the question carries, kept so pointing can check the recipe's names on screen.
+                turnRecipes = CoachClient.reference(question: question, profile: profileDocument.profile,
+                                                    app: captured?.app.name, windowTitle: title,
+                                                    library: .shared, recipes: .shared).recipes
                 answer = try await coach.answer(question: CoachClient.compose(question: question, platform: "macOS", excel: context,
-                    profile: profileDocument.profile, app: captured?.app.name, screenNames: names, library: .shared), history: session.providerHistory(excluding: entry.turnID), jpeg: captured?.jpeg)
+                    profile: profileDocument.profile, app: captured?.app.name, windowTitle: title, screenNames: names,
+                    library: .shared, recipes: .shared), history: session.providerHistory(excluding: entry.turnID), jpeg: captured?.jpeg)
             }
             try Task.checkCancellation()
             guard myTurn == turn else { return }
@@ -583,6 +599,9 @@ final class CompanionController: NSObject {
             // A step or reply the AI left without a place still points at what it names.
             replyTarget = answer.placeForReply
             stepTargets = answer.placesForSteps
+            lessonGoal = question
+            lessonSteps = answer.steps
+            firstStepSeen = false
             requestedCells = cells
             bubble.show(reply: answer.reply, steps: answer.steps)
             positionBubble()

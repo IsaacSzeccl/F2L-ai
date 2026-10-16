@@ -205,6 +205,13 @@ final class ReplyBubble: CompanionPanel {
     /// A short note under the current step, such as "You're already there".
     func note(_ line: String) { if currentStep != nil { setStatus(line, good: true) } }
 
+    /// Takes back a note set with `note`, unless something else has replaced it since.
+    func clearNote(_ line: String) {
+        guard status.stringValue == line else { return }
+        status.stringValue = ""
+        arrange()
+    }
+
     /// F2L saw the step happen (the box got text, the app or page came to the front): tick it and move on.
     func stepDone() {
         guard currentStep != nil else { return }
@@ -315,6 +322,14 @@ final class ReplyBubble: CompanionPanel {
         status.stringValue = ""
         arrange()
         startReveal()
+    }
+
+    /// A recipe's own advice for when a button isn't where the recipe says, shown with nothing to press. Unlike
+    /// `note`, it reads as a caution and shows whether or not a step is the current one.
+    func advice(_ line: String) {
+        guard !ticked else { return }
+        setStatus(line, good: false)
+        arrange()
     }
 
     /// A short note under the current page with one action, such as how to make pointing exact.

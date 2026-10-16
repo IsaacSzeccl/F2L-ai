@@ -70,6 +70,9 @@ public partial class MainWindow
                     place = TargetSnap.Snap(estimate, target.Label, ScreenText.Candidates(lines), capture.Dpi / 96d, byPosition: false);
                     source = place is null ? $"no matching control ({controls.Count} controls, {lines.Sum(line => line.Count)} words)" : "screen-text";
                 }
+                // A recipe step whose on-screen name is not there: the interface may have moved on, so say what the
+                // recipe says to try instead of letting the learner follow a circle drawn around a guess.
+                if (place is null && RecipeScreen.Hint(target.Label, _turnRecipes) is { } advice) _bubble.Advice(advice);
                 // Not confirmed on screen (an icon with no visible name, or another app): a zoomed second look by the AI
                 // around its first guess, or across the whole window when there is none. One short extra request.
                 if (place is null && picture is { JpegBytes.Length: > 0 } shot && !TargetSnap.IsGeneric(target.Label) && _coach.IsConfigured && !_testing)

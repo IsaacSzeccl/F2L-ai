@@ -53,9 +53,12 @@ public struct CoachClient: Sendable {
         Teach the tool the learner asks about even when it is not on screen yet: start from where they are, for example opening
         the browser, going to the tool's official website or app store page, signing in, then the first useful feature. Never
         refuse or stop because a different app is in front; mention what the screenshot shows only when it helps the next step.
-        When a screenshot is provided, use only what it visibly supports for places on screen. If you are unsure how a tool
-        works today, say so in one short sentence and give the safe general steps (its official site and help pages) instead
-        of inventing menus or buttons. If no screenshot is provided, say so naturally when screen details matter. You cannot
+        When a screenshot is provided, use only what it visibly supports for places on screen. When the message carries a
+        checked recipe, follow it: give every one of its steps in order, leave none out, and keep its on-screen names unless
+        the screenshot shows a different name for the same control, in which case the screen wins on the name while the recipe
+        still sets the order and what must not be left out. When it carries no recipe and you are unsure how a tool works
+        today, say so in one short sentence and then either ask one short question or name the tool's official site; never
+        invent a menu, a button or a menu path. If no screenshot is provided, say so naturally when screen details matter. You cannot
         control this computer or click buttons. Ask one short clarifying question only when the request genuinely needs more
         context. Return only a JSON
         object with exactly three keys: "reply", "steps" and "target". "reply" must be natural spoken language, without
@@ -296,13 +299,37 @@ public struct CoachClient: Sendable {
     /// The question as sent to the model: the learner's words, then which computer they use and, for desktop Excel,
     /// what Excel reports about the selection. Only the learner's words are saved in the conversation.
     public static func compose(question: String, platform: String, excel: ExcelContext?, profile: LearnerProfile? = nil,
-                               app: String? = nil, screenNames: [String] = [], library: AIToolLibrary? = nil) -> String {
+                               app: String? = nil, windowTitle: String? = nil, screenNames: [String] = [],
+                               library: AIToolLibrary? = nil, recipes: RecipeLibrary? = nil, account: String = "") -> String {
         var context = "Learner's computer: \(platform)."
         // Which app the screenshot shows, so a question about another tool is taught from there, not refused.
         if let app, !app.isEmpty { context += " The screenshot shows \(app)." }
         if let excel { context += " " + excel.promptLine }
-        return question + "\n\n(" + context + ")" + ScreenNames.line(screenNames)
-            + (library?.referenceNotes(question: question, profile: profile) ?? "") + (profile?.coachingContext ?? "")
+        let found = reference(question: question, profile: profile, app: app, windowTitle: windowTitle,
+                              library: library, recipes: recipes, account: account)
+        return question + "\n\n(" + context + ")" + ScreenNames.line(screenNames) + found.notes + (profile?.coachingContext ?? "")
+    }
+
+    /// What one question resolves to: the tools, the recipes, and the reference text those two produce. `compose`
+    /// builds the question from it, and the host uses the same recipes to check their on-screen names before pointing
+    /// at them, so both see exactly the same selection.
+    public static func reference(question: String, profile: LearnerProfile? = nil, app: String? = nil,
+                                 windowTitle: String? = nil, library: AIToolLibrary? = nil,
+                                 recipes: RecipeLibrary? = nil, account: String = "")
+        -> (tools: [AITool], recipes: [Recipe], notes: String) {
+        // The tool is resolved from the app in front before the question's own words, so a bare "Copilot" in Word is
+        // not answered with GitHub Copilot's coding notes.
+        let tools = library?.resolve(question: question, app: app, windowTitle: windowTitle) ?? []
+        var notes = library?.referenceNotes(question: question, profile: profile, tools: tools) ?? ""
+        var chosen: [Recipe] = []
+        if let recipes, !tools.isEmpty {
+            let moment = RecipeContext(question: question, app: app ?? "", windowTitle: windowTitle ?? "", account: account, profile: profile)
+            chosen = recipes.select(moment, tools: tools)
+            if !chosen.isEmpty { notes += recipes.notes(for: chosen) }
+            // Only a how-to question is told there is no recipe; a greeting or a quick fact needs no such warning.
+            else if QuestionIntent.classify(question) == .procedural { notes += RecipeLibrary.noRecipeNote }
+        }
+        return (tools, chosen, notes)
     }
 
     static func parseTarget(_ value: Any?) -> ScreenTarget? {

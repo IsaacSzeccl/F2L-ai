@@ -254,6 +254,15 @@ public partial class MainWindow : Window
         catch (Exception error) when (error is ArgumentException or InvalidOperationException) { return null; }
     }
 
+    /// <summary>The recipes sent with the current question. Their on-screen names are checked against the screen
+    /// before Pip points at one, so a renamed or missing button shows the recipe's own advice.</summary>
+    private IReadOnlyList<Recipe> _turnRecipes = [];
+
+    /// <summary>The front window's title ("Microsoft Copilot - copilot.microsoft.com"), which says which page is open
+    /// and so which of the three Copilot products a bare "Copilot" question means.</summary>
+    private static string? WindowTitle(CapturedScreen? captured) =>
+        captured is null ? null : NativeDesktop.AppAndTitle(captured.SourceWindow)?.Title;
+
     private async void Send_Click(object sender, RoutedEventArgs e)
     {
         if (IsRequestPending) { CancelCurrentTurn(); Say("Stopped. Ask me again when you’re ready."); }
@@ -356,7 +365,12 @@ public partial class MainWindow : Window
             else
             {
                 var names = await ScreenNamesAsync(captured, token);
-                answer = await _coach.AnswerAsync(ExcelContext.Compose(clean, context, Profile.Profile, AppName(captured), names, AIToolLibrary.Shared), _session.ProviderHistory(entry.TurnId), captured?.JpegBytes,
+                // The same selection the question carries, kept so pointing can check the recipe's names on screen.
+                _turnRecipes = ExcelContext.Reference(clean, Profile.Profile, AppName(captured), AIToolLibrary.Shared,
+                    WindowTitle(captured), RecipeLibrary.Shared, "").Recipes;
+                answer = await _coach.AnswerAsync(ExcelContext.Compose(clean, context, Profile.Profile, AppName(captured), names,
+                        AIToolLibrary.Shared, WindowTitle(captured), RecipeLibrary.Shared),
+                    _session.ProviderHistory(entry.TurnId), captured?.JpegBytes,
                     captured is null ? null : "image/jpeg", token);
             }
             token.ThrowIfCancellationRequested();
