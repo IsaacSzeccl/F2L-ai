@@ -18,6 +18,8 @@ final class ReplyBubble: CompanionPanel {
     private let summary = makeLabel("", size: 12, color: Palette.hex(0x82858D), wraps: true)
     private let counter = makeLabel("", size: 10, weight: .medium, color: Palette.lavenderInk)
     private let text = NSTextField(wrappingLabelWithString: "")
+    /// While words appear, a click shows them all at once; afterwards the text can be selected and copied.
+    private let reveal = NSClickGestureRecognizer()
     private let status = makeLabel("", size: 12, weight: .medium, color: Palette.verified, wraps: true)
     private let closeButton = FlatButton("×", size: 15, ink: Palette.hex(0x9699A2), fill: nil)
     private let back = FlatButton("←", size: 13, ink: Palette.hex(0x9699A2), fill: nil)
@@ -66,6 +68,7 @@ final class ReplyBubble: CompanionPanel {
         hasShadow = true
         level = .statusBar
         text.isSelectable = false
+        text.allowsEditingTextAttributes = true // keeps Pip's font and colour while text is selected
         text.setAccessibilityLabel("Pip’s reply")
         closeButton.padding = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         closeButton.toolTip = "Hide Pip’s reply"
@@ -78,7 +81,8 @@ final class ReplyBubble: CompanionPanel {
         [selection, summary, counter, emoteView, text, status, closeButton, back].forEach(box.addSubview)
         emoteView.imageScaling = .scaleProportionallyUpOrDown
         emoteView.setAccessibilityElement(false)
-        let reveal = NSClickGestureRecognizer(target: self, action: #selector(textClicked))
+        reveal.target = self
+        reveal.action = #selector(textClicked)
         text.addGestureRecognizer(reveal)
     }
     required init?(coder: NSCoder) { fatalError() }
@@ -238,6 +242,7 @@ final class ReplyBubble: CompanionPanel {
         emoteView.isHidden = emote == nil
         let line = phrase
         words = ReplyPhrases.words(in: line)
+        setSelectable(false)
         text.attributedStringValue = Self.body(line, color: Palette.ink)
         text.setAccessibilityValue(line)
         NSAccessibility.post(element: text, notification: .valueChanged)
@@ -365,8 +370,16 @@ final class ReplyBubble: CompanionPanel {
         return NSAttributedString(string: string, attributes: [.font: Fonts.inter(16), .foregroundColor: color, .paragraphStyle: paragraph])
     }
 
+    /// Selection is off while words appear (a selection would show the hidden words) and on once the line is whole.
+    private func setSelectable(_ on: Bool) {
+        if !on, text.currentEditor() != nil { makeFirstResponder(nil) }
+        text.isSelectable = on
+        reveal.isEnabled = !on
+    }
+
     private func startReveal() {
         timer?.invalidate()
+        setSelectable(false)
         started = Date()
         setButtonsVisible(false)
         if reducedMotion || words.isEmpty { finishReveal(); return }
@@ -395,6 +408,7 @@ final class ReplyBubble: CompanionPanel {
     func finishReveal() {
         timer?.invalidate(); timer = nil
         text.attributedStringValue = Self.body(phrase, color: Palette.ink)
+        setSelectable(true)
         setButtonsVisible(true)
         checkStep()
     }

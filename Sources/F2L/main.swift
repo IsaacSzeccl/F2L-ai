@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import CoachCore
 
 @MainActor
@@ -24,6 +25,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             failures.forEach { print("FAIL: \($0)") }
             if failures.isEmpty { print("Exported \(PipEmote.allCases.count) emotes to \(directory)") }
             exit(failures.isEmpty ? 0 : 1)
+        }
+        if let index = CommandLine.arguments.firstIndex(of: "--permissions") {
+            // `open -n build/F2L.app --args --permissions <file>`: what macOS currently allows this exact build, without
+            // asking for anything. Opened with `open`, F2L is checked as itself, not as the shell that started it.
+            let path = CommandLine.arguments.indices.contains(index + 1) ? CommandLine.arguments[index + 1] : "/dev/stdout"
+            let mic: [AVAuthorizationStatus: String] = [.authorized: "allowed", .denied: "denied", .restricted: "restricted", .notDetermined: "not asked"]
+            let lines = ["accessibility: \(AXIsProcessTrusted() ? "allowed" : "not allowed")",
+                         "screenRecording: \(CGPreflightScreenCaptureAccess() ? "allowed" : "not allowed")",
+                         "microphone: \(mic[AVCaptureDevice.authorizationStatus(for: .audio)] ?? "unknown")",
+                         "app: \(Bundle.main.bundlePath)"]
+            try? (lines.joined(separator: "\n") + "\n").write(toFile: path, atomically: true, encoding: .utf8)
+            exit(0)
         }
         // The checks draw real windows; keep them out of sight and click-through so a check never shows sample lessons
         // ("Click A1, then hold Shift and click A4") on the learner's screen. Drawing them into files still works.
