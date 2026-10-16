@@ -2,6 +2,12 @@
 
 This log records the local implementation and design work through 8 October 2026. Entries describe the working checkout; they are not release tags or a claim that changes have been committed or pushed. Earlier work is grouped by milestone where individual edit times were not recorded. Git history remains the record of previously committed changes.
 
+## 16 October 2026 — Rehearsed the invoice demo step by step
+
+- `F2L --rehearse ask|step` runs the companion's real pointing on the screen as it is and saves a picture of each step's circle with a report (nothing is clicked). Walking Gemini (Traditional Chinese) and Excel through the demo found and fixed: a tab title ("Google Gemini") taken for "Customize Gemini" (shorter names must now cover most of the label; browser tabs and bookmarks are left out of page lessons); Customize is the round icon, not the four-squares one; text-box steps circled the field's label, now the box; Gemini's prompt box and + button were too deep in the page for the control walk (depth 18 → 32, text areas included); a fragment of a long Chinese label matched; "Gemini's table" circled the Gemini logo; a step the AI says isn't ready is no longer circled from a guess; steps with two clicks were split (Create › Create manually, + › Upload files, A1 › paste).
+- Excel cells: Apple's text reader misses Excel's single-letter column headings, so "A1" circled the Name Box. Cells are now found from the gridlines (`ExcelGrid`), and an Excel label like A1 counts as a cell even without "cell". A1 and G7 circle correctly in the dark sheet.
+- AI requests may take 90 seconds (was 45): one long demo answer timed out.
+
 ## 16 October 2026 — Gemini Skills and the invoice demo
 
 - Gemini now calls saved instructions **Skills** (技能, under Customize Gemini), not Gems. `gemini-create-gem` / `gemini-use-gem` became `gemini-create-skill` / `gemini-use-skill`, and `gemini-invoice-review-skill` teaches the whole demo flow in 16 steps: save an Invoice Review skill, use it with @, upload the invoices, send the extraction prompt, check every row, copy the tab-separated rows, paste at A1 in Excel and add the totals. The three are marked verified from the team's recordings (Traditional Chinese interface).

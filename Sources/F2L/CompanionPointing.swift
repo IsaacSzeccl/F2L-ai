@@ -18,13 +18,16 @@ extension CompanionController {
     /// Every decision is written to pointing.log for debugging.
     func point(at target: ScreenTarget?, checkRequest: Bool) {
         guard let target, var captured = replyCapture, screenSharingEnabled else { return }
-        let cell = target.cell.flatMap(CellReference.parse)
+        var cell = target.cell.flatMap(CellReference.parse)
         // A later step can happen in another app (the browser, after "Open your browser"): look for it there, by name,
         // since the AI's position belongs to the earlier screenshot.
         var sameApp = true
         if cell == nil, let now = capture.target(), now.pid != captured.app.pid, let located = try? capture.locate(now) {
             captured = located; sameApp = false
         }
+        // In Excel a label such as "A1" is a cell even when the AI left out "cell": find it from the headings, not the
+        // name box that also shows "A1".
+        if cell == nil, captured.app.isExcel, let parsed = CellReference.parse(target.label) { cell = parsed }
         // A direct "circle A1" can't be quietly answered with B1.
         if checkRequest, let cell, requestedCells.count == 1, !CellReference.matchesRequest(cell, requestedCells) { return }
         let version = highlightVersion
@@ -53,7 +56,7 @@ extension CompanionController {
             if let fresh = try? await capture.capture(captured.app), fresh.windowID == captured.windowID {
                 let jpeg = fresh.jpeg, frame = fresh.frame
                 lines = await Task.detached(operation: { ScreenReading.lines(jpeg: jpeg, frame: frame) }).value
-                if cell == nil { picture = jpeg }
+                picture = jpeg
                 fresh.jpeg.resetBytes(in: 0..<fresh.jpeg.count)
                 now = CapturedScreen(jpeg: Data(), windowID: fresh.windowID, frame: fresh.frame, app: fresh.app)
             }
@@ -69,68 +72,33 @@ extension CompanionController {
                 let range = target.label.contains(":") && StepCheck.references(in: "select \(target.label)").count == 1 ? target.label : cell.address
                 if let found = ScreenText.excelCell(range, words: words) {
                     place = found; source = "screen-headings"
+                } else if trusted, now.app.isExcel, !picture.isEmpty,
+                          let grid = await Task.detached(operation: { DesktopAccessibility.largest(role: "AXLayoutArea", pid: pid, in: window) }).value,
+                          let found = await Task.detached(operation: { [picture] in
+                              ExcelGridReader.place(range, jpeg: picture, window: window, grid: grid, words: words) }).value {
+                    // The column letters weren't readable: the gridlines in the same picture place the cell.
+                    place = found; source = "excel-gridlines"
                 } else if trusted, now.app.isExcel, let metrics = await selectionReader.cellMetrics(range),
                           let grid = await Task.detached(operation: { DesktopAccessibility.largest(role: "AXLayoutArea", pid: pid, in: window) }).value,
                           let measured = ExcelGeometry.choose(ExcelGeometry.candidates(metrics, grid: grid), near: estimate) {
                     place = measured; source = "excel-measured"
                 }
             } else {
-                let controls = trusted ? await Task.detached(operation: { DesktopAccessibility.controls(pid: pid, in: window) }).value : []
-                let read = ScreenText.candidates(lines: lines)
-                log["controls"] = controls.count
-                // The step is already done when its switch now says the opposite ("Close sidebar" for "Open Sidebar"):
-                // clicking it would undo what the learner wants, so say so and move on instead of circling it.
-                if !controls.contains(where: { TargetSnap.matches($0.name, TargetSnap.normalise(target.label)) }),
-                   let done = controls.first(where: { TargetSnap.alreadyDone(label: target.label, name: $0.name) }) {
-                    log["source"] = "already-done"; log["matched"] = done.name
+                let finder = PlaceFinder(coach: coach, askAI: !testing)
+                let found = await finder.find(label: target.label, estimate: estimate, app: now.app.name, bundleID: now.app.bundleID, pid: pid, window: window,
+                                              lines: lines, picture: picture, step: bubble.currentStep, recipes: turnRecipes,
+                                              trusted: trusted, log: &log,
+                                              stillWanted: { [weak self] in version == self?.highlightVersion && self?.closed == false })
+                guard found.source != "superseded" else { log["source"] = "superseded"; return }
+                if let done = found.alreadyDone {
+                    log["source"] = "already-done"
                     guard version == highlightVersion, !closed else { return }
                     clearHighlight() // the dashed first guess, if one was drawn
-                    bubble.alreadyDone("Already done: it shows \(done.name) now, so skip this one.")
+                    bubble.alreadyDone("Already done: it shows \(done) now, so skip this one.")
                     return
                 }
-                if let snapped = TargetSnap.snap(box: estimate, label: target.label, candidates: controls) {
-                    place = snapped; source = "accessibility"
-                    log["matched"] = controls.first { $0.frame == snapped }?.name ?? ""
-                } else if let snapped = TargetSnap.snap(box: estimate, label: target.label, candidates: read, byPosition: false) {
-                    place = snapped; source = "screen-text"
-                    log["matched"] = read.first { $0.frame == snapped }?.name ?? ""
-                }
-                // Not there by name: the app may be in another language, or call the control something else ("Open
-                // Sidebar" against 開啟側邊欄 or "Main menu"). Ask the AI which name on screen is the same control (text only).
-                if place == nil, !TargetSnap.isGeneric(target.label), coach.isConfigured, !testing {
-                    let named = controls.filter { TargetSnap.sensible($0.frame) }
-                    let words = read.filter { TargetSnap.sensible($0.frame) && $0.name.split(separator: " ").count <= 3 }
-                    if let name = await coach.matchName(label: target.label, step: bubble.currentStep, app: now.app.name,
-                                                        names: named.map(\.name) + words.map(\.name)) {
-                        guard version == highlightVersion, !closed else { log["source"] = "superseded"; return }
-                        if let hit = named.first(where: { $0.name == name }) ?? words.first(where: { $0.name == name }) {
-                            place = hit.frame; source = named.contains(hit) ? "meaning+accessibility" : "meaning+screen-text"
-                            log["matched"] = name
-                        }
-                    }
-                }
-                // A recipe step whose on-screen name is not there: the interface may have moved on, so say what the
-                // recipe says to try instead of letting the learner follow a circle drawn around a guess.
-                if place == nil, let hint = RecipeScreen.hint(forLabel: target.label, in: turnRecipes) {
-                    log["recipeHint"] = true
-                    bubble.advice(hint)
-                }
-                // Not confirmed on screen (an icon with no visible name, or another app): a zoomed second look by the AI
-                // around its first guess, or across the whole window when there is none. One short extra request.
-                if place == nil, !picture.isEmpty, !TargetSnap.isGeneric(target.label), coach.isConfigured, !testing {
-                    let crop = ZoomLocate.crop(around: estimate, window: window), shot = picture
-                    if let piece = await Task.detached(operation: { ScreenCaptureService.cropJPEG(shot, window: window, to: crop) }).value,
-                       let found = await coach.zoomLocate(label: target.label, app: now.app.name, jpeg: piece, crop: crop) {
-                        guard version == highlightVersion, !closed else { log["source"] = "superseded"; return }
-                        log["zoomBox"] = PointingDiagnostics.rect(found)
-                        // Knowing where to look, a real control under the zoomed box makes it exact.
-                        if let snapped = TargetSnap.snap(box: found, label: "", candidates: controls) {
-                            place = snapped; source = "zoom+accessibility"
-                        } else {
-                            place = found; source = "model-zoom"
-                        }
-                    }
-                }
+                if let hint = found.recipeHint { bubble.advice(hint) }
+                place = found.place; source = found.source
             }
             // Nothing on screen could confirm it (an icon with no visible name, and no Accessibility): still go to where
             // the model saw it, dashed so it reads as approximate, and say how to make it exact.

@@ -29,7 +29,10 @@ public enum NamedPlace {
             let word = raw.trimmingCharacters(in: .punctuationCharacters.subtracting(CharacterSet(charactersIn: "+")))
             let ends = raw.last.map { ".,;:!?".contains($0) } ?? false
             let isKey = word.lowercased().split(separator: "+").contains { keys.contains(String($0)) }
-            let named = !isKey && (word.first?.isUppercase == true || CellReference.parse(word) != nil)
+            // "Gemini's table": the owner, not the control. 上傳檔案 has no capitals but is a name.
+            let possessive = word.hasSuffix("'s") || word.hasSuffix("’s")
+            let named = !isKey && !possessive && (word.first?.isUppercase == true || CellReference.parse(word) != nil || TargetSnap.isWideScript(word))
+            if possessive && run.isEmpty { continue }
             if named { run.append(word) }
             else if !run.isEmpty || isKey || index >= 6 { break }
             else if !filler.contains(word.lowercased()) && index >= 3 { break }

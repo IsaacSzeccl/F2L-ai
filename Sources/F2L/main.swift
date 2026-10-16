@@ -38,6 +38,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             try? (lines.joined(separator: "\n") + "\n").write(toFile: path, atomically: true, encoding: .utf8)
             exit(0)
         }
+        if let index = CommandLine.arguments.firstIndex(of: "--rehearse") {
+            let rest = Array(CommandLine.arguments[(index + 1)...])
+            Task { await Rehearse.run(rest); exit(0) }
+            return
+        }
         if let index = CommandLine.arguments.firstIndex(of: "--ask"), CommandLine.arguments.indices.contains(index + 2) {
             // `open -n build/F2L.app --args --ask <question.txt> <reply.txt>`: the reply Pip's chosen AI gives this question,
             // as if asked in Gemini in Chrome, with the saved profile and recipes but no screenshot. For rehearsing a demo.

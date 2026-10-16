@@ -31,11 +31,16 @@ internal static class TargetSnap
         if (name == label) return true;
         // Chinese and Japanese have no spaces and short words (新增, 設定): one inside the other counts.
         if ((IsWideScript(label) || IsWideScript(name)) && Math.Min(name.Length, label.Length) >= 2)
-            return name.Contains(label, StringComparison.Ordinal) || label.Contains(name, StringComparison.Ordinal);
+            // Spaces mean little between Chinese words. A fragment of a long label (記錄 inside 為技能命名，例如「會議記錄
+            // 摘要工具」, or Gemini inside 問問 Gemini) is not the control.
+            var n = name.Replace(" ", ""); var l = label.Replace(" ", "");
+            return n.Contains(l, StringComparison.Ordinal) || (l.Contains(n, StringComparison.Ordinal) && n.Length * 4 > l.Length * 3);
         // Every meaningful word of one is in the other: "pie chart" matches "Insert Pie or Doughnut Chart".
         static HashSet<string> Words(string text) => text.Split(' ').Where(word => word.Length >= 3).ToHashSet();
         var nameWords = Words(name); var labelWords = Words(label);
-        return nameWords.Count > 0 && labelWords.Count > 0 && (labelWords.IsSubsetOf(nameWords) || nameWords.IsSubsetOf(labelWords));
+        // A shorter name must still cover most of the label: "Gemini" alone is not "Customize Gemini".
+        return nameWords.Count > 0 && labelWords.Count > 0
+            && (labelWords.IsSubsetOf(nameWords) || (nameWords.IsSubsetOf(labelWords) && nameWords.Count * 3 >= labelWords.Count * 2));
     }
 
     /// <summary>Han, kana or hangul in the text.</summary>

@@ -272,10 +272,10 @@
    ],
    "steps": [
     {
-     "do": "In Gemini's left bar, click the four-squares icon to open Customize Gemini (自訂 Gemini).",
-     "label": "Customize Gemini",
-     "expect": "The Customize Gemini page opens with Explore, Connectors and Skills tabs (探索, 連接器, 技能).",
-     "ifMissing": "Type gemini.google.com/customize/skills in the address bar and press Return."
+     "do": "In Gemini's left bar, click Customize (自訂), the round icon under the clock.",
+     "label": "Customize",
+     "expect": "The Customize Gemini page (自訂 Gemini) opens with Explore, Connectors and Skills tabs (探索, 連接器, 技能).",
+     "ifMissing": "With the sidebar open it is the 自訂 row. Or type gemini.google.com/customize/skills in the address bar and press Return."
     },
     {
      "do": "Click the Skills tab (技能) at the top.",
@@ -284,9 +284,14 @@
      "ifMissing": "The tab may read 技能 when Gemini is in Chinese."
     },
     {
-     "do": "Click Create (建立), then choose Create manually (手動建立).",
+     "do": "Click Create (建立) beside the search box.",
      "label": "Create",
-     "expect": "A menu offers Create with Gemini, Create manually and Upload (運用 Gemini 建立, 手動建立, 上傳).",
+     "expect": "A menu opens: Create with Gemini, Create manually and Upload (運用 Gemini 建立, 手動建立, 上傳)."
+    },
+    {
+     "do": "Choose Create manually (手動建立).",
+     "label": "Create manually",
+     "expect": "An empty skill form opens with Name, Description and Instructions.",
      "ifMissing": "Create with Gemini (運用 Gemini 建立) also works: describe the skill and Gemini drafts it."
     },
     {
@@ -421,10 +426,10 @@
    ],
    "steps": [
     {
-     "do": "In Gemini's left bar, click the four-squares icon to open Customize Gemini (自訂 Gemini).",
-     "label": "Customize Gemini",
-     "expect": "The Customize Gemini page opens with Explore, Connectors and Skills tabs (探索, 連接器, 技能).",
-     "ifMissing": "Type gemini.google.com/customize/skills in the address bar and press Return."
+     "do": "In Gemini's left bar, click Customize (自訂), the round icon under the clock.",
+     "label": "Customize",
+     "expect": "The Customize Gemini page (自訂 Gemini) opens with Explore, Connectors and Skills tabs (探索, 連接器, 技能).",
+     "ifMissing": "With the sidebar open it is the 自訂 row. Or type gemini.google.com/customize/skills in the address bar and press Return."
     },
     {
      "do": "Click the Skills tab (技能) at the top.",
@@ -433,13 +438,18 @@
      "ifMissing": "The tab may read 技能 when Gemini is in Chinese."
     },
     {
-     "do": "Click Create (建立), then choose Create manually (手動建立).",
+     "do": "Click Create (建立) beside the search box.",
      "label": "Create",
-     "expect": "An empty skill form opens.",
-     "ifMissing": "Create with Gemini (運用 Gemini 建立) also works."
+     "expect": "A menu opens: Create with Gemini, Create manually and Upload (運用 Gemini 建立, 手動建立, 上傳)."
     },
     {
-     "do": "Name the skill Invoice Review.",
+     "do": "Choose Create manually (手動建立).",
+     "label": "Create manually",
+     "expect": "An empty skill form opens.",
+     "ifMissing": "Create with Gemini (運用 Gemini 建立) also works: describe the skill and Gemini drafts it."
+    },
+    {
+     "do": "In the name box at the top, type Invoice Review.",
      "label": "Name",
      "expect": "Invoice Review shows at the top of the form."
     },
@@ -470,7 +480,12 @@
      "ifMissing": "Type: Use my Invoice Review skill."
     },
     {
-     "do": "Click + beside the prompt box, choose Upload files (上傳檔案) and select all five invoice PDFs.",
+     "do": "Click + (上傳與工具) at the left of the prompt box.",
+     "label": "Upload and tools",
+     "expect": "A menu opens with Upload files (上傳檔案) at the top."
+    },
+    {
+     "do": "Choose Upload files (上傳檔案), select all five invoice PDFs and click Open.",
      "label": "Upload files",
      "expect": "The five invoices show above the prompt box.",
      "ifMissing": "If Gemini refuses five at once, attach three now and two in a second message."
@@ -486,15 +501,20 @@
      "expect": "Every value matches its invoice."
     },
     {
-     "do": "Click the copy button on Gemini's table to copy the tab-separated rows.",
-     "label": "Copy",
-     "expect": "Gemini says the text was copied.",
-     "ifMissing": "Select the table text and press Command+C."
+     "do": "Click Copy code (複製程式碼) at the top right of the block with the rows.",
+     "label": "Copy code",
+     "expect": "Gemini says it was copied.",
+     "ifMissing": "If the rows aren't in a code block, select just the rows and press Command+C. The Copy (複製) button under the answer copies the issue list too."
     },
     {
-     "do": "In Excel, click cell A1 of the staging sheet and press Command+V.",
+     "do": "In Excel, click cell A1 of the staging sheet.",
      "label": "A1",
-     "expect": "The rows fill seven columns, A to G, under the headers."
+     "expect": "A1 is selected."
+    },
+    {
+     "do": "Press Command+V to paste the rows.",
+     "label": "Paste",
+     "expect": "The rows fill seven columns, A to G."
     },
     {
      "do": "Check that each value landed in its own column, Vendor in A to Total in G.",

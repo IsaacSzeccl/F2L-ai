@@ -88,11 +88,11 @@ public struct CoachClient: Sendable {
     public var settings: @Sendable () -> CoachSettings
     public var session: URLSession
 
-    /// Like Windows' HttpClient.Timeout, 45 seconds covers the whole request, not just the wait between packets.
+    /// Like Windows' HttpClient.Timeout, 90 seconds covers the whole request, not just the wait between packets.
     public static let defaultSession: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
-        configuration.timeoutIntervalForRequest = 45
-        configuration.timeoutIntervalForResource = 45
+        configuration.timeoutIntervalForRequest = 90
+        configuration.timeoutIntervalForResource = 90
         return URLSession(configuration: configuration, delegate: ProviderSessionDelegate(), delegateQueue: nil)
     }()
 

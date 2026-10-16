@@ -38,7 +38,9 @@ extension CompanionController {
             // Places are now measured against this picture, not the first one.
             replyCapture = CapturedScreen(jpeg: Data(), windowID: shot.windowID, frame: shot.frame, app: shot.app)
             // The AI saw the screen as it is: a place it didn't see is not drawn from the old plan's guess, only found by name.
-            let target = answer.target ?? (planned ?? NamedPlace.target(in: steps[number])).map {
+            // When the AI says the screen isn't ready and shows no place, nothing is circled: a guess from the step's words
+            // would land on whatever shares the name ("Gemini's table" circled the Gemini logo).
+            let target = answer.target ?? (answer.note.isEmpty ? (planned ?? NamedPlace.target(in: steps[number])) : nil).map {
                 ScreenTarget(left: 0, top: 0, right: 0, bottom: 0, label: $0.label, cell: $0.cell)
             }
             if stepTargets.indices.contains(number) { stepTargets[number] = target }

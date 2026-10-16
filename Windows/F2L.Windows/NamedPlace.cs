@@ -32,7 +32,11 @@ internal static partial class NamedPlace
             var word = raw.Trim(raw.Where(c => char.IsPunctuation(c) && c != '+').Distinct().ToArray());
             var ends = ".,;:!?".Contains(raw[^1]);
             var isKey = word.ToLowerInvariant().Split('+').Any(Keys.Contains);
-            var named = !isKey && word.Length > 0 && (char.IsUpper(word[0]) || CellReference.Parse(word) is not null);
+            // "Gemini's table": the owner, not the control. 上傳檔案 has no capitals but is a name.
+            var possessive = word.EndsWith("'s", StringComparison.Ordinal) || word.EndsWith("’s", StringComparison.Ordinal);
+            var named = !isKey && !possessive && word.Length > 0
+                && (char.IsUpper(word[0]) || CellReference.Parse(word) is not null || TargetSnap.IsWideScript(word));
+            if (possessive && run.Count == 0) continue;
             if (named) run.Add(word);
             else if (run.Count > 0 || isKey || index >= 6) break;
             else if (!Filler.Contains(word.ToLowerInvariant()) && index >= 3) break;

@@ -66,7 +66,7 @@ extension DesktopAccessibility {
 
     /// Roles that are things a learner clicks or reads as a label.
     static let controlRoles: Set<String> = ["AXButton", "AXRadioButton", "AXCheckBox", "AXPopUpButton", "AXMenuButton", "AXMenuBarItem",
-                                            "AXMenuItem", "AXTab", "AXComboBox", "AXTextField", "AXLink", "AXDisclosureTriangle",
+                                            "AXMenuItem", "AXTab", "AXComboBox", "AXTextField", "AXTextArea", "AXLink", "AXDisclosureTriangle",
                                             "AXSegmentedControl", "AXSlider", "AXStaticText", "AXImage"]
 
     static func frame(_ element: AXUIElement) -> CGRect? {
@@ -114,7 +114,8 @@ extension DesktopAccessibility {
             let frame = Self.frame(position: values[1], size: values[2])
             visit(element, role, frame, values)
             if let frame, frame.width > 0, frame.height > 0, !frame.intersects(window), prunable.contains(role) { continue }
-            guard depth < 18, !skip.contains(role), let children = values[6] as? [AXUIElement] else { continue }
+            // Web apps nest deep: Gemini's prompt box is 24 levels down.
+            guard depth < 32, !skip.contains(role), let children = values[6] as? [AXUIElement] else { continue }
             stack.append(contentsOf: children.reversed().map { ($0, depth + 1) })
         }
     }
@@ -131,6 +132,19 @@ extension DesktopAccessibility {
             // A static text's words are its value; asked for only here, since a text area's value can be a whole document.
             if let name = text ?? (role == "AXStaticText" ? attribute(element, kAXValueAttribute) as? String : nil), !name.isEmpty {
                 found.append(ControlCandidate(frame: frame, name: name))
+            }
+        }
+        return found
+    }
+
+    /// The text boxes of app `pid` inside `window` (fields and multi-line areas), global top-left points, for circling the
+    /// box a typing step is about rather than its label.
+    static func textBoxes(pid: pid_t, in window: CGRect, limit: Int = 4000, timeout: Float = 0.2) -> [CGRect] {
+        guard isTrusted else { return [] }
+        var found: [CGRect] = []
+        walk(pid: pid, in: window, limit: limit, timeout: timeout, budget: 1, skip: ["AXLayoutArea"]) { _, role, frame, _ in
+            if ["AXTextField", "AXTextArea", "AXComboBox"].contains(role), let frame, frame.intersects(window), frame.width >= 40, frame.height >= 14 {
+                found.append(frame)
             }
         }
         return found

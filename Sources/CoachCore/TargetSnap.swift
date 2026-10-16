@@ -39,12 +39,16 @@ public enum TargetSnap {
         // "insert" matches "Insert". Short words ("or", "a") don't count.
         // Chinese and Japanese have no spaces and short words (新增, 設定): one inside the other counts.
         if isWideScript(label) || isWideScript(name), min(name.count, label.count) >= 2 {
-            return name.contains(label) || label.contains(name)
+            // Spaces mean little between Chinese words. A fragment of a long label (記錄 inside 為技能命名，例如「會議記錄
+            // 摘要工具」, or Gemini inside 問問 Gemini) is not the control.
+            let name = name.replacingOccurrences(of: " ", with: ""), label = label.replacingOccurrences(of: " ", with: "")
+            return name.contains(label) || (label.contains(name) && name.count * 4 > label.count * 3)
         }
         func words(_ text: String) -> Set<String> { Set(text.split(separator: " ").map(String.init).filter { $0.count >= 3 }) }
         let nameWords = words(name), labelWords = words(label)
         guard !nameWords.isEmpty, !labelWords.isEmpty else { return false }
-        return labelWords.isSubset(of: nameWords) || nameWords.isSubset(of: labelWords)
+        // A shorter name must still cover most of the label: "Gemini" alone is not "Customize Gemini".
+        return labelWords.isSubset(of: nameWords) || (nameWords.isSubset(of: labelWords) && nameWords.count * 3 >= labelWords.count * 2)
     }
 
     /// Switch-like controls rename themselves: the sidebar button says "Close sidebar" once the sidebar is open.

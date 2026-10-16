@@ -30,7 +30,7 @@ internal interface ICoachClient
 /// match Sources/CoachCore/CoachClient.swift. Settings are read for every question, so a switch applies at once.</summary>
 internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSettings>? settings = null) : ICoachClient
 {
-    private static readonly HttpClient SharedHttp = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }) { Timeout = TimeSpan.FromSeconds(45) };
+    private static readonly HttpClient SharedHttp = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }) { Timeout = TimeSpan.FromSeconds(90) };
     private static readonly JsonSerializerOptions HistoryJson = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
     private readonly HttpClient _http = http ?? SharedHttp;
     private readonly Func<CoachSettings> _settings = settings ?? CoachSettings.Current;

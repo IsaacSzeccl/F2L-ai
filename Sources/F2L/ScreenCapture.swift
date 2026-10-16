@@ -38,7 +38,7 @@ final class CapturedScreen {
 /// and captures that app's front window when a question is sent.
 @MainActor
 final class ScreenCaptureService {
-    private static let maxImageSide = 1800.0 // same limit as Windows
+    nonisolated static let maxImageSide = 1800.0 // same limit as Windows
     private var last: ForegroundApp?
     private var observer: Any?
 
@@ -161,7 +161,9 @@ final class ScreenCaptureService {
 
     static let noApp = "No app is selected for screen sharing yet. Click the app you want help with once, then return to Pip."
 
-    func capture(_ app: ForegroundApp?) async throws -> CapturedScreen {
+    /// `maxSide` caps the picture's longer side in pixels: 1800 for what the AI sees; reading Excel's small column
+    /// letters on this Mac needs the screen's own sharpness.
+    func capture(_ app: ForegroundApp?, maxSide: Double = maxImageSide) async throws -> CapturedScreen {
         guard let app else { throw ScreenCaptureError(message: Self.noApp) }
         guard CGPreflightScreenCaptureAccess() else {
             CGRequestScreenCaptureAccess()
@@ -177,7 +179,7 @@ final class ScreenCaptureService {
         let filter = SCContentFilter(desktopIndependentWindow: window)
         let config = SCStreamConfiguration()
         let pixelScale = max(1, Double(filter.pointPixelScale))
-        let scale = min(1, Self.maxImageSide / (Double(max(frame.width, frame.height)) * pixelScale)) * pixelScale
+        let scale = min(1, maxSide / (Double(max(frame.width, frame.height)) * pixelScale)) * pixelScale
         config.width = max(1, Int(Double(frame.width) * scale))
         config.height = max(1, Int(Double(frame.height) * scale))
         config.showsCursor = false
