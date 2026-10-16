@@ -29,10 +29,12 @@ internal sealed record ExcelContext(string Sheet, IReadOnlyList<string> Areas, s
         var moment = new RecipeContext(question, app ?? "", windowTitle ?? "", account, profile);
         IReadOnlyList<Recipe> chosen = recipes is null || tools.Count == 0 ? [] : recipes.Select(moment, tools);
         // Nothing named and nothing on screen fits: propose the tool whose recipe the task asks for.
-        if (recipes is not null && library is not null && library.Mentioned(question).Count == 0
+        // A tool the question names ("into an Excel table") doesn't count as part of the task.
+        var named = library is null ? [] : RecipeLibrary.ToolWords(library.Mentioned(question));
+        if (recipes is not null && library is not null
             && (QuestionIntentClassifier.Classify(question) == QuestionIntent.Procedural || RecipeLibrary.IsGettingStarted(question))
-            && recipes.Suggest(moment, library.Tools) is { } suggested && chosen.All(recipe => recipe.Id != suggested.Id)
-            && RecipeLibrary.TagHits(suggested, question) > (chosen.Count > 0 ? RecipeLibrary.TagHits(chosen[0], question) : 0)
+            && recipes.Suggest(moment, library.Tools, named) is { } suggested && chosen.All(recipe => recipe.Id != suggested.Id)
+            && RecipeLibrary.TagHits(suggested, question, named) > (chosen.Count > 0 ? RecipeLibrary.TagHits(chosen[0], question, named) : 0)
             && library.Find(suggested.Tool) is { } tool)
         {
             tools = new[] { tool }.Concat(tools).ToList();

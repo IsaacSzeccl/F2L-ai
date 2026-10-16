@@ -287,6 +287,9 @@ import Testing
         let found = CoachClient.reference(question: question, app: "Microsoft Excel", library: .shared, recipes: .shared)
         #expect(found.recipes.map(\.id) == ["gemini-invoice-review-skill"])
         #expect(found.tools.first?.id == "gemini" && found.notes.contains("F2L suggests Gemini"))
+        // Charles's own wording names Excel, and still gets Gemini proposed.
+        let own = "I am an accountant. I copy invoice details intro excel tabel by hand everyday which is very tiring, can you teach me a way to read my invoice automatically so i do not have to do it automatically?"
+        #expect(CoachClient.reference(question: own, app: "Notes", library: .shared, recipes: .shared).recipes.first?.id == "gemini-invoice-review-skill")
         // A question that names its own tool is not redirected.
         #expect(!CoachClient.reference(question: "How do I sum a column in Excel?", app: "Microsoft Excel", library: .shared, recipes: .shared)
             .notes.contains("F2L suggests"))

@@ -171,9 +171,10 @@ internal sealed class RecipeLibrary
 
     /// <summary>For a how-to question that names no tool and fits nothing on screen: the recipe, for any tool, that the
     /// question's task clearly asks for (at least two of its tags). Same scoring as RecipeLibrary.suggest on Mac.</summary>
-    internal Recipe? Suggest(RecipeContext context, IReadOnlyList<AITool> tools)
+    internal Recipe? Suggest(RecipeContext context, IReadOnlyList<AITool> tools, HashSet<string>? ignoring = null)
     {
         var task = Words(context.Question);
+        if (ignoring is not null) task.ExceptWith(ignoring);
         var usable = tools.Select(tool => tool.Id).ToHashSet();
         var account = context.Account.ToLowerInvariant();
         var ranked = new List<(Recipe Recipe, int Score, int Offset)>();
@@ -190,9 +191,10 @@ internal sealed class RecipeLibrary
     }
 
     /// <summary>How many of a recipe's tags the question names. Same as RecipeLibrary.tagHits on Mac.</summary>
-    internal static int TagHits(Recipe recipe, string question)
+    internal static int TagHits(Recipe recipe, string question, HashSet<string>? ignoring = null)
     {
         var task = Words(question);
+        if (ignoring is not null) task.ExceptWith(ignoring);
         return recipe.Tags.Count(tag => Names(tag, task));
     }
 
@@ -200,6 +202,10 @@ internal sealed class RecipeLibrary
     internal static string SuggestionNote(string tool) =>
         $"\nNo tool was named and the app on screen has no recipe for this. F2L suggests {tool}: in \"reply\", propose it in one or two "
         + $"sentences and say why it fits the learner's work, then teach every step, starting by opening {tool} when it is not on screen.";
+
+    /// <summary>The words that name these tools: they say which tool, not which task. Same as toolWords on Mac.</summary>
+    internal static HashSet<string> ToolWords(IEnumerable<AITool> tools) =>
+        tools.SelectMany(tool => Words(string.Join(" ", new[] { tool.Name, tool.Id.Replace('-', ' ') }.Concat(tool.Aliases ?? [])))).ToHashSet();
 
     /// <summary>"Teach me Gemini", "I'm new to Gemini": a question that names the tool and no task.</summary>
     private static readonly Regex GettingStarted = new(@"\b(teach|learn|new|start|started|begin|beginner|use|using|help|show|guide|try)\b",

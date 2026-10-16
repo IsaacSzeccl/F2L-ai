@@ -48,11 +48,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // as if asked in Gemini in Chrome, with the saved profile and recipes but no screenshot. For rehearsing a demo.
             let question = (try? String(contentsOfFile: CommandLine.arguments[index + 1], encoding: .utf8)) ?? ""
             let output = CommandLine.arguments[index + 2]
+            // Optional: the app and window title to pretend are in front (default Gemini in Chrome).
+            let app = CommandLine.arguments.indices.contains(index + 3) ? CommandLine.arguments[index + 3] : "Google Chrome"
+            let title = CommandLine.arguments.indices.contains(index + 4) ? CommandLine.arguments[index + 4] : (app == "Google Chrome" ? "Google Gemini" : "")
             Task {
                 let composed = CoachClient.compose(question: question, platform: "macOS", excel: nil, profile: ProfileStore().load().profile,
-                                                   app: "Google Chrome", windowTitle: "Google Gemini", library: .shared, recipes: .shared)
-                let chosen = CoachClient.reference(question: question, profile: ProfileStore().load().profile, app: "Google Chrome",
-                                                   windowTitle: "Google Gemini", library: .shared, recipes: .shared).recipes.map(\.id)
+                                                   app: app, windowTitle: title, library: .shared, recipes: .shared)
+                let chosen = CoachClient.reference(question: question, profile: ProfileStore().load().profile, app: app,
+                                                   windowTitle: title, library: .shared, recipes: .shared).recipes.map(\.id)
                 let started = Date()
                 var text = "recipes: \(chosen.joined(separator: ", "))\n"
                 do {

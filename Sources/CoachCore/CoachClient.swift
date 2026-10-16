@@ -331,10 +331,13 @@ public struct CoachClient: Sendable {
         if let recipes, !tools.isEmpty { chosen = recipes.select(moment, tools: tools) }
         // Nothing named, and what's on screen fits the task less well than another tool's recipe (or not at all):
         // propose the tool whose recipe the task asks for.
-        if let recipes, let library, library.mentioned(in: question).isEmpty,
+        // A tool the question names ("into an Excel table") doesn't count as part of the task.
+        if let recipes, let library,
            QuestionIntent.classify(question) == .procedural || RecipeLibrary.isGettingStarted(question),
-           let suggested = recipes.suggest(moment, tools: library.tools), !chosen.contains(where: { $0.id == suggested.id }),
-           RecipeLibrary.tagHits(suggested, question: question) > (chosen.first.map { RecipeLibrary.tagHits($0, question: question) } ?? 0),
+           case let named = RecipeLibrary.toolWords(library.mentioned(in: question)),
+           let suggested = recipes.suggest(moment, tools: library.tools, ignoring: named), !chosen.contains(where: { $0.id == suggested.id }),
+           RecipeLibrary.tagHits(suggested, question: question, ignoring: named)
+               > (chosen.first.map { RecipeLibrary.tagHits($0, question: question, ignoring: named) } ?? 0),
            let tool = library.find(suggested.tool) {
             chosen = [suggested]
             tools.insert(tool, at: 0)

@@ -283,8 +283,8 @@ public struct RecipeLibrary: Sendable {
     /// For a how-to question that names no tool and fits nothing on screen ("teach me a way to read my invoices
     /// automatically" with Excel in front): the recipe, for any tool, that the question's task clearly asks for (at
     /// least two of its tags), so Pip can propose that tool and teach it. Nil when nothing fits that well.
-    public func suggest(_ context: RecipeContext, tools: [AITool]) -> Recipe? {
-        let task = Self.words(context.question)
+    public func suggest(_ context: RecipeContext, tools: [AITool], ignoring named: Set<String> = []) -> Recipe? {
+        let task = Self.words(context.question).subtracting(named)
         let usable = Set(tools.map(\.id))
         let account = context.account.lowercased()
         let ranked = recipes.enumerated().compactMap { entry -> (recipe: Recipe, score: Int, offset: Int)? in
@@ -299,8 +299,8 @@ public struct RecipeLibrary: Sendable {
     }
 
     /// How many of a recipe's tags the question names: how clearly the question asks for it.
-    public static func tagHits(_ recipe: Recipe, question: String) -> Int {
-        let task = words(question)
+    public static func tagHits(_ recipe: Recipe, question: String, ignoring named: Set<String> = []) -> Int {
+        let task = words(question).subtracting(named)
         return recipe.tags.filter { names($0, in: task) }.count
     }
 
@@ -308,6 +308,13 @@ public struct RecipeLibrary: Sendable {
     public static func suggestionNote(_ tool: String) -> String {
         "\nNo tool was named and the app on screen has no recipe for this. F2L suggests \(tool): in \"reply\", propose it in one or two "
             + "sentences and say why it fits the learner's work, then teach every step, starting by opening \(tool) when it is not on screen."
+    }
+
+    /// The words that name these tools ("excel", "copilot"): they say which tool, not which task.
+    public static func toolWords(_ tools: [AITool]) -> Set<String> {
+        var found: Set<String> = []
+        for tool in tools { found.formUnion(words(([tool.name, tool.id.replacingOccurrences(of: "-", with: " ")] + tool.aliases).joined(separator: " "))) }
+        return found
     }
 
     /// "Teach me Gemini", "I'm new to Gemini": a question that names the tool and no task.
