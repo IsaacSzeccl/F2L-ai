@@ -18,7 +18,7 @@ internal static class ZoomLocate
         """;
 
     internal static string Question(string label, string app) =>
-        $"Find the \"{label}\" control (a button, tab, icon, menu item or field) in this part of the {app} window. Return JSON.";
+        $"Find the \"{label}\" control (a button, tab, icon, menu item or field) in this part of the {app} window. Its visible text may be in another language, or it may be an icon with that meaning. Return JSON.";
 
     /// <summary>Around the first guess: six times its size, at least 420 × 280 (in the same units as the window), inside the window.</summary>
     internal static readonly Size Minimum = new(420, 280);

@@ -193,7 +193,7 @@ import Testing
     @Test func zoomedLookMatches() throws {
         let zoom = try source("ZoomLocate.cs")
         #expect(try rawString(after: "internal const string SystemPrompt", in: zoom) == ZoomLocate.systemPrompt)
-        #expect(zoom.contains("$\"Find the \\\"{label}\\\" control") && zoom.contains(" control (a button, tab, icon, menu item or field) in this part of the {app} window. Return JSON.\""))
+        #expect(zoom.contains("$\"Find the \\\"{label}\\\" control") && zoom.contains(" control (a button, tab, icon, menu item or field) in this part of the {app} window. Its visible text may be in another language, or it may be an icon with that meaning. Return JSON.\""))
         #expect(zoom.contains("new(\(Int(ZoomLocate.minimum.width)), \(Int(ZoomLocate.minimum.height)))"))
     }
 

@@ -37,13 +37,23 @@ public enum TargetSnap {
         if name == label { return true }
         // Every meaningful word of one is in the other: "pie chart" matches "Insert Pie or Doughnut Chart",
         // "insert" matches "Insert". Short words ("or", "a") don't count.
+        // Chinese and Japanese have no spaces and short words (新增, 設定): one inside the other counts.
+        if isWideScript(label) || isWideScript(name), min(name.count, label.count) >= 2 {
+            return name.contains(label) || label.contains(name)
+        }
         func words(_ text: String) -> Set<String> { Set(text.split(separator: " ").map(String.init).filter { $0.count >= 3 }) }
         let nameWords = words(name), labelWords = words(label)
         guard !nameWords.isEmpty, !labelWords.isEmpty else { return false }
         return labelWords.isSubset(of: nameWords) || nameWords.isSubset(of: labelWords)
     }
 
-    static func sensible(_ frame: CGRect) -> Bool {
+    /// Han, kana or hangul in the text.
+    static func isWideScript(_ text: String) -> Bool {
+        text.unicodeScalars.contains { (0x3040...0x30FF).contains($0.value) || (0x3400...0x9FFF).contains($0.value)
+            || (0xAC00...0xD7AF).contains($0.value) || (0xF900...0xFAFF).contains($0.value) }
+    }
+
+    public static func sensible(_ frame: CGRect) -> Bool {
         frame.width >= 6 && frame.height >= 6 && frame.width <= 700 && frame.height <= 300
     }
 

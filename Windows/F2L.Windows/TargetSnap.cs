@@ -29,11 +29,18 @@ internal static class TargetSnap
         name = Normalise(name);
         if (name.Length == 0) return false;
         if (name == label) return true;
+        // Chinese and Japanese have no spaces and short words (新增, 設定): one inside the other counts.
+        if ((IsWideScript(label) || IsWideScript(name)) && Math.Min(name.Length, label.Length) >= 2)
+            return name.Contains(label, StringComparison.Ordinal) || label.Contains(name, StringComparison.Ordinal);
         // Every meaningful word of one is in the other: "pie chart" matches "Insert Pie or Doughnut Chart".
         static HashSet<string> Words(string text) => text.Split(' ').Where(word => word.Length >= 3).ToHashSet();
         var nameWords = Words(name); var labelWords = Words(label);
         return nameWords.Count > 0 && labelWords.Count > 0 && (labelWords.IsSubsetOf(nameWords) || nameWords.IsSubsetOf(labelWords));
     }
+
+    /// <summary>Han, kana or hangul in the text.</summary>
+    internal static bool IsWideScript(string text) => text.Any(c =>
+        (c >= '\u3040' && c <= '\u30FF') || (c >= '\u3400' && c <= '\u9FFF') || (c >= '\uAC00' && c <= '\uD7AF') || (c >= '\uF900' && c <= '\uFAFF'));
 
     internal static bool Sensible(Rect frame, double scale) =>
         frame.Width >= 6 * scale && frame.Height >= 6 * scale && frame.Width <= 700 * scale && frame.Height <= 300 * scale;

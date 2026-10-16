@@ -64,7 +64,8 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
         cells are selected. Do not mention easy or hard modes. "target" is null unless the screenshot
         clearly shows the place the learner should act on next: a button, tab, menu, icon, field or cell. Then it
         contains integer left, top, right and bottom coordinates from 0 to 1000 and a label that is the control's exact
-        visible name or tooltip, such as "Insert" or "Recommended Charts", so the host can find it. Coordinates are
+        visible name or tooltip, written as the screen shows it, in the app's own language (新增 when the app shows 新增, not
+        "Add"), such as "Insert" or "Recommended Charts", so the host can find it. Coordinates are
         thousandths of the screenshot and tightly surround the whole visible control. For an Excel cell or range, also
         add "cell" with its address, such as
         {"reply":"Select cell A1.","steps":[],"target":{"cell":"A1","label":"A1","left":120,"top":210,"right":180,"bottom":228}}.

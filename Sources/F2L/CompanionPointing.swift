@@ -85,6 +85,20 @@ extension CompanionController {
                     place = snapped; source = "screen-text"
                     log["matched"] = read.first { $0.frame == snapped }?.name ?? ""
                 }
+                // Not there by name: the app may be in another language, or call the control something else ("Open
+                // Sidebar" against 開啟側邊欄 or "Main menu"). Ask the AI which name on screen is the same control (text only).
+                if place == nil, !TargetSnap.isGeneric(target.label), coach.isConfigured, !testing {
+                    let named = controls.filter { TargetSnap.sensible($0.frame) }
+                    let words = read.filter { TargetSnap.sensible($0.frame) && $0.name.split(separator: " ").count <= 3 }
+                    if let name = await coach.matchName(label: target.label, step: bubble.currentStep, app: now.app.name,
+                                                        names: named.map(\.name) + words.map(\.name)) {
+                        guard version == highlightVersion, !closed else { log["source"] = "superseded"; return }
+                        if let hit = named.first(where: { $0.name == name }) ?? words.first(where: { $0.name == name }) {
+                            place = hit.frame; source = named.contains(hit) ? "meaning+accessibility" : "meaning+screen-text"
+                            log["matched"] = name
+                        }
+                    }
+                }
                 // A recipe step whose on-screen name is not there: the interface may have moved on, so say what the
                 // recipe says to try instead of letting the learner follow a circle drawn around a guess.
                 if place == nil, let hint = RecipeScreen.hint(forLabel: target.label, in: turnRecipes) {

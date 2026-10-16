@@ -15,7 +15,7 @@ public enum ZoomLocate {
         """
 
     public static func question(label: String, app: String) -> String {
-        "Find the \"\(label)\" control (a button, tab, icon, menu item or field) in this part of the \(app) window. Return JSON."
+        "Find the \"\(label)\" control (a button, tab, icon, menu item or field) in this part of the \(app) window. Its visible text may be in another language, or it may be an icon with that meaning. Return JSON."
     }
 
     /// Around the first guess: six times its size, at least 420 × 280 points, kept inside the window.
