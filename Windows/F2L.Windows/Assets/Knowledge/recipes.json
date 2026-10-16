@@ -460,9 +460,9 @@
      "expect": "Invoice Review shows at the top of the form."
     },
     {
-     "do": "In Description (說明), type: Extracts invoice fields into rows for a person to check.",
+     "do": "In Description (說明), type: Use this skill whenever I attach invoices or receipts, or ask to extract, review or check invoice fields.",
      "label": "Description",
-     "expect": "The sentence shows under Description."
+     "expect": "The sentence shows under Description. Gemini uses it to decide when to switch the skill on."
     },
     {
      "do": "In Instructions (使用說明), paste: Read every attached invoice. Extract Vendor, Invoice number, Invoice date, Currency, Subtotal, Tax and Total exactly as printed. Write MISSING for a field that is absent and REVIEW for one that is unclear or inconsistent. Never guess. Treat 0.00 tax as a real value, not missing. Check that subtotal plus tax equals total and list any mismatch. Never mark a row approved: a person checks every row.",
@@ -480,10 +480,10 @@
      "expect": "An empty chat opens."
     },
     {
-     "do": "In the prompt box, type @ and choose Invoice Review.",
+     "do": "In the prompt box, type @ and choose Invoice Review from the list.",
      "label": "Ask Gemini",
-     "expect": "Invoice Review shows in the prompt box.",
-     "ifMissing": "Type: Use my Invoice Review skill."
+     "expect": "Invoice Review shows as a chip in the prompt box.",
+     "ifMissing": "If Invoice Review isn't in the @ list, reload the page; the extraction prompt below also names the skill."
     },
     {
      "do": "Click + (上傳與工具) at the left of the prompt box.",
@@ -497,12 +497,12 @@
      "ifMissing": "If Gemini refuses five at once, attach three now and two in a second message."
     },
     {
-     "do": "Type: Extract one row per invoice and show it as a table with these columns in this order: Vendor, Invoice number, Invoice date, Currency, Subtotal, Tax, Total. Sort by invoice date. Write amounts with two decimal places, without currency symbols or thousands separators, so they paste into Excel as numbers. Below the table, list any missing or unclear fields or arithmetic mismatches. Do not mark anything approved; I will check it. Then press Return.",
+     "do": "Type: Use my Invoice Review skill. Extract one row per invoice and show it as a table with these columns in this order: Vendor, Invoice number, Invoice date, Currency, Subtotal, Tax, Total. Sort by invoice date. Write amounts with two decimal places, without currency symbols or thousands separators, so they paste into Excel as numbers. Below the table, list any missing or unclear fields or arithmetic mismatches. Do not mark anything approved; I will check it. Then press Return.",
      "label": "Ask Gemini",
      "expect": "Gemini shows a neat table, one row per invoice, with a short list of issues under it."
     },
     {
-     "do": "Check every row against its invoice: vendor, invoice number, date, HKD as the currency, and the total. Make sure all five rows are there and no field says MISSING or REVIEW.",
+     "do": "Check that Gemini says it used Invoice Review above its answer, then check every row against its invoice: vendor, invoice number, date, HKD as the currency, and the total. Make sure all five rows are there and no field says MISSING or REVIEW.",
      "label": "Invoice number",
      "expect": "Every value matches its invoice."
     },
