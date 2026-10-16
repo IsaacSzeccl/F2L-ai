@@ -105,10 +105,10 @@ extension CompanionController {
         setup.makeKeyAndOrderFront(nil)
     }
 
-    /// macOS keeps asking (or keeps saying no) when its Accessibility or Automation entry for F2L belongs to an older
-    /// build. This clears F2L's own two entries, then asks once, fresh, for the current app.
+    /// macOS keeps asking (or keeps saying no) when its Screen Recording, Accessibility or Automation entry for F2L
+    /// belongs to an older build. This clears F2L's own entries, then asks once, fresh, for the current app.
     func fixPermissions() {
-        for service in ["Accessibility", "AppleEvents"] {
+        for service in ["ScreenCapture", "Accessibility", "AppleEvents"] {
             let reset = Process()
             reset.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
             reset.arguments = ["reset", service, Bundle.main.bundleIdentifier ?? "ai.f2l.companion"]
@@ -117,7 +117,7 @@ extension CompanionController {
         }
         shownAccessibilityTip = false
         DesktopAccessibility.requestTrust()
-        say("Permissions cleared. Turn F2L on under Accessibility, then quit and reopen F2L. I'll ask about Excel the next time you ask a question in it.")
+        say("Permissions cleared. Turn F2L on under Accessibility, then quit and reopen F2L. I'll ask for Screen Recording and Excel the next time you ask a question.")
     }
 
     func saveDiagnostics() {

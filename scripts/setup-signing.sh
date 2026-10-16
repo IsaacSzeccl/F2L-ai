@@ -12,9 +12,17 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT/scripts/local-signing.sh"
 
 if [[ -f "$F2L_SIGNING_KEYCHAIN" ]]; then
-  f2l_signing_ready # unlocks it again, e.g. after a restart
-  echo "F2L's signing certificate is ready: $F2L_SIGNING_KEYCHAIN"
-  exit 0
+  if f2l_signing_ready 2>/dev/null; then # unlocks it again, e.g. after a restart
+    echo "F2L's signing certificate is ready: $F2L_SIGNING_KEYCHAIN"
+    exit 0
+  fi
+  # The saved password no longer opens it (it was made before the password moved to keychain-password), so every
+  # build would fall back to ad-hoc. Keep the old file aside and make a new certificate.
+  OLD="$F2L_SIGNING_KEYCHAIN.unusable-$(date +%Y%m%d-%H%M%S)"
+  mv "$F2L_SIGNING_KEYCHAIN" "$OLD"
+  rm -f "$F2L_SIGNING_PASSWORD_FILE"
+  F2L_SIGNING_PASSWORD=""
+  echo "The old signing keychain couldn't be unlocked; moved it to $OLD and making a new one."
 fi
 
 mkdir -p "$F2L_SIGNING_DIR"
@@ -56,7 +64,7 @@ security set-key-partition-list -S apple-tool:,apple: -s -k "$F2L_SIGNING_PASSWO
 KEYCHAINS=()
 while IFS= read -r line; do
   line="${line#"${line%%[![:space:]]*}"}"; line="${line#\"}"; line="${line%\"}"
-  [[ -n "$line" ]] && KEYCHAINS+=("$line")
+  [[ -n "$line" && "$line" != "$F2L_SIGNING_KEYCHAIN" ]] && KEYCHAINS+=("$line")
 done < <(security list-keychains -d user)
 security list-keychains -d user -s "${KEYCHAINS[@]}" "$F2L_SIGNING_KEYCHAIN"
 

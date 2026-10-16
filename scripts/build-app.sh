@@ -38,7 +38,12 @@ cp "$ASSETS/Brand/F2L.icns" "$APP/Contents/Resources/F2L.icns"
 # even though they are switched on.
 if [[ -z "${SIGN_IDENTITY:-}" ]]; then
   source "$ROOT/scripts/local-signing.sh"
-  if f2l_signing_ready >/dev/null 2>&1; then SIGN_IDENTITY="$F2L_SIGNING_NAME"; fi
+  if f2l_signing_ready >/dev/null 2>&1; then
+    SIGN_IDENTITY="$F2L_SIGNING_NAME"
+  elif [[ -f "$F2L_SIGNING_KEYCHAIN" ]]; then
+    echo "⚠️  F2L's signing keychain exists but won't unlock, so this build is ad-hoc and macOS will ask for" >&2
+    echo "   permissions again. Run scripts/setup-signing.sh once to make a working certificate." >&2
+  fi
 fi
 IDENTITY="${SIGN_IDENTITY:--}"
 codesign --force --options runtime --timestamp=none \

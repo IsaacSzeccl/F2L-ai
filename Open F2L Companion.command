@@ -8,12 +8,18 @@ cd "$ROOT"
 
 # Rebuild only for real changes (Finder's .DS_Store files don't count), or when the app lost F2L's own signature (an
 # ad-hoc build makes macOS ask for permissions again). build-app.sh signs with F2L's private certificate.
-SIGNING="$HOME/Library/Application Support/F2L/Signing/F2L-signing.keychain-db"
+# Re-signing is only worth it when that certificate actually unlocks: otherwise every launch would rebuild ad-hoc,
+# and each ad-hoc build looks like a new app to macOS, which then asks for every permission again.
+source "$ROOT/scripts/local-signing.sh"
 if [[ ! -x "$APP/Contents/MacOS/F2L" ]] \
   || [[ -n "$(find Sources App Package.swift Windows/F2L.Windows/Assets -newer "$APP/Contents/MacOS/F2L" -type f ! -name .DS_Store -print -quit)" ]] \
-  || { [[ -f "$SIGNING" ]] && codesign -dvv "$APP" 2>&1 | grep -q "Signature=adhoc"; }; then
+  || { codesign -dvv "$APP" 2>&1 | grep -q "Signature=adhoc" && f2l_signing_ready >/dev/null 2>&1; }; then
   echo "Building F2L (first run or code changed)…"
   "$ROOT/scripts/build-app.sh"
+fi
+if codesign -dvv "$APP" 2>&1 | grep -q "Signature=adhoc"; then
+  echo "Note: F2L is ad-hoc signed, so macOS will ask for its permissions again after the next code change."
+  echo "Run scripts/setup-signing.sh once to stop that."
 fi
 
 if [[ "${1:-}" == "--install-shortcut" ]]; then

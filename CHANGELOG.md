@@ -2,6 +2,12 @@
 
 This log records the local implementation and design work through 8 October 2026. Entries describe the working checkout; they are not release tags or a claim that changes have been committed or pushed. Earlier work is grouped by milestone where individual edit times were not recorded. Git history remains the record of previously committed changes.
 
+## 16 October 2026 — macOS stops asking for permissions on every launch
+
+- **Problem:** F2L asked for its permissions each time it opened, even after they were granted. F2L's private signing keychain was made with the old built-in password; when the password moved to `keychain-password` (8 Oct) the two no longer matched, so the keychain stopped unlocking after a restart. `build-app.sh` then signed ad-hoc without saying so, and the launcher, seeing an ad-hoc app, rebuilt it on every double-click. Each ad-hoc build is a new app to macOS, so every grant was lost.
+- **Fix:** `scripts/setup-signing.sh` now moves a keychain it can't unlock aside and makes a new certificate; `build-app.sh` warns when it has to sign ad-hoc; the launcher only re-signs when the certificate actually unlocks, so it can never rebuild on every launch. On the owner's Mac the certificate was renewed and `build/F2L.app` is signed by *F2L Local Signing*, with the same code requirement across rebuilds. Settings › Reset permissions now also clears Screen Recording.
+- The owner grants Screen Recording and Accessibility once more for the new certificate.
+
 ## 14 October 2026 — Every lesson step looks at the screen again
 
 - **Problem:** a how-to answer plans all its steps from the one screenshot sent with the question, so steps 2, 3, ... were circled from a screen that had since changed (a menu opened, a page loaded, another app came to the front) and the circles were wrong or invented.
