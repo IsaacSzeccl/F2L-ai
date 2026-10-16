@@ -163,8 +163,8 @@ final class ReplyBubble: CompanionPanel {
     }
 
     /// After a ticked step, a moment to see the tick, then the next step.
-    private func advanceSoon() {
-        let timer = Timer(timeInterval: reducedMotion ? 0.6 : 1.4, repeats: false) { [weak self] _ in
+    private func advanceSoon(after seconds: TimeInterval = 1.4) {
+        let timer = Timer(timeInterval: reducedMotion ? 0.6 : seconds, repeats: false) { [weak self] _ in
             MainActor.assumeIsolated { self?.go(to: (self?.index ?? 0) + 1) }
         }
         RunLoop.main.add(timer, forMode: .common)
@@ -230,6 +230,14 @@ final class ReplyBubble: CompanionPanel {
         setEmote(.cheer)
         onCelebrate?()
         advanceSoon()
+    }
+
+    /// The screen shows this step is already done (the sidebar is already open): say so and go on, without a cheer.
+    func alreadyDone(_ line: String) {
+        guard currentStep != nil else { advice(line); return }
+        ticked = true
+        setStatus(line, good: true)
+        advanceSoon(after: 3)
     }
 
     // MARK: - Pages

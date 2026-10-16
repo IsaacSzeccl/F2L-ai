@@ -78,6 +78,16 @@ extension CompanionController {
                 let controls = trusted ? await Task.detached(operation: { DesktopAccessibility.controls(pid: pid, in: window) }).value : []
                 let read = ScreenText.candidates(lines: lines)
                 log["controls"] = controls.count
+                // The step is already done when its switch now says the opposite ("Close sidebar" for "Open Sidebar"):
+                // clicking it would undo what the learner wants, so say so and move on instead of circling it.
+                if !controls.contains(where: { TargetSnap.matches($0.name, TargetSnap.normalise(target.label)) }),
+                   let done = controls.first(where: { TargetSnap.alreadyDone(label: target.label, name: $0.name) }) {
+                    log["source"] = "already-done"; log["matched"] = done.name
+                    guard version == highlightVersion, !closed else { return }
+                    clearHighlight() // the dashed first guess, if one was drawn
+                    bubble.alreadyDone("Already done: it shows \(done.name) now, so skip this one.")
+                    return
+                }
                 if let snapped = TargetSnap.snap(box: estimate, label: target.label, candidates: controls) {
                     place = snapped; source = "accessibility"
                     log["matched"] = controls.first { $0.frame == snapped }?.name ?? ""

@@ -31,7 +31,7 @@ public enum TargetSnap {
         return words.joined(separator: " ")
     }
 
-    static func matches(_ name: String, _ label: String) -> Bool {
+    public static func matches(_ name: String, _ label: String) -> Bool {
         let name = normalise(name)
         guard !name.isEmpty else { return false }
         if name == label { return true }
@@ -45,6 +45,25 @@ public enum TargetSnap {
         let nameWords = words(name), labelWords = words(label)
         guard !nameWords.isEmpty, !labelWords.isEmpty else { return false }
         return labelWords.isSubset(of: nameWords) || nameWords.isSubset(of: labelWords)
+    }
+
+    /// Switch-like controls rename themselves: the sidebar button says "Close sidebar" once the sidebar is open.
+    static let opposites: [(String, String)] = [("open", "close"), ("show", "hide"), ("expand", "collapse"), ("turn on", "turn off"),
+                                                 ("enable", "disable"), ("unmute", "mute"), ("start", "stop"), ("maximize", "restore"),
+                                                 ("開啟", "關閉"), ("打開", "關閉"), ("打开", "关闭"), ("展開", "收合"), ("展开", "收起"),
+                                                 ("顯示", "隱藏"), ("显示", "隐藏"), ("開く", "閉じる"), ("表示", "非表示")]
+
+    /// Whether a control named `name` shows the step `label` has already happened: "Open Sidebar" against
+    /// "Close sidebar", "Unmute" against "Mute", 開啟側邊欄 against 關閉側邊欄.
+    public static func alreadyDone(label: String, name: String) -> Bool {
+        let label = normalise(label), name = normalise(name)
+        for (on, off) in opposites where label.hasPrefix(on) && name.hasPrefix(off) {
+            let wanted = label.dropFirst(on.count).trimmingCharacters(in: .whitespaces)
+            let shown = name.dropFirst(off.count).trimmingCharacters(in: .whitespaces)
+            // "unmute" starts with "un", never with "mute": the prefix check above keeps them apart.
+            if wanted == shown || (!wanted.isEmpty && !shown.isEmpty && matches(shown, wanted)) { return true }
+        }
+        return false
     }
 
     /// Han, kana or hangul in the text.

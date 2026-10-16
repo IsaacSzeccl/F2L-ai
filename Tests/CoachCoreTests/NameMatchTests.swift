@@ -32,4 +32,13 @@ import Testing
         #expect(TargetSnap.snap(box: nil, label: "新增", candidates: candidates) == candidates[0].frame)
         #expect(TargetSnap.snap(box: nil, label: "新", candidates: candidates) == nil) // one character says too little
     }
+
+    @Test func aSwitchThatSaysTheOppositeMeansTheStepIsDone() {
+        #expect(TargetSnap.alreadyDone(label: "Open Sidebar", name: "Close sidebar"))
+        #expect(TargetSnap.alreadyDone(label: "Unmute", name: "Mute"))
+        #expect(TargetSnap.alreadyDone(label: "開啟側邊欄", name: "關閉側邊欄"))
+        #expect(!TargetSnap.alreadyDone(label: "Mute", name: "Unmute"))
+        #expect(!TargetSnap.alreadyDone(label: "Open Sidebar", name: "Close chat"))
+        #expect(!TargetSnap.alreadyDone(label: "Open Sidebar", name: "Open sidebar"))
+    }
 }

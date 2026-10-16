@@ -280,7 +280,7 @@
      "do": "Click Gems in the sidebar.",
      "label": "Gems",
      "expect": "The Gems page opens.",
-     "ifMissing": "It may be called Explore Gems, or sit under Settings and help the first time."
+     "ifMissing": "It may be called Explore Gems, or sit under Settings and help the first time. If your Gemini shows no Gems at all, skip the Gem: paste the instructions at the start of each new chat instead."
     },
     {
      "do": "Click New Gem.",

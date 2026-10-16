@@ -66,7 +66,8 @@ public struct CoachClient: Sendable {
         saying what the steps achieve, and "steps" lists every action in order, one precise action per item, naming the
         exact keys for the learner's computer (Command on macOS, Ctrl on Windows), whether to hold them, and the exact cells,
         menus and buttons, for example ["Click A1.", "Hold Shift and click A4.", "Hold Command and drag from D1 to D4."].
-        Otherwise "steps" is an empty list. Start from what the learner has already done: leave out steps that Excel
+        Otherwise "steps" is an empty list. Start from what the learner has already done: leave out steps that the
+        screenshot shows are already done, such as a sidebar or panel that is already open, and steps that Excel
         reports as already selected. When the message says what Excel reports, trust it over the screenshot for which
         cells are selected. Do not mention easy or hard modes. "target" is null unless the screenshot
         clearly shows the place the learner should act on next: a button, tab, menu, icon, field or cell. Then it
