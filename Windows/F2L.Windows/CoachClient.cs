@@ -148,7 +148,7 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
             case Provider.DeepSeek:
                 payload["thinking"] = new { type = "disabled" };
                 payload["temperature"] = 0.2;
-                payload["max_tokens"] = maxTokens ?? 650; // short teaching replies; a starter plan asks for more
+                payload["max_tokens"] = maxTokens ?? 1400; // short teaching replies; a starter plan asks for more
                 break;
             case Provider.OpenAI:
                 // Reasoning models only take the default temperature and count their reasoning in this limit.
@@ -331,7 +331,7 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
                 : null;
             if (string.IsNullOrWhiteSpace(text)) continue;
             parsed.Add((text.Trim(), item.ValueKind == JsonValueKind.Object ? ParseTarget(item) : null));
-            if (parsed.Count == 12) break;
+            if (parsed.Count == 20) break;
         }
         return parsed;
     }

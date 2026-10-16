@@ -181,8 +181,8 @@
       "path": "Windows/F2L.Windows/Assets/Knowledge/ai-tools.json",
       "role": "runtime-data",
       "provenance": "Written for F2L, 2026-10-11; facts checked against public product pages where noted",
-      "bytes": 55282,
-      "sha256": "7e935dc92da01b0e67f1ee6a66e070e24b872dfb9346fc3cd33b4994246cb424"
+      "bytes": 55322,
+      "sha256": "e7cb3d2c7b8a501c7cd61cb535121b2cae984228136ebfa1336f9b87e27946be"
     },
     {
       "path": "Windows/F2L.Windows/Assets/Pip/playful.png",

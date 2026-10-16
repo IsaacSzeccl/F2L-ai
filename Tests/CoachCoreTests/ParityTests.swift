@@ -35,7 +35,7 @@ import Testing
                 expectQuoted(value, in: providers)
             }
         }
-        for setting in ["[\"temperature\"] = 0.2", "[\"max_tokens\"] = maxTokens ?? 650", "[\"stream\"] = false", "thinking\"] = new { type = \"disabled\" }",
+        for setting in ["[\"temperature\"] = 0.2", "[\"max_tokens\"] = maxTokens ?? 1400", "[\"stream\"] = false", "thinking\"] = new { type = \"disabled\" }",
                         "response_format\"] = new { type = \"json_object\" }", "TakeLast(20)", "detail = \"high\"",
                         "[\"max_completion_tokens\"] = 4000", "[\"reasoning_effort\"] = \"minimal\"", "[\"max_tokens\"] = 4096",
                         "new { effort = \"low\" }", "[\"fallbacks\"] = \"default\"", "\"anthropic-version\", \"2023-06-01\"",

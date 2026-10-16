@@ -147,7 +147,7 @@ public struct CoachClient: Sendable {
         case .deepSeek:
             body["thinking"] = ["type": "disabled"]
             body["temperature"] = 0.2
-            body["max_tokens"] = maxTokens ?? 650 // short teaching replies; a starter plan asks for more
+            body["max_tokens"] = maxTokens ?? 1400 // short teaching replies; a starter plan asks for more
         case .openAI:
             // Reasoning models only take the default temperature and count their reasoning in this limit.
             body["max_completion_tokens"] = 4000
@@ -286,7 +286,7 @@ public struct CoachClient: Sendable {
                            target: parseTarget(answer["target"]))
     }
 
-    /// Up to 12 non-empty steps. Each is a string, or {"text": ..., "target": ...} when the model can see where it happens.
+    /// Up to 20 non-empty steps (a whole checked recipe, such as the invoice demo's 16). Each is a string, or {"text": ..., "target": ...} when the model can see where it happens.
     static func parseSteps(_ value: Any?) -> [(text: String, target: ScreenTarget?)] {
         guard let items = value as? [Any] else { return [] }
         let steps: [(text: String, target: ScreenTarget?)] = items.compactMap { item in
@@ -295,7 +295,7 @@ public struct CoachClient: Sendable {
                   !text.isEmpty else { return nil }
             return (text, parseTarget(object?["target"]))
         }
-        return Array(steps.prefix(12))
+        return Array(steps.prefix(20))
     }
 
     /// The question as sent to the model: the learner's words, then which computer they use and, for desktop Excel,

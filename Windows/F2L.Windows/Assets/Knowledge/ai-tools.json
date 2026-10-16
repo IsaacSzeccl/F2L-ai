@@ -88,7 +88,8 @@
    "aliases": [
     "google gemini",
     "bard",
-    "gems"
+    "gems",
+    "gemini skills"
    ],
    "category": "AI assistant",
    "summary": "Google's AI assistant, connected to Google apps such as Gmail, Docs and Drive.",
@@ -113,7 +114,7 @@
    ],
    "features": [
     "Works with Gmail, Docs, Drive and Maps",
-    "Gems: saved assistants with your instructions",
+    "Skills (技能): saved instructions you reuse in any chat with @",
     "Deep Research reports",
     "Canvas for drafts and code"
    ],

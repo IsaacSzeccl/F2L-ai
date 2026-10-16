@@ -71,7 +71,9 @@ import Testing
     }
 
     @Test(arguments: [("How do I open Canvas in Gemini to edit a draft?", "gemini", "gemini-open-canvas"),
-                      ("How do I create a Gem?", "gemini", "gemini-create-gem"),
+                      ("How do I create a Gem?", "gemini", "gemini-create-skill"),
+                      ("How do I save a skill in Gemini?", "gemini", "gemini-create-skill"),
+                      ("Help me set up a reusable Gemini instruction for extracting vendor, invoice number, invoice date, currency, subtotal, tax, and total from invoices. Use MISSING for absent fields and REVIEW for unclear or inconsistent fields. Never guess, and treat 0.00 tax as a real value. Show me how to save the instruction, upload invoices, check the results, and paste only verified rows into Excel.", "gemini", "gemini-invoice-review-skill"),
                       ("How do I run a deep research report?", "gemini", "gemini-deep-research"),
                       ("How do I turn a Copilot answer into a page I can edit?", "microsoft-365-copilot", "m365-copilot-pages-from-answer"),
                       ("How do I build my own Copilot agent?", "microsoft-365-copilot", "m365-copilot-build-agent"),

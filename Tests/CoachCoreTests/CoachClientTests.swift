@@ -26,7 +26,7 @@ func jsonObject(_ data: Data) -> [String: Any] { (try? JSONSerialization.jsonObj
         #expect(messages[3]["content"] as? String == "Hey please teach me how to build a pi chart in excel")
         #expect((body["response_format"] as? [String: String])?["type"] == "json_object")
         #expect(body["model"] as? String == "deepseek-flash")
-        #expect(body["max_tokens"] as? Int == 650)
+        #expect(body["max_tokens"] as? Int == 1400)
         #expect(body["stream"] as? Bool == false)
         #expect((body["thinking"] as? [String: String])?["type"] == "disabled")
     }

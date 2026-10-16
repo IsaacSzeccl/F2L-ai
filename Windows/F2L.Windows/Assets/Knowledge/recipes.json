@@ -240,10 +240,10 @@
    "verifiedWith": ""
   },
   {
-   "id": "gemini-create-gem",
+   "id": "gemini-create-skill",
    "tool": "gemini",
-   "title": "Create a Gem, a reusable assistant with your instructions",
-   "goal": "Save instructions once so Gemini answers the same way every time you come back.",
+   "title": "Create a Skill, reusable instructions Gemini follows every time",
+   "goal": "Save instructions once as a Gemini Skill (技能) and use them again in any chat with @.",
    "requires": {
     "account": [
      "personal",
@@ -251,80 +251,85 @@
     ],
     "plan": "free ok",
     "regions": [],
-    "notes": ""
+    "notes": "Skills replace the older Gems. Gemini may show the Chinese names in brackets."
    },
    "tags": [
+    "skill",
+    "skills",
+    "技能",
     "gem",
     "gems",
     "assistant",
     "reusable",
     "custom",
     "instructions",
+    "instruction",
     "create",
     "build",
-    "make"
+    "make",
+    "save",
+    "saved"
    ],
    "steps": [
     {
-     "do": "Open gemini.google.com and sign in.",
-     "label": "Ask Gemini",
-     "expect": "The prompt box is visible."
+     "do": "In Gemini's left bar, click the four-squares icon to open Customize Gemini (自訂 Gemini).",
+     "label": "Customize Gemini",
+     "expect": "The Customize Gemini page opens with Explore, Connectors and Skills tabs (探索, 連接器, 技能).",
+     "ifMissing": "Type gemini.google.com/customize/skills in the address bar and press Return."
     },
     {
-     "do": "At the top left, click Open Sidebar.",
-     "label": "Open Sidebar",
-     "expect": "The sidebar opens down the left.",
-     "ifMissing": "The sidebar may already be open; look for the menu or hamburger button in that corner."
+     "do": "Click the Skills tab (技能) at the top.",
+     "label": "Skills",
+     "expect": "The Skills page lists recommended skills and a Create button (建立).",
+     "ifMissing": "The tab may read 技能 when Gemini is in Chinese."
     },
     {
-     "do": "Click Gems in the sidebar.",
-     "label": "Gems",
-     "expect": "The Gems page opens.",
-     "ifMissing": "It may be called Explore Gems, or sit under Settings and help the first time. If your Gemini shows no Gems at all, skip the Gem: paste the instructions at the start of each new chat instead."
+     "do": "Click Create (建立), then choose Create manually (手動建立).",
+     "label": "Create",
+     "expect": "A menu offers Create with Gemini, Create manually and Upload (運用 Gemini 建立, 手動建立, 上傳).",
+     "ifMissing": "Create with Gemini (運用 Gemini 建立) also works: describe the skill and Gemini drafts it."
     },
     {
-     "do": "Click New Gem.",
-     "label": "New Gem",
-     "expect": "An empty Gem form opens.",
-     "ifMissing": "Look for a plus button or Create a Gem on the same page."
+     "do": "In the name box at the top, type the skill's name.",
+     "label": "Name",
+     "expect": "The name shows at the top of the form.",
+     "ifMissing": "The box says 為技能命名 when Gemini is in Chinese."
     },
     {
-     "do": "Type a name, then write the instructions it should follow.",
+     "do": "In Description (說明), write one sentence on what the skill is for.",
+     "label": "Description",
+     "expect": "The sentence shows under Description.",
+     "ifMissing": "The box is labelled 說明."
+    },
+    {
+     "do": "In Instructions (使用說明), write what Gemini must do: the role, the task, the rules and the format you want back.",
      "label": "Instructions",
-     "expect": "Your name and instructions show in the form.",
-     "ifMissing": "Cover four things: the role it should play, the task, the background it needs and the format you want back."
+     "expect": "Your instructions fill the large box.",
+     "ifMissing": "The box is labelled 使用說明."
     },
     {
-     "do": "To add reference files, click Add files under Knowledge.",
-     "label": "Add files",
-     "expect": "Your file is listed under Knowledge.",
-     "ifMissing": "Skip this step if you have no files to add."
-    },
-    {
-     "do": "Click Save.",
-     "label": "Save",
-     "expect": "The Gem appears under My Gems.",
-     "ifMissing": "Look for a Create or Update button in the same corner."
+     "do": "Click Create (建立) at the top right to save the skill.",
+     "label": "Create",
+     "expect": "The button changes to Saved (已儲存).",
+     "ifMissing": "Look for Save (儲存) in the same corner."
     }
    ],
    "commonFailures": [
-    "No Gems in the sidebar: a Workspace administrator may have turned the feature off.",
-    "Instructions too vague: click Use Gemini to re-write instructions to expand them."
+    "No Skills tab: a Workspace administrator may have turned the feature off; paste the instructions at the start of each new chat instead."
    ],
    "source": [
-    "https://support.google.com/gemini/answer/15146780",
-    "https://support.google.com/gemini/answer/15235603"
+    "https://support.google.com/gemini/answer/15146780"
    ],
-   "status": "drafted",
-   "verifiedOn": "",
-   "verifiedBy": "",
-   "verifiedWith": ""
+   "status": "verified",
+   "verifiedOn": "2026-10-16",
+   "verifiedBy": "F2L team recordings",
+   "verifiedWith": "Followed in Gemini on the web (Traditional Chinese interface, personal account) in the team's recordings of 16 Oct 2026."
   },
   {
-   "id": "gemini-use-gem",
+   "id": "gemini-use-skill",
    "tool": "gemini",
-   "title": "Use a Gem you already made",
-   "goal": "Start a chat with one of your saved assistants instead of plain Gemini.",
+   "title": "Use a Skill you saved",
+   "goal": "Start a chat that follows one of your saved skills.",
    "requires": {
     "account": [
      "personal",
@@ -335,52 +340,185 @@
     "notes": ""
    },
    "tags": [
+    "skill",
+    "skills",
+    "技能",
     "gem",
     "gems",
-    "assistant",
+    "use",
     "open",
     "chat",
     "saved"
    ],
    "steps": [
     {
-     "do": "Open gemini.google.com and sign in.",
+     "do": "Click New chat (發起新對話) at the top of the left bar.",
+     "label": "New chat",
+     "expect": "An empty chat opens with the prompt box.",
+     "ifMissing": "Click the pencil icon at the top of the left bar."
+    },
+    {
+     "do": "In the prompt box, type @ and choose your skill from the list.",
      "label": "Ask Gemini",
-     "expect": "The prompt box is visible."
+     "expect": "Your skill's name shows in the prompt box.",
+     "ifMissing": "Type: Use my skill, followed by its name."
     },
     {
-     "do": "At the top left, click Open Sidebar.",
-     "label": "Open Sidebar",
-     "expect": "The sidebar opens."
-    },
-    {
-     "do": "Click Gems.",
-     "label": "Gems",
-     "expect": "The Gems page opens.",
-     "ifMissing": "It may be called Explore Gems."
-    },
-    {
-     "do": "Under My Gems, click the Gem you want.",
-     "label": "My Gems",
-     "expect": "A chat opens with that Gem's name at the top.",
-     "ifMissing": "If My Gems is empty, make one first with the gemini-create-gem recipe."
-    },
-    {
-     "do": "Type your question in the prompt box and press Return.",
-     "label": "Submit",
-     "expect": "The Gem answers in its own style."
+     "do": "Type your request and press Return.",
+     "label": "Ask Gemini",
+     "expect": "Gemini answers and shows the skill it used."
     }
    ],
    "commonFailures": [
-    "The Gem answers like plain Gemini: check its name is shown at the top of the chat."
+    "The answer ignores the rules: check the skill's name showed in the prompt box before sending."
    ],
    "source": [
     "https://support.google.com/gemini/answer/15146780"
    ],
-   "status": "drafted",
-   "verifiedOn": "",
-   "verifiedBy": "",
-   "verifiedWith": ""
+   "status": "verified",
+   "verifiedOn": "2026-10-16",
+   "verifiedBy": "F2L team recordings",
+   "verifiedWith": "Followed in Gemini on the web (Traditional Chinese interface, personal account) in the team's recordings of 16 Oct 2026."
+  },
+  {
+   "id": "gemini-invoice-review-skill",
+   "tool": "gemini",
+   "title": "Extract invoice fields with a Gemini Skill, check them, then paste verified rows into Excel",
+   "goal": "Save an Invoice Review skill, upload invoices, check Gemini's rows against the invoices and paste only checked rows into an Excel staging sheet.",
+   "requires": {
+    "account": [
+     "personal",
+     "workspace"
+    ],
+    "plan": "free ok",
+    "regions": [],
+    "notes": "Up to 10 files can be attached to one prompt, subject to availability; if a batch is refused, send three and then two with the same skill."
+   },
+   "tags": [
+    "invoice",
+    "invoices",
+    "receipt",
+    "accountant",
+    "accounting",
+    "extract",
+    "extraction",
+    "tracker",
+    "skill",
+    "skills",
+    "技能",
+    "gem",
+    "reusable",
+    "instruction",
+    "missing",
+    "review",
+    "tsv",
+    "excel",
+    "paste",
+    "rows",
+    "vendor",
+    "tax",
+    "total"
+   ],
+   "steps": [
+    {
+     "do": "In Gemini's left bar, click the four-squares icon to open Customize Gemini (自訂 Gemini).",
+     "label": "Customize Gemini",
+     "expect": "The Customize Gemini page opens with Explore, Connectors and Skills tabs (探索, 連接器, 技能).",
+     "ifMissing": "Type gemini.google.com/customize/skills in the address bar and press Return."
+    },
+    {
+     "do": "Click the Skills tab (技能) at the top.",
+     "label": "Skills",
+     "expect": "The Skills page lists recommended skills and a Create button (建立).",
+     "ifMissing": "The tab may read 技能 when Gemini is in Chinese."
+    },
+    {
+     "do": "Click Create (建立), then choose Create manually (手動建立).",
+     "label": "Create",
+     "expect": "An empty skill form opens.",
+     "ifMissing": "Create with Gemini (運用 Gemini 建立) also works."
+    },
+    {
+     "do": "Name the skill Invoice Review.",
+     "label": "Name",
+     "expect": "Invoice Review shows at the top of the form."
+    },
+    {
+     "do": "In Description (說明), type: Extracts invoice fields into rows for a person to check.",
+     "label": "Description",
+     "expect": "The sentence shows under Description."
+    },
+    {
+     "do": "In Instructions (使用說明), paste: Read every attached invoice. Extract Vendor, Invoice number, Invoice date, Currency, Subtotal, Tax and Total exactly as printed. Write MISSING for a field that is absent and REVIEW for one that is unclear or inconsistent. Never guess. Treat 0.00 tax as a real value, not missing. Check that subtotal plus tax equals total and list any mismatch. Never mark a row approved: a person checks every row.",
+     "label": "Instructions",
+     "expect": "The instruction fills the large box."
+    },
+    {
+     "do": "Click Create (建立) at the top right to save it.",
+     "label": "Create",
+     "expect": "The button changes to Saved (已儲存)."
+    },
+    {
+     "do": "Click New chat (發起新對話) at the top of the left bar.",
+     "label": "New chat",
+     "expect": "An empty chat opens."
+    },
+    {
+     "do": "In the prompt box, type @ and choose Invoice Review.",
+     "label": "Ask Gemini",
+     "expect": "Invoice Review shows in the prompt box.",
+     "ifMissing": "Type: Use my Invoice Review skill."
+    },
+    {
+     "do": "Click + beside the prompt box, choose Upload files (上傳檔案) and select all five invoice PDFs.",
+     "label": "Upload files",
+     "expect": "The five invoices show above the prompt box.",
+     "ifMissing": "If Gemini refuses five at once, attach three now and two in a second message."
+    },
+    {
+     "do": "Type: Extract one row per invoice. Return tab-separated values with these columns in this order: Vendor, Invoice number, Invoice date, Currency, Subtotal, Tax, Total. Sort by invoice date. Use two decimal places for amounts, without currency symbols or thousands separators. After the table, list any missing or unclear fields or arithmetic mismatches. Do not mark anything approved; I will check it. Then press Return.",
+     "label": "Ask Gemini",
+     "expect": "Gemini returns a table with one row per invoice and a list of issues."
+    },
+    {
+     "do": "Check every row against its invoice: vendor, invoice number, date, HKD as the currency, and the total. Make sure all five rows are there and no field says MISSING or REVIEW.",
+     "label": "Invoice number",
+     "expect": "Every value matches its invoice."
+    },
+    {
+     "do": "Click the copy button on Gemini's table to copy the tab-separated rows.",
+     "label": "Copy",
+     "expect": "Gemini says the text was copied.",
+     "ifMissing": "Select the table text and press Command+C."
+    },
+    {
+     "do": "In Excel, click cell A1 of the staging sheet and press Command+V.",
+     "label": "A1",
+     "expect": "The rows fill seven columns, A to G, under the headers."
+    },
+    {
+     "do": "Check that each value landed in its own column, Vendor in A to Total in G.",
+     "label": "Vendor",
+     "expect": "Seven columns, one invoice per row."
+    },
+    {
+     "do": "In the cell under the last total, type =SUM(G2:G6) and press Return.",
+     "label": "G7",
+     "expect": "The sum matches the invoices' totals added by hand."
+    }
+   ],
+   "commonFailures": [
+    "Everything lands in column A: the copy wasn't tab-separated; ask Gemini to return tab-separated values again.",
+    "Tax shows MISSING for 0.00: the instruction must say that 0.00 tax is a real value."
+   ],
+   "source": [
+    "https://support.google.com/gemini/answer/15146780",
+    "https://support.google.com/gemini/answer/14903178"
+   ],
+   "status": "verified",
+   "verifiedOn": "2026-10-16",
+   "verifiedBy": "F2L team recordings",
+   "verifiedWith": "Followed in Gemini on the web (Traditional Chinese interface, personal account) in the team's recordings of 16 Oct 2026. Excel steps follow the team's demo plan."
   },
   {
    "id": "gemini-deep-research",

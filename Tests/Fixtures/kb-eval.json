@@ -279,12 +279,12 @@
    "app": "Google Chrome",
    "windowTitle": "Gemini - gemini.google.com",
    "account": "personal",
-   "expectedRecipe": "gemini-create-gem",
+   "expectedRecipe": "gemini-create-skill",
    "expectedTool": "gemini",
    "requiredLabels": [
-    "Gems",
-    "New Gem",
-    "Save"
+    "Skills",
+    "Create",
+    "Instructions"
    ],
    "forbidden": [
     "Bard"

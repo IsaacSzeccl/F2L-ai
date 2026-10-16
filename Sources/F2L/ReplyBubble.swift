@@ -439,8 +439,13 @@ final class ReplyBubble: CompanionPanel {
 
     @objc private func textClicked() { if timer != nil { finishReveal() } }
 
-    /// Everything in the card as plain text, the way it reads: a reply's pages, or a lesson's summary and its steps.
+    /// What Copy puts on the clipboard. On a lesson step, the words that step says to type or paste ("paste: Read every
+    /// attached invoice…"), or the step itself; otherwise everything, the way it reads: a reply's pages, or a lesson's
+    /// summary and its steps.
     var copyableText: String {
+        if pages.indices.contains(index), case .step(let number) = pages[index], steps.indices.contains(number) {
+            return Self.toType(in: Self.withoutEmoji(steps[number]))
+        }
         if !steps.isEmpty {
             let numbered = steps.enumerated().map { "\($0.offset + 1). \(Self.withoutEmoji($0.element))" }
             return ([summary.stringValue].filter { !$0.isEmpty } + numbered).joined(separator: "\n")
@@ -448,6 +453,20 @@ final class ReplyBubble: CompanionPanel {
         return pages.compactMap { page -> String? in
             if case .text(let line, _) = page { return Self.withoutEmoji(line) } else { return nil }
         }.joined(separator: "\n\n")
+    }
+
+    /// "In Instructions, paste: Read every invoice." → "Read every invoice."; "Type: Hello. Then press Return." → "Hello.".
+    /// A step with nothing to type is copied whole.
+    static func toType(in step: String) -> String {
+        for marker in ["paste: ", "Paste: ", "type: ", "Type: "] {
+            guard let range = step.range(of: marker) else { continue }
+            var words = String(step[range.upperBound...]).trimmingCharacters(in: .whitespaces)
+            for ending in [" Then press Return.", " and press Return.", ", then press Return."] where words.hasSuffix(ending) {
+                words = String(words.dropLast(ending.count))
+            }
+            return words.isEmpty ? step : words
+        }
+        return step
     }
 
     private func copyAll() {

@@ -38,6 +38,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             try? (lines.joined(separator: "\n") + "\n").write(toFile: path, atomically: true, encoding: .utf8)
             exit(0)
         }
+        if let index = CommandLine.arguments.firstIndex(of: "--ask"), CommandLine.arguments.indices.contains(index + 2) {
+            // `open -n build/F2L.app --args --ask <question.txt> <reply.txt>`: the reply Pip's chosen AI gives this question,
+            // as if asked in Gemini in Chrome, with the saved profile and recipes but no screenshot. For rehearsing a demo.
+            let question = (try? String(contentsOfFile: CommandLine.arguments[index + 1], encoding: .utf8)) ?? ""
+            let output = CommandLine.arguments[index + 2]
+            Task {
+                let composed = CoachClient.compose(question: question, platform: "macOS", excel: nil, profile: ProfileStore().load().profile,
+                                                   app: "Google Chrome", windowTitle: "Google Gemini", library: .shared, recipes: .shared)
+                let chosen = CoachClient.reference(question: question, profile: ProfileStore().load().profile, app: "Google Chrome",
+                                                   windowTitle: "Google Gemini", library: .shared, recipes: .shared).recipes.map(\.id)
+                let started = Date()
+                var text = "recipes: \(chosen.joined(separator: ", "))\n"
+                do {
+                    let answer = try await CoachClient().answer(question: composed, history: [], jpeg: nil)
+                    text += String(format: "seconds: %.1f\n\n", Date().timeIntervalSince(started)) + answer.text + "\n"
+                } catch {
+                    text += "error: \((error as? CoachRequestError)?.message ?? "\(error)")\n"
+                }
+                try? text.write(toFile: output, atomically: true, encoding: .utf8)
+                exit(0)
+            }
+            return
+        }
         // The checks draw real windows; keep them out of sight and click-through so a check never shows sample lessons
         // ("Click A1, then hold Shift and click A4") on the learner's screen. Drawing them into files still works.
         if CommandLine.arguments.contains("--soak") || CommandLine.arguments.contains("--render") {

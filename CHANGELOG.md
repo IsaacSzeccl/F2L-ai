@@ -2,6 +2,13 @@
 
 This log records the local implementation and design work through 8 October 2026. Entries describe the working checkout; they are not release tags or a claim that changes have been committed or pushed. Earlier work is grouped by milestone where individual edit times were not recorded. Git history remains the record of previously committed changes.
 
+## 16 October 2026 — Gemini Skills and the invoice demo
+
+- Gemini now calls saved instructions **Skills** (技能, under Customize Gemini), not Gems. `gemini-create-gem` / `gemini-use-gem` became `gemini-create-skill` / `gemini-use-skill`, and `gemini-invoice-review-skill` teaches the whole demo flow in 16 steps: save an Invoice Review skill, use it with @, upload the invoices, send the extraction prompt, check every row, copy the tab-separated rows, paste at A1 in Excel and add the totals. The three are marked verified from the team's recordings (Traditional Chinese interface).
+- Lessons can have up to 20 steps (was 12) and replies up to 1,400 tokens (was 650), so a whole recipe fits. On a step, Copy copies just the words to paste or type.
+- `F2L --ask <question.txt> <reply.txt>` (opened with `open -n`) prints the recipes chosen and the reply, for rehearsing a demo. The demo question now picks the invoice recipe and returns all 16 steps in about 5 seconds.
+- Also today: reading Chinese and Japanese on screen, matching names by meaning, skipping steps already done, a timing record per question, and the permission and copy fixes above.
+
 ## 16 October 2026 — macOS stops asking for permissions on every launch
 
 - **Problem:** F2L asked for its permissions each time it opened, even after they were granted. F2L's private signing keychain was made with the old built-in password; when the password moved to `keychain-password` (8 Oct) the two no longer matched, so the keychain stopped unlocking after a restart. `build-app.sh` then signed ad-hoc without saying so, and the launcher, seeing an ad-hoc app, rebuilt it on every double-click. Each ad-hoc build is a new app to macOS, so every grant was lost.
