@@ -268,7 +268,8 @@
     "build",
     "make",
     "save",
-    "saved"
+    "saved",
+    "creating"
    ],
    "steps": [
     {
@@ -422,7 +423,10 @@
     "rows",
     "vendor",
     "tax",
-    "total"
+    "total",
+    "demo",
+    "accounts",
+    "accountant"
    ],
    "steps": [
     {

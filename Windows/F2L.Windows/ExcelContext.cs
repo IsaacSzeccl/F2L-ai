@@ -13,7 +13,7 @@ internal sealed record ExcelContext(string Sheet, IReadOnlyList<string> Areas, s
         IEnumerable<string>? screenNames = null, AIToolLibrary? library = null, string? windowTitle = null,
         RecipeLibrary? recipes = null, string account = "") =>
         question + "\n\n(Learner's computer: Windows." + (string.IsNullOrEmpty(app) ? "" : $" The screenshot shows {app}.")
-        + (excel is null ? "" : " " + excel.PromptLine) + ")" + ScreenNames.Line(screenNames ?? [])
+        + (excel is null ? "" : " " + excel.PromptLine) + TeachingReply.LanguageLine(question) + ")" + ScreenNames.Line(screenNames ?? [])
         + Reference(question, profile, app, library, windowTitle, recipes, account).Notes + (profile?.CoachingContext ?? "");
 
     /// <summary>What one question resolves to: the tools, the recipes, and the reference text those two produce.

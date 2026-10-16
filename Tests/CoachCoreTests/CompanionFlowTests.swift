@@ -14,7 +14,7 @@ import Testing
     @Test func anyToolIsTaughtFromWhereTheLearnerIs() throws {
         // Asking about a tool that isn't open (Terminal in front) is taught from there, not refused.
         let text = CoachClient.compose(question: "Teach me Tencent WorkBuddy", platform: "macOS", excel: nil, app: "Terminal", library: .shared)
-        #expect(text.hasPrefix("Teach me Tencent WorkBuddy\n\n(Learner's computer: macOS. The screenshot shows Terminal.)"))
+        #expect(text.hasPrefix("Teach me Tencent WorkBuddy\n\n(Learner's computer: macOS. The screenshot shows Terminal. The learner wrote in English"))
         #expect(!CoachClient.compose(question: "Hi", platform: "macOS", excel: nil).contains("screenshot shows"))
         let prompt = CoachClient.teachingPrompt.split(whereSeparator: \.isWhitespace).joined(separator: " ")
         #expect(prompt.contains("Teach the tool the learner asks about even when it is not on screen yet"))

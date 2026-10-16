@@ -73,7 +73,7 @@ internal sealed partial class AIToolLibrary
         ("copilot.cloud.microsoft", "microsoft-365-copilot"), ("m365.cloud.microsoft", "microsoft-365-copilot"),
         ("microsoft 365 copilot", "microsoft-365-copilot"), ("copilotstudio.microsoft.com", "copilot-studio"),
         ("copilot.microsoft.com", "microsoft-copilot"),
-        ("gemini.google.com", "gemini"), ("notebooklm.google.com", "notebooklm"), ("aistudio.google.com", "google-ai-studio"),
+        ("gemini.google.com", "gemini"), ("google gemini", "gemini"), ("notebooklm.google.com", "notebooklm"), ("aistudio.google.com", "google-ai-studio"),
         // Every Workspace app, by address and by the name its tab carries, so "Gemini in Slides" is a Workspace
         // question even when the learner also says "Gemini".
         ("docs.google.com", "google-workspace"), ("mail.google.com", "google-workspace"), ("drive.google.com", "google-workspace"),

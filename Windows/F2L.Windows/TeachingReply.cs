@@ -22,6 +22,29 @@ internal static partial class TeachingReply
     [GeneratedRegex(@"\s+(?:Let me know if you (?:have any questions|need (?:any |more |further )?help|need anything else)|Feel free to ask (?:any questions|if you need (?:more )?help))[!.]?\s*\z", RegexOptions.IgnoreCase)]
     private static partial Regex Closing();
 
+    /// <summary>The language the learner wrote in, by its letters: Pip answers in it even when the app on screen uses
+    /// another language. Null when it can't tell. Same rules as TeachingReply.language(of:) on Mac.</summary>
+    internal static string? Language(string question)
+    {
+        int latin = 0, han = 0, kana = 0, hangul = 0;
+        foreach (var c in question)
+        {
+            if (c is >= 'A' and <= 'Z' or >= 'a' and <= 'z') latin++;
+            else if (c is >= '\u3040' and <= '\u30FF') kana++;
+            else if (c is >= '\uAC00' and <= '\uD7AF') hangul++;
+            else if (c is >= '\u3400' and <= '\u9FFF' or >= '\uF900' and <= '\uFAFF') han++;
+        }
+        if (kana > 0) return "Japanese";
+        if (hangul > 0) return "Korean";
+        if (han > 0) return han * 2 >= latin ? "Chinese" : "English";
+        return latin >= 3 ? "English" : null;
+    }
+
+    /// <summary>The line added to a question that says which language to answer in.</summary>
+    internal static string LanguageLine(string question) => Language(question) is { } language
+        ? $" The learner wrote in {language}: answer in {language}, naming on-screen controls in {language} with their on-screen names in brackets."
+        : "";
+
     internal static string Clean(string text)
     {
         var clean = Opening().Replace(text.Trim(), "");

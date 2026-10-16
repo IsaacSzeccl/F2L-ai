@@ -42,3 +42,14 @@ import Testing
         #expect(!TargetSnap.alreadyDone(label: "Open Sidebar", name: "Open sidebar"))
     }
 }
+
+@Suite struct AnswerLanguage {
+    @Test func theQuestionsLettersSayWhichLanguage() {
+        #expect(TeachingReply.language(of: "Let's try the demo once") == "English")
+        #expect(TeachingReply.language(of: "幫我建立技能") == "Chinese")
+        #expect(TeachingReply.language(of: "How do I click 自訂?") == "English")
+        #expect(TeachingReply.language(of: "スキルを作る") == "Japanese")
+        #expect(TeachingReply.language(of: "A1") == nil)
+        #expect(CoachClient.compose(question: "Let's try the demo", platform: "macOS", excel: nil).contains("answer in English"))
+    }
+}

@@ -55,7 +55,9 @@ internal sealed partial class CoachClient(HttpClient? http = null, Func<CoachSet
         control this computer or click buttons. Ask one short clarifying question only when the request genuinely needs more
         context. Return only a JSON
         object with exactly three keys: "reply", "steps" and "target". "reply" must be natural spoken language, without
-        markdown, bullet lists, emojis, or URLs. When the task takes more than one action, "reply" is one short sentence
+        markdown, bullet lists, emojis, or URLs. Write "reply" and every step in the language of the learner's question, even
+        when the app on screen uses another language: name an on-screen control in the learner's language with its
+        on-screen name in brackets, such as "Click Customize (自訂)." When the task takes more than one action, "reply" is one short sentence
         saying what the steps achieve, and "steps" lists every action in order, one precise action per item, naming the
         exact keys for the learner's computer (Command on macOS, Ctrl on Windows), whether to hold them, and the exact cells,
         menus and buttons, for example ["Click A1.", "Hold Shift and click A4.", "Hold Command and drag from D1 to D4."].

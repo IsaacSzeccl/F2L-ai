@@ -22,6 +22,31 @@ public enum TeachingReply {
         pattern: #"\s+(?:Let me know if you (?:have any questions|need (?:any |more |further )?help|need anything else)|Feel free to ask (?:any questions|if you need (?:more )?help))[!.]?\s*\z"#,
         options: [.caseInsensitive])
 
+    /// The language the learner wrote in, by its letters: Pip answers in it even when the app on screen uses another
+    /// language (an English question about a Chinese Gemini gets English steps). Nil when it can't tell.
+    public static func language(of question: String) -> String? {
+        var latin = 0, han = 0, kana = 0, hangul = 0
+        for scalar in question.unicodeScalars {
+            switch scalar.value {
+            case 0x41...0x5A, 0x61...0x7A: latin += 1
+            case 0x3040...0x30FF: kana += 1
+            case 0xAC00...0xD7AF: hangul += 1
+            case 0x3400...0x9FFF, 0xF900...0xFAFF: han += 1
+            default: break
+            }
+        }
+        if kana > 0 { return "Japanese" }
+        if hangul > 0 { return "Korean" }
+        if han > 0 { return han * 2 >= latin ? "Chinese" : "English" }
+        return latin >= 3 ? "English" : nil
+    }
+
+    /// The line added to a question that says which language to answer in.
+    public static func languageLine(_ question: String) -> String {
+        guard let language = language(of: question) else { return "" }
+        return " The learner wrote in \(language): answer in \(language), naming on-screen controls in \(language) with their on-screen names in brackets."
+    }
+
     public static func clean(_ text: String) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         var clean = opening.stringByReplacingMatches(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed), withTemplate: "")

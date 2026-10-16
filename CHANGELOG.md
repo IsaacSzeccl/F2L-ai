@@ -2,6 +2,10 @@
 
 This log records the local implementation and design work through 8 October 2026. Entries describe the working checkout; they are not release tags or a claim that changes have been committed or pushed. Earlier work is grouped by milestone where individual edit times were not recorded. Git history remains the record of previously committed changes.
 
+## 16 October 2026 — Answers in the learner's language; "the demo" finds the demo lesson
+
+- An English question about a Chinese Gemini came back all in Chinese, and "Let's try the demo" or "create the skill" found no lesson (Chrome's tab title "Google Gemini" didn't count as Gemini), so Pip pointed at an old chat and invented a "save as notebook" step. Now each question says which language the learner wrote in (`TeachingReply.language(of:)`, both apps) and Pip answers in it, naming controls with their on-screen names in brackets ("Click Customize (自訂)"); "Google Gemini" in a window title means Gemini; the invoice lesson is tagged "demo".
+
 ## 16 October 2026 — Rehearsed the invoice demo step by step
 
 - `F2L --rehearse ask|step` runs the companion's real pointing on the screen as it is and saves a picture of each step's circle with a report (nothing is clicked). Walking Gemini (Traditional Chinese) and Excel through the demo found and fixed: a tab title ("Google Gemini") taken for "Customize Gemini" (shorter names must now cover most of the label; browser tabs and bookmarks are left out of page lessons); Customize is the round icon, not the four-squares one; text-box steps circled the field's label, now the box; Gemini's prompt box and + button were too deep in the page for the control walk (depth 18 → 32, text areas included); a fragment of a long Chinese label matched; "Gemini's table" circled the Gemini logo; a step the AI says isn't ready is no longer circled from a guess; steps with two clicks were split (Create › Create manually, + › Upload files, A1 › paste).
