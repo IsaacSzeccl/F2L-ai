@@ -497,9 +497,9 @@
      "ifMissing": "If Gemini refuses five at once, attach three now and two in a second message."
     },
     {
-     "do": "Type: Extract one row per invoice. Return tab-separated values with these columns in this order: Vendor, Invoice number, Invoice date, Currency, Subtotal, Tax, Total. Sort by invoice date. Use two decimal places for amounts, without currency symbols or thousands separators. After the table, list any missing or unclear fields or arithmetic mismatches. Do not mark anything approved; I will check it. Then press Return.",
+     "do": "Type: Extract one row per invoice and show it as a table with these columns in this order: Vendor, Invoice number, Invoice date, Currency, Subtotal, Tax, Total. Sort by invoice date. Write amounts with two decimal places, without currency symbols or thousands separators, so they paste into Excel as numbers. Below the table, list any missing or unclear fields or arithmetic mismatches. Do not mark anything approved; I will check it. Then press Return.",
      "label": "Ask Gemini",
-     "expect": "Gemini returns a table with one row per invoice and a list of issues."
+     "expect": "Gemini shows a neat table, one row per invoice, with a short list of issues under it."
     },
     {
      "do": "Check every row against its invoice: vendor, invoice number, date, HKD as the currency, and the total. Make sure all five rows are there and no field says MISSING or REVIEW.",
@@ -507,10 +507,10 @@
      "expect": "Every value matches its invoice."
     },
     {
-     "do": "Click Copy code (複製程式碼) at the top right of the block with the rows.",
-     "label": "Copy code",
-     "expect": "Gemini says it was copied.",
-     "ifMissing": "If the rows aren't in a code block, select just the rows and press Command+C. The Copy (複製) button under the answer copies the issue list too."
+     "do": "Click Copy table (複製表格) under Gemini's table.",
+     "label": "Copy table",
+     "expect": "Gemini says the table was copied.",
+     "ifMissing": "Point at the table to show its buttons, or select the whole table and press Command+C. Don't use Copy (複製) under the answer: it copies the issue list too."
     },
     {
      "do": "In Excel, click cell A1 of the staging sheet.",
@@ -520,7 +520,7 @@
     {
      "do": "Press Command+V to paste the rows.",
      "label": "Paste",
-     "expect": "The rows fill seven columns, A to G."
+     "expect": "The rows fill seven columns, A to G, as a table with the headers in row 1."
     },
     {
      "do": "Check that each value landed in its own column, Vendor in A to Total in G.",
@@ -534,7 +534,7 @@
     }
    ],
    "commonFailures": [
-    "Everything lands in column A: the copy wasn't tab-separated; ask Gemini to return tab-separated values again.",
+    "Everything lands in column A: the rows were copied as plain text; copy Gemini's table itself and paste again.",
     "Tax shows MISSING for 0.00: the instruction must say that 0.00 tax is a real value."
    ],
    "source": [
