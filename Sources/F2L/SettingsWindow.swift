@@ -248,6 +248,12 @@ final class SettingsWindow: NSWindow, NSWindowDelegate, NSTextFieldDelegate {
                 _ = label("Allowed", x: width - 86, y: 22, width: 70, size: 12, color: Palette.verified, weight: .semibold, in: row)
             } else {
                 button("Allow…", x: width - 96, y: 14, width: 80, in: row) {
+                    // Asking first is what puts F2L in macOS's list; opening the page alone leaves it missing there.
+                    switch pane {
+                    case "Privacy_ScreenCapture": CGRequestScreenCaptureAccess()
+                    case "Privacy_Accessibility": DesktopAccessibility.requestTrust()
+                    default: break
+                    }
                     NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)")!)
                 }
             }

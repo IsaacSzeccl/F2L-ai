@@ -23,6 +23,8 @@ final class ReplyBubble: CompanionPanel {
     private let status = makeLabel("", size: 12, weight: .medium, color: Palette.verified, wraps: true)
     private let closeButton = FlatButton("×", size: 15, ink: Palette.hex(0x9699A2), fill: nil)
     private let back = FlatButton("←", size: 13, ink: Palette.hex(0x9699A2), fill: nil)
+    /// Copies everything Pip said in this card (all pages, or the lesson's summary and every step).
+    private let copyButton = FlatButton("Copy", size: 11, ink: Palette.hex(0x9699A2), fill: nil)
     private var buttons: [FlatButton] = []
 
     private var steps: [String] = []
@@ -78,7 +80,11 @@ final class ReplyBubble: CompanionPanel {
         back.toolTip = "Previous step"
         back.setAccessibilityLabel("Previous step")
         back.onClick = { [weak self] in self?.go(to: (self?.index ?? 1) - 1) }
-        [selection, summary, counter, emoteView, text, status, closeButton, back].forEach(box.addSubview)
+        copyButton.padding = NSEdgeInsets(top: 3, left: 8, bottom: 3, right: 8)
+        copyButton.toolTip = "Copy what Pip said"
+        copyButton.setAccessibilityLabel("Copy what Pip said")
+        copyButton.onClick = { [weak self] in self?.copyAll() }
+        [selection, summary, counter, emoteView, text, status, closeButton, back, copyButton].forEach(box.addSubview)
         emoteView.imageScaling = .scaleProportionallyUpOrDown
         emoteView.setAccessibilityElement(false)
         reveal.target = self
@@ -425,6 +431,31 @@ final class ReplyBubble: CompanionPanel {
 
     @objc private func textClicked() { if timer != nil { finishReveal() } }
 
+    /// Everything in the card as plain text, the way it reads: a reply's pages, or a lesson's summary and its steps.
+    var copyableText: String {
+        if !steps.isEmpty {
+            let numbered = steps.enumerated().map { "\($0.offset + 1). \(Self.withoutEmoji($0.element))" }
+            return ([summary.stringValue].filter { !$0.isEmpty } + numbered).joined(separator: "\n")
+        }
+        return pages.compactMap { page -> String? in
+            if case .text(let line, _) = page { return Self.withoutEmoji(line) } else { return nil }
+        }.joined(separator: "\n\n")
+    }
+
+    private func copyAll() {
+        let value = copyableText
+        guard !value.isEmpty else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(value, forType: .string)
+        setCopyTitle("Copied")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.setCopyTitle("Copy") }
+    }
+
+    private func setCopyTitle(_ title: String) {
+        copyButton.title = title
+        copyButton.textSize = 11 // restyles the new title
+    }
+
     // MARK: - Placement
 
     func follow(_ rect: CGRect, avoiding target: CGRect? = nil, input: CGRect? = nil) {
@@ -471,7 +502,14 @@ final class ReplyBubble: CompanionPanel {
             }
             y += 32
         }
-        let total = y + 16
+        let copyWidth: CGFloat = 60 // fits "Copy" and "Copied"
+        copyButton.isHidden = copyableText.isEmpty
+        if !copyButton.isHidden {
+            y += 4
+            copyButton.frame = NSRect(x: width - 14 - copyWidth, y: y, width: copyWidth, height: 22)
+            y += 22
+        }
+        let total = y + 12
         back.frame = NSRect(x: width - 66, y: 8, width: 28, height: 26)
         closeButton.frame = NSRect(x: width - 38, y: 8, width: 28, height: 26)
 
