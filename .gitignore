@@ -13,6 +13,7 @@ spike-cases/
 Windows/F2L.Windows/local.settings.json
 Windows/artifacts/
 /local.settings.json
+Demo video - Copy.mp4
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
