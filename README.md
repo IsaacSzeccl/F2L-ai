@@ -187,3 +187,11 @@ dotnet run --project Windows/F2L.Windows.Tests/F2L.Windows.Tests.csproj
 ```
 
 See [Windows/README.md](Windows/README.md) for the Windows harness options, including the optional live Excel check.
+
+## Demo
+<p align="center">
+  <video src="[video demo](https://github.com/IsaacSzeccl/F2L-ai/blob/main/Demo%20video%20-%20Copy.mp4)" width="100%" controls>
+    Your browser does not support the video tag.
+  </video>
+</p>
+
