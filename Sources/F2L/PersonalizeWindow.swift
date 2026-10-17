@@ -173,6 +173,10 @@ final class PersonalizeWindow: NSWindow, NSWindowDelegate, NSTextFieldDelegate {
             back.isEnabled = !busy
         } else {
             button(original.profile == nil ? "Not now" : "Cancel", x: side + 40, y: bottom, width: 120, in: root) { [weak self] in self?.performClose(nil) }
+            // "Not now" asks again next time; this says Pip can do without a profile.
+            if original.needsProfile {
+                button("No profile needed", x: side + 172, y: bottom, width: 170, in: root) { [weak self] in self?.declineProfile() }
+            }
         }
         if step == 1 {
             let local = button("Plan without AI", x: w - 372, y: bottom, width: 150, in: root) { [weak self] in self?.makePlan(usingAI: false) }
@@ -402,6 +406,14 @@ final class PersonalizeWindow: NSWindow, NSWindowDelegate, NSTextFieldDelegate {
             try store.save(ProfileDocument(profile: profile, plan: plan, onboardingComplete: true))
             finished = true; close(); onDone?()
         } catch { errorMessage = "Your profile couldn’t be saved. Check that this computer’s F2L folder is writable, then try again."; rebuild() }
+    }
+    private func declineProfile() {
+        do {
+            original.noProfileWanted = true
+            original.onboardingComplete = true
+            try store.save(original)
+            finished = true; close(); onDone?()
+        } catch { errorMessage = "Pip couldn’t save your choice. Please try again."; rebuild() }
     }
     private func forget() {
         let alert = NSAlert(); alert.messageText = "Forget your profile and starter plan?"

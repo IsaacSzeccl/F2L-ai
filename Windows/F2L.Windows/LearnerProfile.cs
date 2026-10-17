@@ -156,6 +156,14 @@ internal sealed record ProfileDocument
     public bool OnboardingComplete { get; set; }
     public LearnerProfile? Profile { get; set; }
     public StarterPlan? Plan { get; set; }
+    /// <summary>The learner said Pip needn't know about their work. Until then, a missing profile is asked for.</summary>
+    public bool NoProfileWanted { get; set; }
+
+    /// <summary>Pip asks for a profile when it has no role and no work goal, unless the learner said no need. Same rule
+    /// as ProfileDocument.needsProfile on Mac.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool NeedsProfile => !NoProfileWanted
+        && string.IsNullOrWhiteSpace(Profile?.Role) && string.IsNullOrWhiteSpace(Profile?.Goal);
 }
 internal sealed class ProfileStore(string? path = null)
 {

@@ -169,3 +169,22 @@ struct LiveStarterPlan {
         #expect(StarterPlan.draft(for: p).summary.contains("IT support work"))
     }
 }
+
+@Suite struct AskingForAProfile {
+    @Test func aMissingProfileIsAskedForUntilTheLearnerSaysNoNeed() throws {
+        #expect(ProfileDocument().needsProfile)
+        #expect(ProfileDocument(onboardingComplete: true).needsProfile) // skipped or forgotten: ask again
+        var empty = LearnerProfile(); empty.name = "Alex"
+        #expect(ProfileDocument(profile: empty, onboardingComplete: true).needsProfile) // a name alone says nothing about the work
+        var work = LearnerProfile(); work.role = "Accountant"
+        #expect(!ProfileDocument(profile: work, onboardingComplete: true).needsProfile)
+        #expect(!ProfileDocument(onboardingComplete: true, noProfileWanted: true).needsProfile)
+    }
+
+    @Test func olderProfileFilesStillLoad() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("f2l-old-profile-\(UUID().uuidString).json")
+        try #"{"version":1,"onboardingComplete":true,"profile":{"role":"Accountant","goal":"Invoice Processing"}}"#.write(to: url, atomically: true, encoding: .utf8)
+        let document = ProfileStore(url: url).load()
+        #expect(document.profile?.role == "Accountant" && !document.noProfileWanted && !document.needsProfile)
+    }
+}

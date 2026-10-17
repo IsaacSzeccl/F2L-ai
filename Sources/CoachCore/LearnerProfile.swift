@@ -224,8 +224,31 @@ public struct ProfileDocument: Codable, Equatable, Sendable {
     public var onboardingComplete = false
     public var profile: LearnerProfile?
     public var plan: StarterPlan?
-    public init(profile: LearnerProfile? = nil, plan: StarterPlan? = nil, onboardingComplete: Bool = false) {
-        self.profile = profile; self.plan = plan; self.onboardingComplete = onboardingComplete
+    /// The learner said Pip needn't know about their work ("No profile needed"). Until then, a missing profile is asked for.
+    public var noProfileWanted = false
+    public init(profile: LearnerProfile? = nil, plan: StarterPlan? = nil, onboardingComplete: Bool = false, noProfileWanted: Bool = false) {
+        self.profile = profile; self.plan = plan; self.onboardingComplete = onboardingComplete; self.noProfileWanted = noProfileWanted
+    }
+
+    /// Pip asks for a profile when it has none worth using (no role and no work goal), unless the learner said no need.
+    /// Skipping the setup ("Not now", closing it) or forgetting the profile asks again next time.
+    public var needsProfile: Bool {
+        guard !noProfileWanted else { return false }
+        let role = profile?.role.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let goal = profile?.goal.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return role.isEmpty && goal.isEmpty
+    }
+
+    enum CodingKeys: String, CodingKey { case version, onboardingComplete, profile, plan, noProfileWanted }
+
+    /// Files written before `noProfileWanted` existed still load.
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        version = try values.decodeIfPresent(Int.self, forKey: .version) ?? 1
+        onboardingComplete = try values.decodeIfPresent(Bool.self, forKey: .onboardingComplete) ?? false
+        profile = try values.decodeIfPresent(LearnerProfile.self, forKey: .profile)
+        plan = try values.decodeIfPresent(StarterPlan.self, forKey: .plan)
+        noProfileWanted = try values.decodeIfPresent(Bool.self, forKey: .noProfileWanted) ?? false
     }
 }
 

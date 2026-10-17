@@ -174,6 +174,12 @@ internal sealed class PersonalizeWindow : Window
             _step--; _error = ""; Render();
         });
         back.IsEnabled = !_busy; back.HorizontalAlignment = HorizontalAlignment.Left; actions.Children.Add(back); footer.Children.Add(actions);
+        // "Not now" asks again next time; this says Pip can do without a profile.
+        if (_step == 0 && _original.NeedsProfile)
+        {
+            var decline = ActionButton("No profile needed", DeclineProfile); decline.Background = Brushes.Transparent; decline.FontSize = 10;
+            decline.HorizontalAlignment = HorizontalAlignment.Left; footer.Children.Add(decline);
+        }
         if (_original.Profile is not null)
         {
             var forget = ActionButton("Forget my profile", Forget); forget.Background = Brushes.Transparent; forget.FontSize = 10;
@@ -338,6 +344,11 @@ internal sealed class PersonalizeWindow : Window
         var plan = _plan ?? StarterPlan.Draft(_profile);
         try { _store.Save(new() { Profile = _profile, Plan = plan, OnboardingComplete = true }); _finished = true; Close(); }
         catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException) { _error = "Your profile couldn’t be saved. Check that this computer’s F2L folder is writable, then try again."; Render(); }
+    }
+    private void DeclineProfile()
+    {
+        try { _store.Save(_original with { NoProfileWanted = true, OnboardingComplete = true }); _finished = true; Close(); }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException) { _error = "Pip couldn’t save your choice. Please try again."; Render(); }
     }
     private void Forget()
     {

@@ -134,7 +134,8 @@ public partial class MainWindow : Window
             OpenConversation();
             Wave(TimeSpan.FromSeconds(2.4));
             Greet();
-            if (!_testing && !Profile.OnboardingComplete) ShowProfile();
+            // A missing profile is asked for every launch until the learner fills it in or says no profile is needed.
+            if (!_testing && Profile.NeedsProfile) ShowProfile();
         });
     }
 

@@ -242,7 +242,8 @@ final class CompanionController: NSObject {
             appear()
             wave(for: 2.4)
             greet()
-            if !testing && !profileDocument.onboardingComplete { showProfile() }
+            // A missing profile is asked for every launch until the learner fills it in or says no profile is needed.
+            if !testing && profileDocument.needsProfile { showProfile() }
         }
     }
 
@@ -453,6 +454,12 @@ final class CompanionController: NSObject {
     /// "How can I help you, Alex?" with what they chose to learn, to pick from. Nothing starts until they choose.
     func greet(_ saved: ProfileDocument? = nil) {
         let document = saved ?? profileDocument
+        if document.needsProfile && !testing {
+            say("I don't know about your work yet. Tell me a little, so my help fits what you do.", emote: .hello,
+                choices: [("Set up my profile", true, { [weak self] in self?.showProfile() }),
+                          ("No profile needed", false, { [weak self] in self?.declineProfile() })])
+            return
+        }
         guard let profile = document.profile, profile.personalizationEnabled else { say(Self.greeting, emote: .hello); return }
         let name = profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let topics = Array(profile.learning.prefix(3))
@@ -464,6 +471,17 @@ final class CompanionController: NSObject {
                 choices: topics.map { topic in (topic, true, { [weak self] in self?.submit(LearnerProfile.lessonQuestion(topic)) }) }
                     + [("Change what I learn", false, { [weak self] in self?.showProfile() })])
         }
+    }
+
+    /// "No profile needed": Pip stops asking until the learner sets one up from the menu.
+    func declineProfile() {
+        var document = profileStore.load()
+        document.noProfileWanted = true
+        document.onboardingComplete = true
+        try? profileStore.save(document)
+        profileDocument = document
+        personalizeWindow?.close()
+        say(Self.greeting, emote: .hello)
     }
 
     func wave(for seconds: TimeInterval = 1.6) {

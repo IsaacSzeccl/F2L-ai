@@ -2,6 +2,10 @@
 
 This log records the local implementation and design work through 8 October 2026. Entries describe the working checkout; they are not release tags or a claim that changes have been committed or pushed. Earlier work is grouped by milestone where individual edit times were not recorded. Git history remains the record of previously committed changes.
 
+## 17 October 2026 — Pip asks for a missing profile
+
+- The setup opened only once: "Not now", closing it, or "Forget my profile" marked onboarding done, and Pip never asked again. Now `ProfileDocument.needsProfile` (no role and no work goal, and the learner hasn't chosen "No profile needed") opens the setup at every launch, and Pip's greeting offers "Set up my profile" or "No profile needed". The setup's first step has a "No profile needed" button that stops the asking (saved as `noProfileWanted`); the profile stays editable from the menu. Older profile files still load. Mac and Windows (Windows not compiled).
+
 ## 16 October 2026 — Pip proposes the right tool (the demo story)
 
 - "I'm an accountant… teach me a way to read my invoices automatically" names no tool. With Excel in front it picked a weak Copilot recipe; with nothing fitting it had none. Now, when the question names no tool and another tool's recipe fits the task clearly better (more of its tags), Pip proposes that tool and why, then teaches it from where the learner is (`RecipeLibrary.suggest`, `suggestionNote`; both apps). A getting-started question ("teach me to use Gemini") picks the recipe that fits the learner's profile (`fitting`). The invoice lesson says to recommend a Skill first.
